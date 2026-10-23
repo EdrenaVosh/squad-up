@@ -1,0 +1,63 @@
+# squad lint: exit code 2 on errors, 0 on warnings unless --strict.
+exec squad lint good
+stdout 'no problems'
+stdout 'tokens per session'
+
+! exec squad lint bad
+stdout 'bad-model'
+stdout 'unknown-field'
+stdout 'did you mean "disallowedTools"'
+
+exec squad lint warny
+stdout 'short-description'
+! exec squad lint warny --strict
+
+! exec squad lint bad --json
+stdout '"errors": 1'
+-- claude/agents/reviewer.md --
+---
+name: reviewer
+description: Reviews diffs. Use after any code change.
+---
+Be strict.
+-- squadup/presets/good/preset.yaml --
+schema: 1
+name: good
+mode: replace
+main: null
+agents: [reviewer]
+-- squadup/presets/good/agents/reviewer.md --
+---
+name: reviewer
+description: Reviews diffs for bugs and risky changes. Use after any code change.
+tools: Read, Grep
+---
+You review code.
+-- squadup/presets/bad/preset.yaml --
+schema: 1
+name: bad
+mode: replace
+main: null
+agents: [reviewer]
+-- squadup/presets/bad/agents/reviewer.md --
+---
+name: reviewer
+description: Reviews diffs for bugs and risky changes. Use after any code change.
+tools: Read
+model: gpt-5
+disallowed_tools: Bash
+---
+You review code.
+-- squadup/presets/warny/preset.yaml --
+schema: 1
+name: warny
+mode: replace
+main: null
+agents: [reviewer]
+-- squadup/presets/warny/agents/reviewer.md --
+---
+name: reviewer
+description: Short one. Use when needed.
+tools: Read
+---
+You review code.

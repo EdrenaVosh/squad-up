@@ -14,6 +14,9 @@ Presets of agent teams for [Claude Code](https://code.claude.com): switch them w
 | `squad use <preset>` | Equip a preset (`--dry-run`, `--yes`, `--force`, `--save-edits`, `--discard-edits`) |
 | `squad restore` | Return to your original setup (Initial) |
 | `squad undo [--to <id>]` | Go back one step, or to a point from `squad log` |
+| `squad run <preset> [-- args]` | Start `claude` with a preset for one session, writing nothing to `~/.claude` (`--dry-run`) |
+| `squad models [--probe]` | Which models you can use: catalogue, your policy, and an optional probe |
+| `squad lint [preset]` | Check agents and presets, and estimate their cost in context (`--strict`, `--json`) |
 | `squad log` | Operations that changed your config, newest first |
 | `squad initial [--recapture]` | Show your original setup, or capture it again |
 | `squad doctor` | Check that Claude Code is installed and logged in |

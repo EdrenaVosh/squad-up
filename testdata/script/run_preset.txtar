@@ -1,0 +1,58 @@
+# squad run starts claude with the preset and writes nothing to the config.
+env FAKE_CLAUDE_ARGS_FILE=$WORK/claude-args.txt
+exec squad list
+copytree claude claude.orig
+copytree squadup squadup.orig
+
+exec squad run solo
+stdout 'fake claude session'
+stderr 'Running claude with "solo"'
+stderr '\+ your global agents'
+grep '--agents' claude-args.txt
+grep '"planner"' claude-args.txt
+grep '--settings' claude-args.txt
+treeeq claude claude.orig
+treeeq squadup squadup.orig
+
+# Arguments after -- reach claude.
+exec squad run solo -- --model opus
+grep '--model' claude-args.txt
+
+# The exit code of claude is the exit code of squad run.
+env FAKE_CLAUDE_EXIT=3
+! exec squad run solo
+! stderr 'Error:'
+
+# Nothing starts on a dry run.
+rm claude-args.txt
+exec squad run solo --dry-run
+stdout 'Would run'
+stdout '"model": "sonnet"'
+! exists claude-args.txt
+
+-- claude/agents/reviewer.md --
+---
+name: reviewer
+description: Reviews diffs. Use after any code change.
+---
+Be strict.
+-- claude/settings.json --
+{
+  "model": "opus"
+}
+-- squadup/presets/solo/preset.yaml --
+schema: 1
+name: solo
+mode: replace
+main: null
+agents: [planner]
+settings:
+  model: sonnet
+-- squadup/presets/solo/agents/planner.md --
+---
+name: planner
+description: Plans work. Use before any large change.
+tools: Read, Grep
+color: cyan
+---
+Plan it.

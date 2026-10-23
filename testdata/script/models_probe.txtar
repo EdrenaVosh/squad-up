@@ -1,0 +1,35 @@
+# squad models: the catalogue first, the probe only on request.
+exec squad models
+stdout 'unknown'
+stderr 'squad models --probe'
+! exists squadup/cache/models.json
+
+env FAKE_CLAUDE_UNAVAILABLE=fable
+exec squad models --probe
+stdout 'claude-opus-5-5'
+stdout 'unavailable'
+stdout 'issue with the selected model'
+exists squadup/cache/models.json
+
+# A later call reads the cache, and status summarises it.
+exec squad models
+stdout 'Probed'
+exec squad status
+stdout 'verified: haiku, opus, sonnet'
+stdout 'unavailable: fable'
+
+# The user's allowlist is applied.
+cp settings-allowlist.json claude/settings.json
+exec squad models
+stdout 'blocked by policy'
+
+-- claude/agents/reviewer.md --
+---
+name: reviewer
+description: Reviews diffs. Use after any code change.
+---
+Be strict.
+-- settings-allowlist.json --
+{
+  "availableModels": ["sonnet", "haiku"]
+}

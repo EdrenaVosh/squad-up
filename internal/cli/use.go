@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -55,7 +56,7 @@ func (a *app) newUse() *cobra.Command {
 		Use:   "use <preset>",
 		Short: "Equip a preset: write its agents and settings into ~/.claude",
 		Args:  cobra.ExactArgs(1),
-		RunE: func(_ *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			opts, err := f.options()
 			if err != nil {
 				return err
@@ -64,11 +65,21 @@ func (a *app) newUse() *cobra.Command {
 			if err != nil {
 				return planError(err)
 			}
-			return a.operate(plan, opts, f)
+			return a.operate(plan, opts, f, a.presetModelWarnings(cmd.Context(), args[0])...)
 		},
 	}
 	f.register(cmd)
 	return cmd
+}
+
+// presetModelWarnings checks the models a preset uses against the policy and a
+// saved probe. A preset that cannot be loaded has nothing to report here.
+func (a *app) presetModelWarnings(ctx context.Context, name string) []string {
+	b, err := preset.Store{Dir: a.paths.PresetsDir()}.Load(name)
+	if err != nil {
+		return nil
+	}
+	return a.modelWarnings(ctx, b)
 }
 
 func (a *app) newRestore() *cobra.Command {
@@ -131,12 +142,12 @@ func planError(err error) error {
 }
 
 // operate shows the plan, gets the user's decisions and executes it.
-func (a *app) operate(plan *apply.Plan, opts apply.Options, f opFlags) error {
+func (a *app) operate(plan *apply.Plan, opts apply.Options, f opFlags, extraWarnings ...string) error {
 	if plan.NoOp {
 		printf(a.io.Out, "%s\n", tui.AlreadyEquipped(plan.Target))
 		return nil
 	}
-	renderPlan(a.io.Out, plan)
+	renderPlan(a.io.Out, plan, extraWarnings)
 
 	if len(plan.Conflicts) > 0 {
 		return &ExitError{
@@ -235,7 +246,7 @@ func executeError(err error) error {
 	return &ExitError{Code: 1, Err: err, Fix: "check that the Claude config and ~/.squadup are writable, then try again"}
 }
 
-func renderPlan(w io.Writer, p *apply.Plan) {
+func renderPlan(w io.Writer, p *apply.Plan, extraWarnings []string) {
 	switch p.Command {
 	case "use":
 		printf(w, "Equip %q (mode: %s)\n", p.Target, p.Mode)
@@ -280,7 +291,7 @@ func renderPlan(w io.Writer, p *apply.Plan) {
 			printf(w, "    ! %s\n", c)
 		}
 	}
-	warnings := p.Warnings
+	warnings := append(append([]string(nil), p.Warnings...), extraWarnings...)
 	if model := os.Getenv("ANTHROPIC_MODEL"); model != "" && changesKey(p, "model") {
 		warnings = append(warnings, tui.ModelOverride(model))
 	}

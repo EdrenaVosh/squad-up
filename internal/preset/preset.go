@@ -22,9 +22,12 @@ const (
 
 // Value sets accepted by Validate.
 var (
-	Accents         = []string{"red", "blue", "green", "yellow", "purple", "orange", "pink", "cyan"}
-	EffortLevels    = []string{"low", "medium", "high", "xhigh", "max"}
-	PermissionModes = []string{"default", "acceptEdits", "auto", "dontAsk", "bypassPermissions", "plan"}
+	Accents      = []string{"red", "blue", "green", "yellow", "purple", "orange", "pink", "cyan"}
+	EffortLevels = []string{"low", "medium", "high", "xhigh", "max"}
+	// SettingsEffortLevels are the values of the `effortLevel` settings key,
+	// which does not accept "max" (agents' own `effort` field does).
+	SettingsEffortLevels = []string{"low", "medium", "high", "xhigh"}
+	PermissionModes      = []string{"default", "acceptEdits", "auto", "dontAsk", "bypassPermissions", "plan"}
 )
 
 var nameRE = regexp.MustCompile(`^[a-z0-9][a-z0-9-]{0,63}$`)
@@ -98,8 +101,8 @@ func (p Preset) Validate() error {
 	if p.Accent != "" && !slices.Contains(Accents, p.Accent) {
 		add("accent: %q must be one of %v", p.Accent, Accents)
 	}
-	if e := p.Settings.EffortLevel; e != "" && !slices.Contains(EffortLevels, e) {
-		add("effortLevel: %q must be one of %v", e, EffortLevels)
+	if e := p.Settings.EffortLevel; e != "" && !slices.Contains(SettingsEffortLevels, e) {
+		add("effortLevel: %q must be one of %v (\"max\" is only valid for an agent's own effort)", e, SettingsEffortLevels)
 	}
 	if perms := p.Settings.Permissions; perms != nil && perms.DefaultMode != "" && !slices.Contains(PermissionModes, perms.DefaultMode) {
 		add("defaultMode: %q must be one of %v", perms.DefaultMode, PermissionModes)

@@ -10,6 +10,7 @@ import (
 
 	"github.com/EdrenaVosh/squadup/internal/apply"
 	"github.com/EdrenaVosh/squadup/internal/claude"
+	"github.com/EdrenaVosh/squadup/internal/models"
 	"github.com/EdrenaVosh/squadup/internal/tui"
 )
 
@@ -26,12 +27,22 @@ type claudeJSON struct {
 	Provider string `json:"provider,omitempty"`
 	LoggedIn bool   `json:"loggedIn"`
 	Error    string `json:"error,omitempty"`
+
+	authMethod string
+}
+
+type modelsJSON struct {
+	Probed      bool       `json:"probed"`
+	ProbedAt    *time.Time `json:"probedAt,omitempty"`
+	Verified    []string   `json:"verified"`
+	Unavailable []string   `json:"unavailable"`
 }
 
 type statusJSON struct {
 	Active    string      `json:"active"`
 	Drift     []driftJSON `json:"drift"`
 	Claude    claudeJSON  `json:"claude"`
+	Models    modelsJSON  `json:"models"`
 	ClaudeDir string      `json:"claudeDir"`
 	Home      string      `json:"home"`
 	Warnings  []string    `json:"warnings"`
@@ -67,6 +78,7 @@ func (a *app) newStatus() *cobra.Command {
 			for _, d := range drift {
 				st.Drift = append(st.Drift, driftJSON{Path: d.Path, Kind: string(d.Kind)})
 			}
+			st.Models = a.modelsSummary(st.Claude)
 			if model := os.Getenv("ANTHROPIC_MODEL"); model != "" {
 				st.Warnings = append(st.Warnings, tui.ModelOverride(model))
 			}
@@ -98,7 +110,7 @@ func gatherClaude(ctx context.Context) claudeJSON {
 	if auth, err := c.Auth(ctx); err != nil {
 		info.Error = err.Error()
 	} else {
-		info.Provider, info.LoggedIn = auth.APIProvider, auth.LoggedIn
+		info.Provider, info.LoggedIn, info.authMethod = auth.APIProvider, auth.LoggedIn, auth.AuthMethod
 	}
 	return info
 }
@@ -133,10 +145,46 @@ func renderStatus(a *app, st statusJSON) {
 		}
 		row("Claude", strings.Join(nonEmpty(parts...), " · "))
 	}
+	row("Models", modelsRow(st.Models))
 	row("Config dir", st.ClaudeDir)
 	row("Squadup home", st.Home)
 
 	for _, w := range st.Warnings {
 		printf(a.io.Out, "\n! %s\n", w)
 	}
+}
+
+// modelsSummary reports the models that a saved probe and the policy settle.
+func (a *app) modelsSummary(c claudeJSON) modelsJSON {
+	summary := modelsJSON{Verified: []string{}, Unavailable: []string{}}
+	if !c.Found || c.Error != "" {
+		return summary
+	}
+	cache, err := models.LoadCache(a.paths)
+	if err != nil || !cache.Valid(c.Version, c.authMethod, a.now()) {
+		return summary
+	}
+	policy, _ := a.policy()
+	summary.Probed = true
+	at := cache.ProbedAt
+	summary.ProbedAt = &at
+	summary.Verified, summary.Unavailable = verifiedAndUnavailable(models.Evaluate(models.Catalog(), policy, cache))
+	return summary
+}
+
+func modelsRow(m modelsJSON) string {
+	if !m.Probed {
+		return tui.NotProbed
+	}
+	var parts []string
+	if len(m.Verified) > 0 {
+		parts = append(parts, "verified: "+strings.Join(m.Verified, ", "))
+	}
+	if len(m.Unavailable) > 0 {
+		parts = append(parts, "unavailable: "+strings.Join(m.Unavailable, ", "))
+	}
+	if len(parts) == 0 {
+		return "probed, nothing verified"
+	}
+	return strings.Join(parts, " · ")
 }

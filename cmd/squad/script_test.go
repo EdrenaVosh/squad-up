@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/rogpeppe/go-internal/testscript"
@@ -33,7 +36,7 @@ func TestScripts(t *testing.T) {
 			env.Setenv("CLAUDE_CONFIG_DIR", filepath.Join(env.WorkDir, "claude"))
 			env.Setenv("SQUADUP_HOME", filepath.Join(env.WorkDir, "squadup"))
 			env.Setenv("ANTHROPIC_MODEL", "")
-			env.Setenv("PATH", withoutClaude(env.Getenv("PATH")))
+			env.Setenv("PATH", fakeClaudeDir()+string(os.PathListSeparator)+withoutClaude(env.Getenv("PATH")))
 			return nil
 		},
 		Cmds: map[string]func(ts *testscript.TestScript, neg bool, args []string){
@@ -137,4 +140,31 @@ func withoutClaude(path string) string {
 		}
 	}
 	return strings.Join(kept, string(os.PathListSeparator))
+}
+
+var (
+	fakeOnce sync.Once
+	fakeDir  string
+)
+
+// fakeClaudeDir builds testdata/fakeclaude once and returns the folder with
+// the resulting `claude`, which scripts find first on PATH.
+func fakeClaudeDir() string {
+	fakeOnce.Do(func() {
+		dir, err := os.MkdirTemp("", "squad-fakeclaude-")
+		if err != nil {
+			panic(err)
+		}
+		name := "claude"
+		if runtime.GOOS == "windows" {
+			name += ".exe"
+		}
+		cmd := exec.Command("go", "build", "-o", filepath.Join(dir, name), "./testdata/fakeclaude")
+		cmd.Dir = filepath.Join("..", "..")
+		if out, err := cmd.CombinedOutput(); err != nil {
+			panic(fmt.Sprintf("build fakeclaude: %v\n%s", err, out))
+		}
+		fakeDir = dir
+	})
+	return fakeDir
 }

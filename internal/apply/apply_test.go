@@ -787,3 +787,44 @@ func TestPermissionsChangesAreSummarisedInThePlan(t *testing.T) {
 	}
 	t.Fatal("no permissions op in the plan")
 }
+
+func TestResolveGivesTheBundleAndSettingsWithInitialFallbacks(t *testing.T) {
+	f := newFx(t, nil)
+
+	b, resolved, err := f.e.Resolve("bug-hunt")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b.Preset.Name != "bug-hunt" || len(b.Agents) != 2 {
+		t.Errorf("bundle = %+v", b.Preset)
+	}
+	want := map[string]string{
+		"model":       `"haiku"`,
+		"agent":       `"debugger"`,
+		"effortLevel": `"medium"`,
+	}
+	for key, raw := range want {
+		if resolved[key] != raw {
+			t.Errorf("resolved[%s] = %q, want %q", key, resolved[key], raw)
+		}
+	}
+	if !strings.Contains(resolved["permissions"], `"defaultMode": "default"`) {
+		t.Errorf("permissions = %q, want Initial's text", resolved["permissions"])
+	}
+}
+
+func TestResolveFailsForUnknownAndBrokenPresets(t *testing.T) {
+	f := newFx(t, nil)
+
+	if _, _, err := f.e.Resolve("nope"); err == nil || !strings.Contains(err.Error(), "nope") {
+		t.Errorf("unknown preset: %v", err)
+	}
+	path := filepath.Join(f.p.PresetDir("solo"), "agents", "planner.md")
+	if err := os.WriteFile(path, []byte(agentMD("somebody-else", "x")), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := f.e.Resolve("solo"); err == nil || !strings.Contains(err.Error(), "planner") {
+		t.Errorf("mismatched agent: %v", err)
+	}
+}

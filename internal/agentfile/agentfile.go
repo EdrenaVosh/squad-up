@@ -25,7 +25,7 @@ var (
 var KnownKeys = []string{
 	"name", "description", "tools", "disallowedTools", "model", "permissionMode",
 	"maxTurns", "skills", "mcpServers", "hooks", "memory", "background", "effort",
-	"isolation", "color", "initialPrompt", "omitClaudeMd", "autoCompactWindow",
+	"isolation", "color", "initialPrompt", "omitClaudeMd", "autoCompactWindow", "experimental",
 }
 
 // Agent is a parsed agent file.

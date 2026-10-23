@@ -62,6 +62,7 @@ const (
 	ClaudeUnavailable = "unavailable — run squad doctor"
 	ManualEdits       = "Manual edits detected"
 	NoDrift           = "none"
+	NotProbed         = "not probed — run squad models --probe"
 )
 
 // ModelOverride warns that ANTHROPIC_MODEL beats the preset's model.

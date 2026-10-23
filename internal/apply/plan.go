@@ -290,7 +290,9 @@ func (e Engine) desiredInitial(meta *initial.Meta) (*desired, error) {
 	}, nil
 }
 
-func (e Engine) desiredPreset(name string, meta *initial.Meta) (*desired, error) {
+// loadValidBundle loads a preset and checks that it can be applied: the
+// preset is valid and every agent file defines the agent it is listed as.
+func (e Engine) loadValidBundle(name string) (*preset.Bundle, error) {
 	b, err := preset.Store{Dir: e.Paths.PresetsDir()}.Load(name)
 	if err != nil {
 		return nil, err
@@ -307,7 +309,39 @@ func (e Engine) desiredPreset(name string, meta *initial.Meta) (*desired, error)
 			return nil, fmt.Errorf("preset %q: the file for agent %q declares the name %q", name, a.Name, got)
 		}
 	}
+	return b, nil
+}
 
+// Resolve loads a preset and works out the managed settings it stands for:
+// what the preset sets itself, and Initial's value for every key it leaves
+// out. Keys are the raw JSON text. It writes nothing.
+func (e Engine) Resolve(name string) (*preset.Bundle, map[string]string, error) {
+	meta, err := initial.Load(e.Paths)
+	if err != nil {
+		return nil, nil, fmt.Errorf("your original setup is not saved yet: %w (run any other squad command once to capture it)", err)
+	}
+	b, err := e.loadValidBundle(name)
+	if err != nil {
+		return nil, nil, err
+	}
+	d, err := e.desiredFromBundle(b, meta)
+	if err != nil {
+		return nil, nil, err
+	}
+	return b, d.settings, nil
+}
+
+func (e Engine) desiredPreset(name string, meta *initial.Meta) (*desired, error) {
+	b, err := e.loadValidBundle(name)
+	if err != nil {
+		return nil, err
+	}
+	return e.desiredFromBundle(b, meta)
+}
+
+func (e Engine) desiredFromBundle(b *preset.Bundle, meta *initial.Meta) (*desired, error) {
+	name := b.Preset.Name
+	var err error
 	d := &desired{
 		command:          "use",
 		label:            name,

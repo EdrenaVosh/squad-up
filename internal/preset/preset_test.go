@@ -115,6 +115,7 @@ func TestValidateReportsEachProblemWithItsField(t *testing.T) {
 		"unknown mode":         {func(p *preset.Preset) { p.Mode = "merge" }, "mode"},
 		"unknown accent":       {func(p *preset.Preset) { p.Accent = "magenta" }, "accent"},
 		"unknown effort":       {func(p *preset.Preset) { p.Settings.EffortLevel = "ultra" }, "effortLevel"},
+		"max in settings key":  {func(p *preset.Preset) { p.Settings.EffortLevel = "max" }, "effortLevel"},
 		"unknown default mode": {func(p *preset.Preset) { p.Settings.Permissions.DefaultMode = "yolo" }, "defaultMode"},
 		"duplicate agent":      {func(p *preset.Preset) { p.Agents = []string{"a", "a"} }, "agents"},
 		"invalid agent name":   {func(p *preset.Preset) { p.Agents = []string{"Bad Name"} }, "agents"},
