@@ -167,3 +167,33 @@ func checkAgentsMatch(b Bundle) error {
 	}
 	return nil
 }
+
+// Replace overwrites an existing preset with b. The new version is built
+// beside the old one and swapped in, so a failure leaves the old preset alone.
+func (s Store) Replace(b Bundle) error {
+	if err := b.Preset.Validate(); err != nil {
+		return fmt.Errorf("invalid preset: %w", err)
+	}
+	if err := checkAgentsMatch(b); err != nil {
+		return err
+	}
+	if !s.Exists(b.Preset.Name) {
+		return fmt.Errorf("%w: %s", ErrNotFound, b.Preset.Name)
+	}
+
+	final := filepath.Join(s.Dir, b.Preset.Name)
+	old := filepath.Join(s.Dir, "."+b.Preset.Name+".old")
+	if err := fsx.RemoveAll(old); err != nil {
+		return err
+	}
+	if err := fsx.Rename(final, old); err != nil {
+		return fmt.Errorf("replace preset %s: %w", b.Preset.Name, err)
+	}
+	if err := s.Save(b); err != nil {
+		if restoreErr := fsx.Rename(old, final); restoreErr != nil {
+			return fmt.Errorf("%w (and the previous version is left in %s: %w)", err, old, restoreErr)
+		}
+		return err
+	}
+	return fsx.RemoveAll(old)
+}

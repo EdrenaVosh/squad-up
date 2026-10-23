@@ -123,3 +123,24 @@ func ReadFileIfExists(path string) ([]byte, bool, error) {
 	}
 	return data, true, nil
 }
+
+// AppendFile appends data to path, creating the file and its parents.
+func AppendFile(path string, data []byte, perm os.FileMode) error {
+	guard(path)
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return err
+	}
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, perm)
+	if err != nil {
+		return err
+	}
+	if _, err := f.Write(data); err != nil {
+		_ = f.Close()
+		return err
+	}
+	if err := f.Sync(); err != nil {
+		_ = f.Close()
+		return err
+	}
+	return f.Close()
+}

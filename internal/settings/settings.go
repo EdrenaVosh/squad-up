@@ -3,6 +3,7 @@
 package settings
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -29,8 +30,17 @@ func ReadManaged(path string) (Managed, bool, error) {
 	if !existed {
 		return Managed{}, false, nil
 	}
-	if !gjson.ValidBytes(data) {
+	m, err := ParseManaged(data)
+	if err != nil {
 		return Managed{}, true, fmt.Errorf("%s is not valid JSON", path)
+	}
+	return m, true, nil
+}
+
+// ParseManaged extracts the managed keys from the text of a settings file.
+func ParseManaged(data []byte) (Managed, error) {
+	if !gjson.ValidBytes(data) {
+		return Managed{}, errors.New("not valid JSON")
 	}
 	m := Managed{raw: map[string]string{}}
 	for _, key := range ManagedKeys {
@@ -38,7 +48,7 @@ func ReadManaged(path string) (Managed, bool, error) {
 			m.raw[key] = res.Raw
 		}
 	}
-	return m, true, nil
+	return m, nil
 }
 
 // ManagedFromRaw wraps already-extracted raw JSON values (key → JSON text).

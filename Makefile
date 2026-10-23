@@ -8,7 +8,7 @@ LDFLAGS := -s -w -X $(VERSION_PKG).Version=$(VERSION) -X $(VERSION_PKG).Commit=$
 SANDBOX := $(CURDIR)/.sandbox
 SANDBOX_ENV := CLAUDE_CONFIG_DIR=$(SANDBOX)/claude SQUADUP_HOME=$(SANDBOX)/squadup
 
-.PHONY: build test lint sandbox sandbox-reset try try-claude snapshot install clean
+.PHONY: build test lint sandbox sandbox-presets sandbox-reset try try-claude snapshot install clean
 
 build:
 	go build -ldflags '$(LDFLAGS)' -o bin/squad ./cmd/squad
@@ -22,6 +22,10 @@ test: lint
 
 sandbox:
 	./scripts/sandbox.sh "$(SANDBOX)"
+
+# Add demo presets (solo-indie, bug-hunt, extra-helper) to the sandbox.
+sandbox-presets: sandbox
+	./scripts/sandbox-presets.sh "$(SANDBOX)"
 
 sandbox-reset:
 	rm -rf "$(SANDBOX)"

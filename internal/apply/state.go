@@ -11,6 +11,7 @@ import (
 
 	"github.com/EdrenaVosh/squadup/internal/fsx"
 	"github.com/EdrenaVosh/squadup/internal/paths"
+	"github.com/EdrenaVosh/squadup/internal/settings"
 )
 
 const stateSchema = 1
@@ -23,6 +24,19 @@ type State struct {
 	AppliedAt time.Time         `json:"appliedAt"`
 	BackupID  string            `json:"backupId"`
 	Manifest  map[string]string `json:"manifest"`
+	Settings  *SettingsRecord   `json:"settings,omitempty"`
+}
+
+// SettingsRecord remembers what squad did to settings.json, so that manual
+// edits to the managed keys can be told apart from Claude Code reformatting
+// the file.
+type SettingsRecord struct {
+	// SHA256 is the hash of settings.json right after squad wrote it, "" when
+	// the file did not exist.
+	SHA256 string `json:"sha256"`
+	// Managed holds the raw JSON of the keys the preset sets itself. Keys
+	// that fall back to Initial are not tracked.
+	Managed map[string]string `json:"managed"`
 }
 
 // ActivePreset is the equipped preset; before anything is applied that is
@@ -77,8 +91,10 @@ type DriftItem struct {
 	Kind DriftKind
 }
 
-// Drift compares the manifest of written files with the disk. Files that are
-// not in the manifest are never reported: they are not squad's business.
+// Drift compares what squad wrote with the disk: agent files by hash, managed
+// settings keys by value (so reformatting settings.json is not drift). Files
+// that are not in the manifest are never reported: they are not squad's
+// business. Settings items are named "settings.json:<key>".
 func Drift(p paths.Paths, s State) ([]DriftItem, error) {
 	rels := make([]string, 0, len(s.Manifest))
 	for rel := range s.Manifest {
@@ -99,5 +115,32 @@ func Drift(p paths.Paths, s State) ([]DriftItem, error) {
 			items = append(items, DriftItem{Path: rel, Kind: DriftModified})
 		}
 	}
-	return items, nil
+	return append(items, settingsDrift(p, s)...), nil
+}
+
+// settingsDrift compares the keys the preset set itself with settings.json.
+// Keys the preset leaves to Initial are not tracked: changing them is not
+// editing the preset. An unreadable settings.json is not reported here;
+// planning fails on it.
+func settingsDrift(p paths.Paths, s State) []DriftItem {
+	if s.Settings == nil {
+		return nil
+	}
+	current, _, err := settings.ReadManaged(p.SettingsFile())
+	if err != nil {
+		return nil
+	}
+	var items []DriftItem
+	for _, key := range settings.ManagedKeys {
+		want, wanted := s.Settings.Managed[key]
+		path := "settings.json:" + key
+		switch {
+		case !wanted:
+		case !current.Has(key):
+			items = append(items, DriftItem{Path: path, Kind: DriftMissing})
+		case !settings.EqualJSON(want, string(current.Raw(key))):
+			items = append(items, DriftItem{Path: path, Kind: DriftModified})
+		}
+	}
+	return items
 }

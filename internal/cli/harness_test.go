@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/EdrenaVosh/squadup/internal/cli"
+	"github.com/EdrenaVosh/squadup/internal/preset"
 	"github.com/EdrenaVosh/squadup/internal/testutil"
 )
 
@@ -85,4 +86,46 @@ func (e *env) runWith(stdin string, interactive bool, args ...string) result {
 		Now:         func() time.Time { return fixedNow },
 	})
 	return result{stdout: out.String(), stderr: errOut.String(), code: code}
+}
+
+func agentMD(name, body string) string {
+	return "---\nname: " + name + "\ndescription: " + name + " agent. Use when " + name + " is needed.\n---\n" + body + "\n"
+}
+
+func (e *env) tree() map[string]string { return testutil.Tree(e.t, e.claudeDir) }
+
+// addPresets stores two replace-mode presets: solo and bug-hunt.
+func (e *env) addPresets() {
+	e.t.Helper()
+	store := preset.Store{Dir: filepath.Join(e.home, "presets")}
+	main := "debugger"
+	for _, b := range []preset.Bundle{
+		{
+			Preset: preset.Preset{
+				Schema: 1, Name: "solo", Title: "Solo", Mode: preset.ModeReplace,
+				Agents:   []string{"planner", "reviewer", "tester"},
+				Settings: preset.Settings{Model: "sonnet", EffortLevel: "high"},
+			},
+			Agents: []preset.AgentFile{
+				{Name: "planner", Data: []byte(agentMD("planner", "Plan it."))},
+				{Name: "reviewer", Data: []byte(agentMD("reviewer", "Solo reviewer."))},
+				{Name: "tester", Data: []byte(agentMD("tester", "Solo tester."))},
+			},
+		},
+		{
+			Preset: preset.Preset{
+				Schema: 1, Name: "bug-hunt", Title: "Bug Hunt", Mode: preset.ModeReplace, Main: &main,
+				Agents:   []string{"debugger", "tester"},
+				Settings: preset.Settings{Model: "haiku"},
+			},
+			Agents: []preset.AgentFile{
+				{Name: "debugger", Data: []byte(agentMD("debugger", "Find it."))},
+				{Name: "tester", Data: []byte(agentMD("tester", "Hunt tester."))},
+			},
+		},
+	} {
+		if err := store.Save(b); err != nil {
+			e.t.Fatal(err)
+		}
+	}
 }

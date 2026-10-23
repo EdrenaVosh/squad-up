@@ -74,3 +74,38 @@ const (
 	RecapturePrompt = "Replace Initial with your current setup? The old snapshot is kept in backups. [y/N] "
 	Cancelled       = "Cancelled."
 )
+
+// Equip, restore and undo texts.
+const (
+	ApplyPrompt = "Apply these changes? [y/N] "
+	DriftPrompt = "You edited files of the equipped preset by hand. What now? [s]ave the edits into it, [d]iscard them, [c]ancel: "
+	DryRun      = "Dry run: nothing was changed."
+	NoLogYet    = "No operations yet."
+
+	ManualEditsHeader = "Manual edits detected in the equipped preset:"
+	ConflictsHeader   = "Cannot continue, these files are in the way:"
+	NoFileChanges     = "No file changes: only the equipped preset changes."
+)
+
+// Equipped is shown after `squad use`.
+func Equipped(preset, backup string) string {
+	return fmt.Sprintf("Equipped %q. Backup: %s.\nGo back with `squad undo`, or return to your original setup with `squad restore`.", preset, backup)
+}
+
+// Restored is shown after `squad restore`.
+func Restored(backup string) string {
+	return fmt.Sprintf("Restored your original setup (Initial). Backup: %s.\nGo back with `squad undo`.", backup)
+}
+
+// Undone is shown after `squad undo`.
+func Undone(target, backup string) string {
+	return fmt.Sprintf("Undone: back to %q. Backup of the state before the undo: %s (`squad undo` again redoes it).", target, backup)
+}
+
+// AlreadyEquipped explains a no-op.
+func AlreadyEquipped(target string) string {
+	if target == "initial" {
+		return "Already on Initial — nothing to change."
+	}
+	return fmt.Sprintf("%q is already equipped — nothing to change.", target)
+}

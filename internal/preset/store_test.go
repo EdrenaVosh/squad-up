@@ -161,3 +161,38 @@ func TestNamesOfMissingDirIsEmpty(t *testing.T) {
 		t.Fatalf("Names() = %v, %v", got, err)
 	}
 }
+
+func TestReplaceOverwritesAnExistingPresetAtomically(t *testing.T) {
+	store := preset.Store{Dir: t.TempDir()}
+	if err := store.Save(bundle()); err != nil {
+		t.Fatal(err)
+	}
+	updated := bundle()
+	updated.Preset.Title = "Changed"
+	updated.Preset.Agents = []string{"planner"}
+	updated.Agents = updated.Agents[:1]
+
+	if err := store.Replace(updated); err != nil {
+		t.Fatalf("Replace() error = %v", err)
+	}
+
+	got, err := store.Load("solo-indie")
+	if err != nil || got.Preset.Title != "Changed" || len(got.Agents) != 1 {
+		t.Fatalf("Load() = %+v, %v", got, err)
+	}
+	if _, err := os.Stat(filepath.Join(store.Dir, "solo-indie", "agents", "tester.md")); !os.IsNotExist(err) {
+		t.Error("agent files of the old version must be gone")
+	}
+	entries, _ := os.ReadDir(store.Dir)
+	if len(entries) != 1 {
+		t.Errorf("Replace() left temp folders: %v", entries)
+	}
+}
+
+func TestReplaceFailsForAMissingPreset(t *testing.T) {
+	err := preset.Store{Dir: t.TempDir()}.Replace(bundle())
+
+	if !errors.Is(err, preset.ErrNotFound) {
+		t.Fatalf("Replace() error = %v, want ErrNotFound", err)
+	}
+}

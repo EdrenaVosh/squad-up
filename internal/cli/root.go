@@ -97,6 +97,7 @@ type app struct {
 	yes       bool
 	noColor   bool
 	paths     paths.Paths
+	input     *bufio.Reader // shared by every prompt so that buffered answers are not lost
 }
 
 func (a *app) now() time.Time {
@@ -125,7 +126,8 @@ func (a *app) newRoot() *cobra.Command {
 	flags.BoolVarP(&a.yes, "yes", "y", false, "skip confirmations")
 	flags.BoolVar(&a.noColor, "no-color", false, "disable colors (NO_COLOR is also respected)")
 
-	root.AddCommand(newDoctor(), a.newList(), a.newStatus(), a.newCapture(), a.newInitial())
+	root.AddCommand(newDoctor(), a.newList(), a.newStatus(), a.newCapture(), a.newInitial(),
+		a.newUse(), a.newRestore(), a.newUndo(), a.newLog())
 	return root
 }
 
@@ -171,11 +173,24 @@ func skipsPrepare(cmd *cobra.Command) bool {
 	return false
 }
 
-// confirm asks a yes/no question on stderr and reads the answer from stdin.
-func (a *app) confirm(prompt string) (bool, error) {
+// ask prints a prompt on stderr and returns the line typed in answer. At the
+// end of input it returns what was read so far, without an error.
+func (a *app) ask(prompt string) (string, error) {
 	printf(a.io.Err, "%s", prompt)
-	line, err := bufio.NewReader(a.io.In).ReadString('\n')
+	if a.input == nil {
+		a.input = bufio.NewReader(a.io.In)
+	}
+	line, err := a.input.ReadString('\n')
 	if err != nil && !errors.Is(err, io.EOF) {
+		return "", err
+	}
+	return line, nil
+}
+
+// confirm asks a yes/no question; only "y" or "yes" means yes.
+func (a *app) confirm(prompt string) (bool, error) {
+	line, err := a.ask(prompt)
+	if err != nil {
 		return false, err
 	}
 	answer := strings.ToLower(strings.TrimSpace(line))

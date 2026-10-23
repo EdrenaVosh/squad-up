@@ -1,0 +1,50 @@
+# The first command captures the user's setup as Initial, prints what it found
+# to stderr, and changes nothing in the Claude config.
+exec squad list
+stderr 'We found your existing Claude Code setup'
+stderr 'Agents       3   docs-writer · reviewer · tester'
+stderr 'Model        opus'
+stderr 'Permissions  acceptEdits · 1 allow · 0 ask · 1 deny'
+stderr 'Nothing was changed'
+stdout 'No presets yet'
+stdout '● initial'
+exists squadup/presets/initial/agents/team/tester.md
+cmp squadup/presets/initial/agents/reviewer.md claude/agents/reviewer.md
+cmp squadup/presets/initial/settings.orig.json claude/settings.json
+
+# The summary is shown only once.
+exec squad list
+! stderr .
+
+# JSON stays clean.
+exec squad list --json
+stdout '"name": "initial"'
+
+-- claude/agents/reviewer.md --
+---
+name: reviewer
+description: Reviews diffs. Use after any code change.
+---
+Be strict.
+-- claude/agents/team/tester.md --
+---
+name: tester
+description: Writes tests. Use when coverage is missing.
+---
+Test it.
+-- claude/agents/docs-writer.md --
+---
+name: docs-writer
+description: Updates docs. Use after changes.
+---
+Keep it short.
+-- claude/settings.json --
+{
+  "theme": "dark",
+  "model": "opus",
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": ["Bash(git status)"],
+    "deny": ["Read(./.env)"]
+  }
+}

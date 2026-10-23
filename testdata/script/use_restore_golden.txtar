@@ -1,0 +1,92 @@
+# Golden round trip: use A, use B, use A, restore gives back the original
+# Claude config byte for byte.
+exec squad list
+copytree claude claude.orig
+
+exec squad use solo --yes
+stdout 'Equipped "solo"'
+exists claude/agents/planner.md
+! exists claude/agents/docs-writer.md
+! exists claude/agents/team/tester.md
+exists claude/agents/notes.txt
+grep '"model": "sonnet"' claude/settings.json
+grep '"theme": "dark"' claude/settings.json
+! treeeq claude claude.orig
+
+exec squad use bug-hunt --yes
+! exists claude/agents/planner.md
+exists claude/agents/debugger.md
+grep '"agent": "debugger"' claude/settings.json
+
+exec squad use solo --yes
+exec squad restore --yes
+stdout 'Restored your original setup'
+treeeq claude claude.orig
+
+# Everything that was done is in the log.
+exec squad log
+stdout 'restore'
+stdout 'bug-hunt'
+
+-- claude/agents/reviewer.md --
+---
+name: reviewer
+description: Reviews diffs. Use after any code change.
+---
+Be strict.
+-- claude/agents/team/tester.md --
+---
+name: tester
+description: Writes tests. Use when coverage is missing.
+---
+Test it.
+-- claude/agents/docs-writer.md --
+---
+name: docs-writer
+description: Updates docs. Use after changes.
+---
+Keep it short.
+-- claude/agents/notes.txt --
+not an agent
+-- claude/settings.json --
+{
+  "theme": "dark",
+  "model": "opus",
+  "env": { "SECRET": "keep-out" }
+}
+-- squadup/presets/solo/preset.yaml --
+schema: 1
+name: solo
+title: Solo
+mode: replace
+main: null
+agents: [planner, reviewer]
+settings:
+  model: sonnet
+-- squadup/presets/solo/agents/planner.md --
+---
+name: planner
+description: Plans work. Use before any large change.
+---
+Plan it.
+-- squadup/presets/solo/agents/reviewer.md --
+---
+name: reviewer
+description: Reviews diffs. Use after any code change.
+---
+Solo reviewer.
+-- squadup/presets/bug-hunt/preset.yaml --
+schema: 1
+name: bug-hunt
+title: Bug Hunt
+mode: replace
+main: debugger
+agents: [debugger]
+settings:
+  model: haiku
+-- squadup/presets/bug-hunt/agents/debugger.md --
+---
+name: debugger
+description: Finds bugs. Use when a test fails.
+---
+Find it.

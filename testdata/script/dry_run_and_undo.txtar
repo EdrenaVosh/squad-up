@@ -1,0 +1,50 @@
+# --dry-run writes nothing; undo returns to the previous state.
+exec squad list
+copytree claude claude.orig
+
+exec squad use solo --dry-run
+stdout 'Dry run'
+stdout '\+ agents/planner.md'
+treeeq claude claude.orig
+! exists squadup/backups
+! exists squadup/log.jsonl
+
+# Without --yes and without a terminal squad refuses.
+! exec squad use solo
+stderr '--yes'
+treeeq claude claude.orig
+
+exec squad use solo --yes
+! treeeq claude claude.orig
+exec squad undo --yes
+stdout 'Undone'
+treeeq claude claude.orig
+
+# Undoing the undo brings solo back.
+exec squad undo --yes
+exists claude/agents/planner.md
+
+-- claude/agents/reviewer.md --
+---
+name: reviewer
+description: Reviews diffs. Use after any code change.
+---
+Be strict.
+-- claude/settings.json --
+{
+  "model": "opus"
+}
+-- squadup/presets/solo/preset.yaml --
+schema: 1
+name: solo
+mode: replace
+main: null
+agents: [planner]
+settings:
+  model: sonnet
+-- squadup/presets/solo/agents/planner.md --
+---
+name: planner
+description: Plans work. Use before any large change.
+---
+Plan it.

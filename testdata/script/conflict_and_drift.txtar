@@ -1,0 +1,66 @@
+# A foreign file at a target path blocks the switch until --force.
+exec squad list
+cp mine.md claude/agents/planner.md
+copytree claude claude.orig
+
+! exec squad use solo --yes
+stdout 'agents/planner.md'
+stderr '--force'
+treeeq claude claude.orig
+
+exec squad use solo --yes --force
+grep 'Plan it' claude/agents/planner.md
+
+# Manual edits of the equipped preset need an explicit decision.
+cp edited.md claude/agents/planner.md
+! exec squad use other --yes
+stdout 'Manual edits detected'
+stderr '--save-edits'
+exec squad status
+stdout 'Manual edits detected'
+
+exec squad use other --yes --save-edits
+grep 'edited by hand' squadup/presets/solo/agents/planner.md
+
+-- claude/agents/reviewer.md --
+---
+name: reviewer
+description: Reviews diffs. Use after any code change.
+---
+Be strict.
+-- mine.md --
+---
+name: planner
+description: The user's own planner. Use when planning.
+---
+Mine.
+-- edited.md --
+---
+name: planner
+description: Plans work. Use before any large change.
+---
+edited by hand
+-- squadup/presets/solo/preset.yaml --
+schema: 1
+name: solo
+mode: replace
+main: null
+agents: [planner]
+-- squadup/presets/solo/agents/planner.md --
+---
+name: planner
+description: Plans work. Use before any large change.
+---
+Plan it.
+-- squadup/presets/other/preset.yaml --
+schema: 1
+name: other
+mode: replace
+main: null
+agents: [helper]
+-- squadup/presets/other/agents/helper.md --
+---
+name: helper
+description: Helps. Use when asked.
+---
+Help.
