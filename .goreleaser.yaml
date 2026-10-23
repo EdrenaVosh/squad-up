@@ -1,0 +1,46 @@
+version: 2
+
+project_name: squadup
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: squad
+    main: ./cmd/squad
+    binary: squad
+    env:
+      - CGO_ENABLED=0
+    goos: [darwin, linux, windows]
+    goarch: [amd64, arm64]
+    ldflags:
+      - -s -w
+      - -X github.com/EdrenaVosh/squadup/internal/version.Version={{ .Version }}
+      - -X github.com/EdrenaVosh/squadup/internal/version.Commit={{ .ShortCommit }}
+      - -X github.com/EdrenaVosh/squadup/internal/version.Date={{ .Date }}
+
+archives:
+  - id: squad
+    formats: [tar.gz]
+    name_template: "squadup_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+
+checksum:
+  name_template: checksums.txt
+
+# Set explicitly so GoReleaser does not need a git remote (none exists until
+# the publish stage).
+release:
+  github:
+    owner: EdrenaVosh
+    name: squadup
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
