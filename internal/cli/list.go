@@ -6,26 +6,12 @@ import (
 	"io"
 	"slices"
 	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
 
-	"github.com/EdrenaVosh/squadup/internal/apply"
-	"github.com/EdrenaVosh/squadup/internal/initial"
-	"github.com/EdrenaVosh/squadup/internal/preset"
 	"github.com/EdrenaVosh/squadup/internal/tui"
+	"github.com/EdrenaVosh/squadup/internal/workspace"
 )
-
-type listEntry struct {
-	Name        string     `json:"name"`
-	Title       string     `json:"title,omitempty"`
-	Description string     `json:"description,omitempty"`
-	Agents      int        `json:"agents"`
-	Active      bool       `json:"active"`
-	Initial     bool       `json:"initial"`
-	CapturedAt  *time.Time `json:"capturedAt,omitempty"`
-	Error       string     `json:"error,omitempty"`
-}
 
 func (a *app) newList() *cobra.Command {
 	var asJSON bool
@@ -35,9 +21,9 @@ func (a *app) newList() *cobra.Command {
 		Short:   "List presets; the active one is marked",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			entries, err := a.listEntries()
+			entries, err := a.workspace().Entries()
 			if err != nil {
-				return err
+				return &ExitError{Code: 1, Err: err, Fix: "fix or delete the file named above; files squad wrote stay in place"}
 			}
 			if asJSON {
 				return writeJSON(a.io.Out, entries)
@@ -50,56 +36,12 @@ func (a *app) newList() *cobra.Command {
 	return cmd
 }
 
-// listEntries returns the stored presets alphabetically, then Initial.
-func (a *app) listEntries() ([]listEntry, error) {
-	state, err := apply.LoadState(a.paths)
-	if err != nil {
-		return nil, &ExitError{Code: 1, Err: err, Fix: "fix or delete the state file; files squad wrote stay in place"}
-	}
-	meta, err := initial.Load(a.paths)
-	if err != nil {
-		return nil, &ExitError{Code: 1, Err: err, Fix: "run `squad initial --recapture` once your config is in its original state"}
-	}
-	active := state.ActivePreset()
-
-	store := preset.Store{Dir: a.paths.PresetsDir()}
-	names, err := store.Names()
-	if err != nil {
-		return nil, &ExitError{Code: 1, Err: err, Fix: "check the permissions of " + a.paths.PresetsDir()}
-	}
-
-	var entries []listEntry
-	for _, name := range names {
-		if name == "initial" {
-			continue
-		}
-		e := listEntry{Name: name, Active: name == active}
-		if p, err := store.LoadPreset(name); err != nil {
-			e.Error = firstLine(err.Error())
-		} else {
-			e.Title, e.Description, e.Agents = p.Title, p.Description, len(p.Agents)
-		}
-		entries = append(entries, e)
-	}
-	captured := meta.CapturedAt
-	entries = append(entries, listEntry{
-		Name:        "initial",
-		Title:       "Initial",
-		Description: "Your original Claude Code setup",
-		Agents:      len(meta.Summary().AgentNames),
-		Active:      active == "initial",
-		Initial:     true,
-		CapturedAt:  &captured,
-	})
-	return entries, nil
-}
-
-func renderList(a *app, entries []listEntry) {
+func renderList(a *app, entries []workspace.Entry) {
 	width := 0
 	for _, e := range entries {
 		width = max(width, len(e.Name))
 	}
-	line := func(e listEntry) {
+	line := func(e workspace.Entry) {
 		marker := "○"
 		switch {
 		case e.Active:
@@ -142,9 +84,4 @@ func writeJSON(w io.Writer, v any) error {
 
 func nonEmpty(items ...string) []string {
 	return slices.DeleteFunc(items, func(s string) bool { return s == "" })
-}
-
-func firstLine(s string) string {
-	line, _, _ := strings.Cut(s, "\n")
-	return line
 }

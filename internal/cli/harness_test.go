@@ -57,6 +57,7 @@ func newEnv(t *testing.T) *env {
 	t.Setenv("CLAUDE_CONFIG_DIR", e.claudeDir)
 	t.Setenv("SQUADUP_HOME", e.home)
 	t.Setenv("ANTHROPIC_MODEL", "")
+	testutil.HideClaude(t)
 	return e
 }
 

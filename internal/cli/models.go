@@ -48,7 +48,7 @@ func (a *app) newModels() *cobra.Command {
 }
 
 func (a *app) runModels(ctx context.Context, probe, asJSON bool) error {
-	policy, notes := a.policy()
+	policy, notes := a.workspace().Policy()
 
 	var (
 		client   claude.Client

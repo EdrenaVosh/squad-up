@@ -75,11 +75,11 @@ func (a *app) newUse() *cobra.Command {
 // presetModelWarnings checks the models a preset uses against the policy and a
 // saved probe. A preset that cannot be loaded has nothing to report here.
 func (a *app) presetModelWarnings(ctx context.Context, name string) []string {
-	b, err := preset.Store{Dir: a.paths.PresetsDir()}.Load(name)
+	b, err := a.workspace().Store().Load(name)
 	if err != nil {
 		return nil
 	}
-	return a.modelWarnings(ctx, b)
+	return a.workspace().ModelWarnings(ctx, b)
 }
 
 func (a *app) newRestore() *cobra.Command {

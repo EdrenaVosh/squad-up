@@ -12,6 +12,7 @@ import (
 	"github.com/EdrenaVosh/squadup/internal/claude"
 	"github.com/EdrenaVosh/squadup/internal/models"
 	"github.com/EdrenaVosh/squadup/internal/tui"
+	"github.com/EdrenaVosh/squadup/internal/workspace"
 )
 
 const statusTimeout = 15 * time.Second
@@ -119,8 +120,11 @@ func renderStatus(a *app, st statusJSON) {
 	row := func(label, value string) { printf(a.io.Out, "%-14s %s\n", label, value) }
 
 	active := st.Active
-	if active == "initial" {
+	switch {
+	case active == "initial":
 		active += " · your original setup"
+	case !a.workspace().Store().Exists(active):
+		active += " (preset removed)"
 	}
 	row("Active preset", active)
 
@@ -164,11 +168,11 @@ func (a *app) modelsSummary(c claudeJSON) modelsJSON {
 	if err != nil || !cache.Valid(c.Version, c.authMethod, a.now()) {
 		return summary
 	}
-	policy, _ := a.policy()
+	policy, _ := a.workspace().Policy()
 	summary.Probed = true
 	at := cache.ProbedAt
 	summary.ProbedAt = &at
-	summary.Verified, summary.Unavailable = verifiedAndUnavailable(models.Evaluate(models.Catalog(), policy, cache))
+	summary.Verified, summary.Unavailable = workspace.VerifiedAndUnavailable(models.Evaluate(models.Catalog(), policy, cache))
 	return summary
 }
 

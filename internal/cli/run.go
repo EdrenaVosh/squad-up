@@ -56,7 +56,7 @@ func (a *app) runPreset(ctx context.Context, name string, extra []string, dryRun
 		return &ExitError{Code: 1, Err: err, Fix: "shorten the prompts of the preset, or equip it with `squad use " + name + "`"}
 	}
 
-	for _, w := range a.modelWarnings(ctx, bundle) {
+	for _, w := range a.workspace().ModelWarnings(ctx, bundle) {
 		printf(a.io.Err, "! %s\n", w)
 	}
 	if m := os.Getenv("ANTHROPIC_MODEL"); m != "" && resolved["model"] != "" {

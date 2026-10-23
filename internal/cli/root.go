@@ -127,7 +127,8 @@ func (a *app) newRoot() *cobra.Command {
 	flags.BoolVar(&a.noColor, "no-color", false, "disable colors (NO_COLOR is also respected)")
 
 	root.AddCommand(newDoctor(), a.newList(), a.newStatus(), a.newCapture(), a.newInitial(),
-		a.newUse(), a.newRestore(), a.newUndo(), a.newLog(), a.newRun(), a.newModels(), a.newLint())
+		a.newUse(), a.newRestore(), a.newUndo(), a.newLog(), a.newRun(), a.newModels(), a.newLint(),
+		a.newNew(), a.newClone(), a.newRename(), a.newRm(), a.newEdit())
 	return root
 }
 

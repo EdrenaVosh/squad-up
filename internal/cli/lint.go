@@ -2,13 +2,10 @@ package cli
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
 
-	"github.com/EdrenaVosh/squadup/internal/initial"
 	"github.com/EdrenaVosh/squadup/internal/lint"
 	"github.com/EdrenaVosh/squadup/internal/preset"
 )
@@ -39,7 +36,7 @@ func (a *app) newLint() *cobra.Command {
 			}
 			reports := make([]lint.Report, 0, len(targets))
 			for _, name := range targets {
-				report, err := a.lintTarget(name)
+				report, err := a.workspace().Lint(name)
 				if err != nil {
 					return &ExitError{Code: 1, Err: err, Fix: "check the permissions of " + a.paths.Home}
 				}
@@ -91,48 +88,6 @@ func (a *app) lintTargets(args []string) ([]string, error) {
 		}
 	}
 	return append(out, "initial"), nil
-}
-
-func (a *app) lintTarget(name string) (lint.Report, error) {
-	if name == "initial" {
-		return a.lintInitial()
-	}
-	store := preset.Store{Dir: a.paths.PresetsDir()}
-	p, err := store.LoadPreset(name)
-	if err != nil {
-		return lint.Report{Name: name, Findings: []lint.Finding{{
-			Level: lint.LevelError, Rule: "invalid-preset", File: "preset.yaml", Message: firstLine(err.Error()),
-			Fix: "fix preset.yaml in " + a.paths.PresetDir(name),
-		}}}, nil
-	}
-	in := lint.Input{Name: name, Preset: p}
-	for _, agent := range p.Agents {
-		if !preset.ValidName(agent) {
-			continue // reported by the preset's own validation
-		}
-		data, err := os.ReadFile(filepath.Join(a.paths.PresetDir(name), "agents", agent+".md"))
-		if err != nil {
-			continue // reported as a missing agent file
-		}
-		in.Agents = append(in.Agents, lint.Agent{File: agent + ".md", Data: data})
-	}
-	return lint.Run(in), nil
-}
-
-func (a *app) lintInitial() (lint.Report, error) {
-	meta, err := initial.Load(a.paths)
-	if err != nil {
-		return lint.Report{}, err
-	}
-	in := lint.Input{Name: "initial"}
-	for _, entry := range meta.Agents {
-		data, err := os.ReadFile(filepath.Join(a.paths.InitialDir(), "agents", filepath.FromSlash(entry.Path)))
-		if err != nil {
-			return lint.Report{}, err
-		}
-		in.Agents = append(in.Agents, lint.Agent{File: entry.Path, Data: data})
-	}
-	return lint.Run(in), nil
 }
 
 func renderLint(a *app, out lintOutput) {

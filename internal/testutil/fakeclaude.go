@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"sync"
 	"testing"
 )
@@ -44,6 +45,26 @@ func FakeClaude(t *testing.T) string {
 
 	t.Setenv("PATH", filepath.Dir(builtBin)+string(os.PathListSeparator)+os.Getenv("PATH"))
 	return builtBin
+}
+
+// HideClaude removes every PATH entry that holds a claude executable for the
+// duration of the test, so that a test never starts the developer's real
+// Claude Code. Other tools stay available.
+func HideClaude(t *testing.T) {
+	t.Helper()
+	var kept []string
+	for _, dir := range filepath.SplitList(os.Getenv("PATH")) {
+		found := false
+		for _, name := range []string{"claude", "claude.exe"} {
+			if _, err := os.Stat(filepath.Join(dir, name)); err == nil {
+				found = true
+			}
+		}
+		if !found {
+			kept = append(kept, dir)
+		}
+	}
+	t.Setenv("PATH", strings.Join(kept, string(os.PathListSeparator)))
 }
 
 // EmptyPath makes `claude` unfindable for the duration of the test.

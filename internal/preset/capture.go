@@ -61,9 +61,19 @@ func FromConfig(p paths.Paths, name string) (Bundle, []Skipped, error) {
 	if err != nil {
 		return Bundle{}, nil, err
 	}
-	settingsView, main, err := SettingsFromManaged(managed)
+	b, skipped, err := FromFiles(name, files, managed)
 	if err != nil {
 		return Bundle{}, nil, fmt.Errorf("%s: %w", p.SettingsFile(), err)
+	}
+	return b, skipped, nil
+}
+
+// FromFiles builds a preset named name from agent files and managed settings,
+// the way FromConfig does for the live setup.
+func FromFiles(name string, files []agentfile.File, managed settings.Managed) (Bundle, []Skipped, error) {
+	settingsView, main, err := SettingsFromManaged(managed)
+	if err != nil {
+		return Bundle{}, nil, err
 	}
 
 	b := Bundle{Preset: Preset{
