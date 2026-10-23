@@ -1,0 +1,24 @@
+╭─ Agent planner · preview ────────────────────────────── solo-indie · slot 1 ─╮
+│ PREVIEW — planner.md                                                         │
+│ ---                                                                          │
+│ name: planner                                                                │
+│ description: Breaks a task into steps. Use before starting any large change. │
+│ tools: Read, Grep, Glob                                                      │
+│ model: opus                                                                  │
+│ effort: high                                                                 │
+│ permissionMode: plan                                                         │
+│ color: cyan                                                                  │
+│ ---                                                                          │
+│ Plan it.                                                                     │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+ ↑↓ move  enter edit  p preview  esc back  ? help

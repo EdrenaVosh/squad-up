@@ -174,24 +174,36 @@ type Streams struct {
 	Out, Err io.Writer
 }
 
+// Prepare creates the temporary settings file and the claude command that uses
+// it. The caller starts the command and calls cleanup afterwards, which removes
+// the file and is safe to call more than once.
+func Prepare(bin string, spec Spec, extra []string) (*exec.Cmd, func(), error) {
+	file, err := os.CreateTemp("", "squad-settings-*.json")
+	if err != nil {
+		return nil, nil, fmt.Errorf("create the temporary settings file: %w", err)
+	}
+	cleanup := func() { _ = os.Remove(file.Name()) }
+	if _, err := file.Write(spec.SettingsJSON); err != nil {
+		_ = file.Close()
+		cleanup()
+		return nil, nil, fmt.Errorf("write the temporary settings file: %w", err)
+	}
+	if err := file.Close(); err != nil {
+		cleanup()
+		return nil, nil, err
+	}
+	return exec.Command(bin, spec.Args(file.Name(), extra)...), cleanup, nil
+}
+
 // Run starts claude with the preset and waits for it. Interrupt and
 // termination signals are passed on to claude. It returns claude's exit code,
 // or 128 plus the signal number when claude was killed by a signal.
 func Run(bin string, spec Spec, extra []string, s Streams) (int, error) {
-	file, err := os.CreateTemp("", "squad-settings-*.json")
+	cmd, cleanup, err := Prepare(bin, spec, extra)
 	if err != nil {
-		return 0, fmt.Errorf("create the temporary settings file: %w", err)
-	}
-	defer func() { _ = os.Remove(file.Name()) }()
-	if _, err := file.Write(spec.SettingsJSON); err != nil {
-		_ = file.Close()
-		return 0, fmt.Errorf("write the temporary settings file: %w", err)
-	}
-	if err := file.Close(); err != nil {
 		return 0, err
 	}
-
-	cmd := exec.Command(bin, spec.Args(file.Name(), extra)...)
+	defer cleanup()
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = s.In, s.Out, s.Err
 
 	signals := make(chan os.Signal, 4)

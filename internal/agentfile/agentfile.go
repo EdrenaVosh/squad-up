@@ -135,6 +135,12 @@ func (a *Agent) Set(key string, value any) {
 	a.fields = append(a.fields, yaml.MapItem{Key: key, Value: value})
 }
 
+// SetBody replaces the prompt. After it, Marshal emits the canonical form.
+func (a *Agent) SetBody(body string) {
+	a.dirty = true
+	a.body = []byte(body)
+}
+
 func (a *Agent) str(key string) string {
 	v, ok := a.Get(key)
 	if !ok || v == nil {

@@ -180,3 +180,24 @@ func TestParseReportsBrokenYAML(t *testing.T) {
 		t.Fatalf("Parse() error = %v, want a YAML error", err)
 	}
 }
+
+func TestSetBodyReplacesThePromptAndKeepsTheFrontmatter(t *testing.T) {
+	a, err := agentfile.Parse([]byte("---\ncolor: green\nname: a\ndescription: d\nzzz: 1\n---\nOld body\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	a.SetBody("New body\nwith two lines\n")
+	got, err := a.Marshal()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "---\nname: a\ndescription: d\ncolor: green\nzzz: 1\n---\nNew body\nwith two lines\n"
+	if string(got) != want {
+		t.Fatalf("Marshal() = %q, want %q", got, want)
+	}
+	if a.Prompt() != "New body\nwith two lines\n" {
+		t.Errorf("Prompt() = %q", a.Prompt())
+	}
+}

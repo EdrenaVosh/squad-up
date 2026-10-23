@@ -178,3 +178,17 @@ func TestPermissionsFromJSONRejectsNonObjects(t *testing.T) {
 		t.Fatal("PermissionsFromJSON() accepted a string")
 	}
 }
+
+func TestPermissionsSummary(t *testing.T) {
+	p := &preset.Permissions{DefaultMode: "acceptEdits", Allow: []string{"a", "b"}, Ask: []string{"c"}, Deny: []string{"d", "e", "f"}}
+	if got := p.Summary(); got != "acceptEdits · 2 allow · 1 ask · 3 deny" {
+		t.Errorf("Summary() = %q", got)
+	}
+	if got := (&preset.Permissions{}).Summary(); got != "default · 0 allow · 0 ask · 0 deny" {
+		t.Errorf("Summary() of an empty value = %q", got)
+	}
+	var none *preset.Permissions
+	if got := none.Summary(); got != "" {
+		t.Errorf("Summary() of nil = %q, want empty", got)
+	}
+}

@@ -10,10 +10,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/x/term"
 	"github.com/spf13/cobra"
 
 	"github.com/EdrenaVosh/squadup/internal/initial"
 	"github.com/EdrenaVosh/squadup/internal/paths"
+	"github.com/EdrenaVosh/squadup/internal/tui"
 	"github.com/EdrenaVosh/squadup/internal/version"
 )
 
@@ -39,23 +41,21 @@ type IO struct {
 	In          io.Reader
 	Out, Err    io.Writer
 	Interactive bool             // whether In is a person at a terminal
+	Terminal    bool             // whether Out is a terminal
 	Now         func() time.Time // defaults to time.Now
+	// TUI opens the terminal interface; nil means the real one.
+	TUI func(env tui.Env, in io.Reader, out io.Writer) error
 }
 
 // Execute runs squad on the real terminal and returns the exit code.
 func Execute(args []string, stdout, stderr io.Writer) int {
-	return Run(args, IO{In: os.Stdin, Out: stdout, Err: stderr, Interactive: isTerminal(os.Stdin)})
-}
-
-// isTerminal reports whether f is a character device other than the null
-// device. It avoids a terminal dependency until the TUI brings one.
-func isTerminal(f *os.File) bool {
-	info, err := f.Stat()
-	if err != nil || info.Mode()&os.ModeCharDevice == 0 {
-		return false
-	}
-	null, err := os.Stat(os.DevNull)
-	return err != nil || !os.SameFile(info, null)
+	return Run(args, IO{
+		In:          os.Stdin,
+		Out:         stdout,
+		Err:         stderr,
+		Interactive: term.IsTerminal(os.Stdin.Fd()),
+		Terminal:    term.IsTerminal(os.Stdout.Fd()),
+	})
 }
 
 // Run executes squad with args and returns the process exit code.
@@ -97,6 +97,7 @@ type app struct {
 	yes       bool
 	noColor   bool
 	paths     paths.Paths
+	welcome   *initial.Meta // set on the very first run
 	input     *bufio.Reader // shared by every prompt so that buffered answers are not lost
 }
 
@@ -114,7 +115,13 @@ func (a *app) newRoot() *cobra.Command {
 		Version:           version.String(),
 		SilenceUsage:      true,
 		SilenceErrors:     true,
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error { return a.prepare(cmd) },
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error { return a.prepare(cmd, args) },
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			if a.canOpenInterface() {
+				return a.openInterface(tui.Start{})
+			}
+			return cmd.Help()
+		},
 	}
 	root.SetOut(a.io.Out)
 	root.SetErr(a.io.Err)
@@ -134,7 +141,7 @@ func (a *app) newRoot() *cobra.Command {
 
 // prepare resolves the locations and, on the very first run, captures Initial
 // before any command does its work.
-func (a *app) prepare(cmd *cobra.Command) error {
+func (a *app) prepare(cmd *cobra.Command, args []string) error {
 	if skipsPrepare(cmd) {
 		return nil
 	}
@@ -158,7 +165,34 @@ func (a *app) prepare(cmd *cobra.Command) error {
 			Fix:  fmt.Sprintf("make sure %s is readable and %s is writable", p.ClaudeDir, p.Home),
 		}
 	}
+	a.welcome = meta
+	if !cmd.HasParent() && len(args) == 0 && a.canOpenInterface() {
+		return nil // the interface shows the welcome itself
+	}
 	renderWelcome(a.io.Err, meta)
+	return nil
+}
+
+// canOpenInterface is true when a person sits at a color terminal. Pipes,
+// NO_COLOR, CI and a dumb terminal get plain text instead.
+func (a *app) canOpenInterface() bool {
+	return a.io.Interactive && a.io.Terminal && !a.noColor &&
+		os.Getenv("NO_COLOR") == "" && os.Getenv("CI") == "" && os.Getenv("TERM") != "dumb"
+}
+
+// openInterface runs the terminal interface, starting on the given screen.
+func (a *app) openInterface(start tui.Start) error {
+	env := tui.Env{Paths: a.paths, Now: a.now, Start: start}
+	if start.Kind == tui.StartHome {
+		env.Welcome = a.welcome
+	}
+	run := a.io.TUI
+	if run == nil {
+		run = tui.Run
+	}
+	if err := run(env, a.io.In, a.io.Out); err != nil {
+		return &ExitError{Code: 1, Err: fmt.Errorf("the terminal interface stopped: %w", err), Fix: "use the commands instead; `squad --help` lists them"}
+	}
 	return nil
 }
 

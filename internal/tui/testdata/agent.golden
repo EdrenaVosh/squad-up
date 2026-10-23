@@ -1,0 +1,24 @@
+╭─ Agent planner ──────────────────────────────────────── solo-indie · slot 1 ─╮
+│ ▸ Name              planner                                                  │
+│   Description       Breaks a task into steps. Use before starting any large …│
+│   Model             opus                                                     │
+│   Effort            high                                                     │
+│   Permission mode   plan                                                     │
+│   Tools             Read, Grep, Glob                                         │
+│   Disallowed tools  —                                                        │
+│   Max turns         —                                                        │
+│   Color             ■ cyan                                                   │
+│   Prompt            1 line · enter opens your editor                         │
+│                                                                              │
+│ CHECKS                                                                       │
+│   ✓ nothing to fix                                                           │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+ ↑↓ move  enter edit  p preview  esc back  ? help

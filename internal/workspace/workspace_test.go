@@ -1,6 +1,7 @@
 package workspace_test
 
 import (
+	"context"
 	"errors"
 	"os"
 	"path/filepath"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/EdrenaVosh/squadup/internal/apply"
 	"github.com/EdrenaVosh/squadup/internal/initial"
+	"github.com/EdrenaVosh/squadup/internal/models"
 	"github.com/EdrenaVosh/squadup/internal/paths"
 	"github.com/EdrenaVosh/squadup/internal/preset"
 	"github.com/EdrenaVosh/squadup/internal/testutil"
@@ -323,5 +325,169 @@ func TestSaveReplacesAnExistingPreset(t *testing.T) {
 	got, _ := w.Store().Load("solo")
 	if got.Preset.Description != "Changed" {
 		t.Errorf("description = %q", got.Preset.Description)
+	}
+}
+
+// ---- card ----
+
+func richAgent(name, extra string) string {
+	return "---\nname: " + name + "\ndescription: " + name + " agent. Use when " + name + " is needed.\ntools: Read\n" + extra + "---\nBody of " + name + ".\n"
+}
+
+func TestCardDescribesAPreset(t *testing.T) {
+	w := setup(t)
+	perms := &preset.Permissions{DefaultMode: "acceptEdits", Allow: []string{"Bash(npm run *)"}, Deny: []string{"Read(./.env)"}}
+	err := w.Store().Save(preset.Bundle{
+		Preset: preset.Preset{
+			Schema: 1, Name: "rich", Title: "Rich Team", Description: "A team", Mode: preset.ModeExtend,
+			Agents:   []string{"alpha", "beta"},
+			Settings: preset.Settings{Model: "opus", EffortLevel: "high", Permissions: perms},
+		},
+		Agents: []preset.AgentFile{
+			{Name: "alpha", Data: []byte(richAgent("alpha", "model: sonnet\neffort: low\npermissionMode: plan\ncolor: cyan\n"))},
+			{Name: "beta", Data: []byte(richAgent("beta", ""))},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	c, err := w.Card("rich")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	if c.Name != "rich" || c.Title != "Rich Team" || c.Mode != preset.ModeExtend || c.Model != "opus" || c.Effort != "high" {
+		t.Errorf("card = %+v", c)
+	}
+	if c.Permissions != "acceptEdits · 1 allow · 0 ask · 1 deny" || c.Main != "" {
+		t.Errorf("permissions = %q, main = %q", c.Permissions, c.Main)
+	}
+	want := []workspace.AgentInfo{
+		{Name: "alpha", Model: "sonnet", Effort: "low", PermissionMode: "plan", Color: "cyan"},
+		{Name: "beta"},
+	}
+	if !reflect.DeepEqual(c.Agents, want) {
+		t.Errorf("agents = %+v, want %+v", c.Agents, want)
+	}
+	if c.SessionTokens == 0 {
+		t.Error("the cost estimate is missing")
+	}
+}
+
+func TestCardCountsLintFindings(t *testing.T) {
+	w := setup(t)
+	err := w.Store().Save(preset.Bundle{
+		Preset: preset.Preset{Schema: 1, Name: "messy", Mode: preset.ModeReplace, Agents: []string{"zed"}},
+		Agents: []preset.AgentFile{{Name: "zed", Data: []byte(richAgent("zed", "model: gpt-5\n"))}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	c, err := w.Card("messy")
+
+	if err != nil || c.Errors != 1 {
+		t.Fatalf("card = %+v, %v: the bad model is one error", c, err)
+	}
+}
+
+func TestCardOfInitialReadsTheSnapshot(t *testing.T) {
+	w := setup(t)
+
+	c, err := w.Card("initial")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !c.Initial || c.Model != "opus" || c.Effort != "high" || c.Main != "reviewer" || c.Permissions != "acceptEdits · 1 allow · 0 ask · 0 deny" {
+		t.Errorf("card = %+v", c)
+	}
+	names := []string{}
+	for _, a := range c.Agents {
+		names = append(names, a.Name)
+	}
+	if !reflect.DeepEqual(names, []string{"reviewer", "tester"}) {
+		t.Errorf("agents = %v: the broken one is left out", names)
+	}
+	if c.Errors != 1 {
+		t.Errorf("Errors = %d, want the unreadable agent counted", c.Errors)
+	}
+}
+
+func TestCardOfAnUnknownOrBrokenPreset(t *testing.T) {
+	w := setup(t)
+	testutil.WriteFiles(t, filepath.Join(w.Paths.PresetsDir(), "broken"), map[string]string{"preset.yaml": "schema: [oops"})
+
+	if _, err := w.Card("nope"); !errors.Is(err, preset.ErrNotFound) {
+		t.Errorf("unknown: %v", err)
+	}
+	c, err := w.Card("broken")
+	if err != nil || c.Error == "" || c.Errors == 0 {
+		t.Errorf("broken = %+v, %v: the card must say what is wrong instead of failing", c, err)
+	}
+}
+
+// ---- capture ----
+
+func TestCaptureStoresTheLiveSetupAsAPreset(t *testing.T) {
+	w := setup(t)
+	testutil.WriteFiles(t, w.Paths.ClaudeDir, map[string]string{"agents/extra.md": agentMD("extra", "Added later.")})
+
+	skipped, err := w.Capture("live")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(skipped) != 1 || skipped[0].Path != "broken.md" {
+		t.Errorf("skipped = %+v", skipped)
+	}
+	got, err := w.Store().Load("live")
+	if err != nil || !reflect.DeepEqual(got.Preset.Agents, []string{"extra", "reviewer", "tester"}) {
+		t.Fatalf("Load() = %+v, %v", got, err)
+	}
+	if _, err := w.Capture("live"); !errors.Is(err, preset.ErrExists) {
+		t.Errorf("capturing onto an existing name: %v", err)
+	}
+	if _, err := w.Capture("initial"); !errors.Is(err, workspace.ErrReservedName) {
+		t.Errorf("capturing as initial: %v", err)
+	}
+}
+
+// ---- probing models ----
+
+func TestProbeModelsStoresTheResultsInTheCache(t *testing.T) {
+	w := setup(t)
+	testutil.FakeClaude(t)
+	t.Setenv("FAKE_CLAUDE_UNAVAILABLE", "fable")
+
+	cache, err := w.ProbeModels(context.Background())
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !cache.Results["opus"].OK || cache.Results["opus"].ID != "claude-opus-5-5" || cache.Results["fable"].OK {
+		t.Errorf("results = %+v", cache.Results)
+	}
+	if cache.ClaudeVersion != "2.1.0 (Claude Code)" || cache.AuthMethod != "claude.ai" || !cache.ProbedAt.Equal(now) {
+		t.Errorf("cache = %+v", cache)
+	}
+	saved, err := models.LoadCache(w.Paths)
+	if err != nil || !reflect.DeepEqual(saved.Results, cache.Results) {
+		t.Errorf("saved = %+v, %v", saved, err)
+	}
+}
+
+func TestProbeModelsExplainsWhatIsMissing(t *testing.T) {
+	w := setup(t)
+
+	testutil.HideClaude(t)
+	if _, err := w.ProbeModels(context.Background()); !errors.Is(err, workspace.ErrNoClaude) {
+		t.Errorf("without claude: %v", err)
+	}
+	testutil.FakeClaude(t)
+	t.Setenv("FAKE_CLAUDE_LOGGED_IN", "0")
+	if _, err := w.ProbeModels(context.Background()); !errors.Is(err, workspace.ErrNotLoggedIn) {
+		t.Errorf("logged out: %v", err)
 	}
 }

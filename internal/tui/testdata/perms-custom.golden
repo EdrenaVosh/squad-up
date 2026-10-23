@@ -1,0 +1,24 @@
+╭─ Custom permissions ────────────────────────────────────────────── bug-hunt ─╮
+│ ▸ Default mode  default                                                      │
+│                                                                              │
+│ ALLOW — runs without asking                                                  │
+│   + add rule                                                                 │
+│                                                                              │
+│ ASK — always asks first                                                      │
+│   + add rule                                                                 │
+│                                                                              │
+│ DENY — never allowed                                                         │
+│   + add rule                                                                 │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+ ↑↓ move  enter edit  x delete rule  esc back

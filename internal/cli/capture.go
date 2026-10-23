@@ -6,7 +6,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/EdrenaVosh/squadup/internal/preset"
 	"github.com/EdrenaVosh/squadup/internal/tui"
 	"github.com/EdrenaVosh/squadup/internal/workspace"
 )
@@ -31,17 +30,16 @@ func (a *app) capturePreset(name string) error {
 	if store.Exists(name) {
 		return &ExitError{Code: 1, Err: fmt.Errorf("preset %q already exists", name), Fix: "choose another name"}
 	}
-	bundle, skipped, err := preset.FromConfig(a.paths, name)
+	skipped, err := a.workspace().Capture(name)
 	if err != nil {
 		return &ExitError{Code: 1, Err: err, Fix: "repair the file named above and run the command again"}
 	}
-	if err := store.Save(bundle); err != nil {
+	bundle, err := store.Load(name)
+	if err != nil {
 		return &ExitError{Code: 1, Err: err, Fix: "check the permissions of " + a.paths.PresetsDir()}
 	}
 
-	for _, s := range skipped {
-		printf(a.io.Err, "Skipped %s: %s\n", s.Path, s.Reason)
-	}
+	a.reportSkipped(skipped)
 	summary := tui.AgentCount(len(bundle.Agents))
 	if len(bundle.Agents) > 0 {
 		summary += " (" + strings.Join(bundle.Preset.Agents, " · ") + ")"

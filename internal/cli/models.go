@@ -13,6 +13,7 @@ import (
 	"github.com/EdrenaVosh/squadup/internal/claude"
 	"github.com/EdrenaVosh/squadup/internal/models"
 	"github.com/EdrenaVosh/squadup/internal/tui"
+	"github.com/EdrenaVosh/squadup/internal/workspace"
 )
 
 const (
@@ -80,26 +81,21 @@ func (a *app) runModels(ctx context.Context, probe, asJSON bool) error {
 	}
 
 	if probe {
+		printf(a.io.Err, "Probing %s with one tiny request each…\n", strings.Join(models.ProbeAliases, ", "))
+		probed, err := a.workspace().ProbeModels(ctx)
 		switch {
-		case !found:
+		case errors.Is(err, workspace.ErrNoClaude):
 			return &ExitError{Code: 1, Err: errors.New("cannot probe: claude was not found"), Fix: "install Claude Code (https://code.claude.com/docs) and check it with `squad doctor`"}
-		case !haveAuth || !auth.LoggedIn:
+		case errors.Is(err, workspace.ErrNotLoggedIn):
 			return &ExitError{
 				Code: 1,
 				Err:  errors.New("cannot probe: claude is not logged in"),
 				Fix:  "run `claude auth login` (login is stored per config directory, so a custom CLAUDE_CONFIG_DIR needs its own login)",
 			}
+		case err != nil:
+			return &ExitError{Code: 1, Err: err, Fix: "run `squad doctor` to check claude"}
 		}
-		printf(a.io.Err, "Probing %s with one tiny request each…\n", strings.Join(models.ProbeAliases, ", "))
-		cache = &models.Cache{
-			ClaudeVersion: version,
-			AuthMethod:    auth.AuthMethod,
-			ProbedAt:      a.now().UTC(),
-			Results:       models.Probe(ctx, client, models.ProbeAliases, probeTimeout),
-		}
-		if err := models.SaveCache(a.paths, cache); err != nil {
-			return &ExitError{Code: 1, Err: fmt.Errorf("save the probe: %w", err), Fix: "check the permissions of " + a.paths.CacheDir()}
-		}
+		cache = probed
 	}
 
 	results := models.Evaluate(models.Catalog(), policy, cache)

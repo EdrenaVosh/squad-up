@@ -32,6 +32,10 @@ var (
 	ErrReservedName = errors.New(`"initial" is reserved for your original setup`)
 	// ErrProtected means Initial cannot be changed or removed.
 	ErrProtected = errors.New("initial is your original setup and cannot be renamed or removed")
+	// ErrNoClaude means the claude binary could not be found.
+	ErrNoClaude = errors.New("claude was not found")
+	// ErrNotLoggedIn means claude is installed but not signed in.
+	ErrNotLoggedIn = errors.New("claude is not logged in")
 	// ErrEquipped means the preset is equipped and removing it needs force.
 	ErrEquipped = errors.New("the preset is equipped right now")
 )
@@ -391,4 +395,55 @@ func VerifiedAndUnavailable(results []models.Result) (verified, unavailable []st
 func firstLine(s string) string {
 	line, _, _ := strings.Cut(s, "\n")
 	return line
+}
+
+// Capture stores the live Claude Code setup as a new preset. Agent files that
+// cannot be part of a preset are returned in skipped.
+func (w Workspace) Capture(name string) (skipped []preset.Skipped, err error) {
+	if err := CheckName(name); err != nil {
+		return nil, err
+	}
+	err = w.locked(func() error {
+		var b preset.Bundle
+		b, skipped, err = preset.FromConfig(w.Paths, name)
+		if err != nil {
+			return err
+		}
+		return w.Store().Save(b)
+	})
+	return skipped, err
+}
+
+// probeTimeout bounds each request of a probe.
+const probeTimeout = 30 * time.Second
+
+// ProbeModels sends one tiny request per model alias, stores the answers in
+// the cache and returns them. It needs claude to be installed and signed in.
+func (w Workspace) ProbeModels(ctx context.Context) (*models.Cache, error) {
+	bin, err := claude.Find()
+	if err != nil {
+		return nil, ErrNoClaude
+	}
+	client := claude.Client{Bin: bin}
+	version, err := client.Version(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("ask claude for its version: %w", err)
+	}
+	auth, err := client.Auth(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("ask claude who is signed in: %w", err)
+	}
+	if !auth.LoggedIn {
+		return nil, ErrNotLoggedIn
+	}
+	cache := &models.Cache{
+		ClaudeVersion: version,
+		AuthMethod:    auth.AuthMethod,
+		ProbedAt:      w.now().UTC(),
+		Results:       models.Probe(ctx, client, models.ProbeAliases, probeTimeout),
+	}
+	if err := models.SaveCache(w.Paths, cache); err != nil {
+		return nil, fmt.Errorf("save the probe: %w", err)
+	}
+	return cache, nil
 }

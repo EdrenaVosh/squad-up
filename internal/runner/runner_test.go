@@ -254,3 +254,29 @@ func TestRunReportsAClaudeThatCannotStart(t *testing.T) {
 		t.Fatalf("Run() error = %v", err)
 	}
 }
+
+func TestPrepareBuildsTheCommandAndTheTemporarySettingsFile(t *testing.T) {
+	spec, err := runner.Build(bundle(nil), map[string]string{"model": `"sonnet"`})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cmd, cleanup, err := runner.Prepare("/usr/bin/claude", spec, []string{"--model", "opus"})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cmd.Path != "/usr/bin/claude" || cmd.Args[1] != "--agents" || cmd.Args[len(cmd.Args)-1] != "opus" {
+		t.Errorf("Args = %q", cmd.Args)
+	}
+	settingsPath := cmd.Args[4]
+	data, err := os.ReadFile(settingsPath)
+	if err != nil || !strings.Contains(string(data), `"model": "sonnet"`) {
+		t.Fatalf("settings file %s = %q, %v", settingsPath, data, err)
+	}
+	cleanup()
+	if _, err := os.Stat(settingsPath); !os.IsNotExist(err) {
+		t.Errorf("cleanup left %s behind (%v)", settingsPath, err)
+	}
+	cleanup() // safe to call again
+}

@@ -1,0 +1,24 @@
+                                                                                
+                                                                                
+        ╭─ Help ───────────────────────────────────────────────────────╮        
+        │                                                              │        
+        │ Main screen                                                  │        
+        │  ↑↓ j k   select a preset                                    │        
+        │  enter    open it: agents, model, permissions                │        
+        │  e        equip it (write it into ~/.claude, after a previe… │        
+        │  t        try it: start claude with it, writing nothing      │        
+        │  n c r d  new, clone, rename, delete                         │        
+        │  /        filter the list                                    │        
+        │                                                              │        
+        │ Editing                                                      │        
+        │  esc      go back; changes are saved as you make them        │        
+        │  ctrl+c   quit from anywhere                                 │        
+        │                                                              │        
+        │ Your original setup (◇ initial) is never changed.            │        
+        │ `squad restore` brings it back at any time.                  │        
+        │                                                              │        
+        ╰──────────────────────────────────────────────────────────────╯        
+                                                                                
+                                                                                
+                                                                                
+ any key close

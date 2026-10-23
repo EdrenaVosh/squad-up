@@ -1,0 +1,24 @@
+╭─ squadup ──────────────────────────────────────────── claude 2.1.309 · opus ─╮
+│ PRESETS              │ Bug Hunt                                              │
+│                      │ A debugger and a tester for tracking down a failure   │
+│ ▸ ○ bug-hunt         │                                                       │
+│   ○ refactor-day     │ SLOT 1  ■ debugger     inherit  —       default       │
+│   ○ solo-indie       │ SLOT 2  ■ tester       inherit  —       default       │
+│                      │                                                       │
+│                      │ Default model  haiku         Main agent  debugger     │
+│                      │ Permissions    —             Mode        replace      │
+│                      │ Lint           ✓ clean · ~34 tokens/session           │
+│                      │                                                       │
+│                      │                                                       │
+│                      │                                                       │
+│                      │                                                       │
+│                      │                                                       │
+│                      │                                                       │
+│                      │                                                       │
+│                      │                                                       │
+│                      │                                                       │
+│                      │                                                       │
+│ ──────────────────── │                                                       │
+│   ● initial          │                                                       │
+╰──────────────────────┴───────────────────────────────────────────────────────╯
+ ↑↓ select  enter open  e equip  t try  n new  c clone  ? help  q quit

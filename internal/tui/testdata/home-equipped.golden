@@ -1,0 +1,24 @@
+╭─ squadup ────────────────────────────────────────── claude 2.1.309 · sonnet ─╮
+│ PRESETS              │ Solo Indie                                 ● EQUIPPED │
+│                      │ Planner, reviewer and tester for one-person apps      │
+│   ○ bug-hunt         │                                                       │
+│   ○ refactor-day     │ SLOT 1  ■ planner      opus     high    plan          │
+│ ▸ ● solo-indie       │ SLOT 2  ■ reviewer     sonnet   high    default       │
+│                      │ SLOT 3  ■ tester       haiku    medium  acceptEdits   │
+│                      │                                                       │
+│                      │ Default model  sonnet        Main agent  —            │
+│                      │ Permissions    acceptEdits   Mode        replace      │
+│                      │ Lint           ✓ clean · ~53 tokens/session           │
+│                      │                                                       │
+│                      │                                                       │
+│                      │                                                       │
+│                      │                                                       │
+│                      │                                                       │
+│                      │                                                       │
+│                      │                                                       │
+│                      │                                                       │
+│                      │                                                       │
+│ ──────────────────── │                                                       │
+│   ◇ initial          │                                                       │
+╰──────────────────────┴───────────────────────────────────────────────────────╯
+ ↑↓ select  enter open  e equip  t try  n new  c clone  ? help  q quit

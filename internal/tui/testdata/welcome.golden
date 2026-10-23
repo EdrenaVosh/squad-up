@@ -1,0 +1,24 @@
+╭─ Welcome to squadup ─────────────────────────────────────────────────────────╮
+│                                                                              │
+│ We found your existing Claude Code setup                                     │
+│ and saved it as ◇ Initial — your safe point.                                 │
+│                                                                              │
+│   Agents       3   docs-writer · reviewer · tester                           │
+│   Model        opus                                                          │
+│   Effort       high                                                          │
+│   Permissions  acceptEdits · 1 allow · 0 ask · 0 deny                        │
+│   Main agent   —                                                             │
+│                                                                              │
+│ Nothing was changed. Run `squad restore` any time to get this back.          │
+│                                                                              │
+│ ▸ Start from my current setup     an editable copy of what you have now      │
+│   Create a first preset           blank, or from your current setup          │
+│   Check which models I can use    four tiny requests to Claude               │
+│   Go to the main screen           look around first                          │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+ ↑↓ choose  enter go  esc skip

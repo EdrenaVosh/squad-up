@@ -1,0 +1,24 @@
+╭─ Equip solo-indie ───────────────────────────────────────────────── replace ─╮
+│                                                                              │
+│ AGENTS  ~/.claude/agents                                                     │
+│   − docs-writer.md                                                           │
+│   + planner.md                                                               │
+│   ~ reviewer.md                                                              │
+│   − team/tester.md                                                           │
+│   + tester.md                                                                │
+│                                                                              │
+│ SETTINGS  settings.json                                                      │
+│   ~ model: "opus" → "sonnet"                                                 │
+│   ~ permissions                                                              │
+│       acceptEdits · 1 allow · 0 ask · 0 deny                                 │
+│     → acceptEdits · 0 allow · 1 ask · 0 deny                                 │
+│                                                                              │
+│ • Model and main-agent changes apply to new sessions only.                   │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                            [ Equip ]   [ Cancel ]                            │
+╰──────────────────────────────────────────────────────────────────────────────╯
+ enter choose  ←→ switch  y equip  esc cancel  n cancel

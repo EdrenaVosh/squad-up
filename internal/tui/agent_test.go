@@ -1,0 +1,326 @@
+package tui_test
+
+import (
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/EdrenaVosh/squadup/internal/agentfile"
+	"github.com/EdrenaVosh/squadup/internal/testutil"
+)
+
+// openAgent opens the n-th agent (0-based) of a preset in its editor.
+func (h *harness) openAgent(preset string, n int) {
+	h.t.Helper()
+	h.open(preset)
+	for i := 0; i < n; i++ {
+		h.press("down")
+	}
+	h.press("enter")
+}
+
+// agent reads an agent of a stored preset.
+func (h *harness) agent(preset, name string) *agentfile.Agent {
+	h.t.Helper()
+	data, err := os.ReadFile(filepath.Join(h.paths.PresetDir(preset), "agents", name+".md"))
+	if err != nil {
+		h.t.Fatal(err)
+	}
+	a, err := agentfile.Parse(data)
+	if err != nil {
+		h.t.Fatalf("%s.md no longer parses: %v\n%s", name, err, data)
+	}
+	return a
+}
+
+// field moves the cursor of the agent editor to the n-th field (0-based).
+func (h *harness) field(n int) {
+	h.t.Helper()
+	for i := 0; i < 10; i++ {
+		h.press("up")
+	}
+	for i := 0; i < n; i++ {
+		h.press("down")
+	}
+}
+
+const (
+	fName = iota
+	fDescription
+	fModel
+	fEffort
+	fPermission
+	fTools
+	fDisallowed
+	fMaxTurns
+	fColor
+	fPrompt
+)
+
+func TestAgentEditorAt80x24(t *testing.T) {
+	h := newHarness(t)
+
+	h.openAgent("solo-indie", 0)
+
+	h.contains("Agent planner", "Name", "planner", "Model", "opus", "Permission mode", "plan", "CHECKS", "nothing to fix")
+	h.golden("agent")
+}
+
+func TestAgentEditorShowsThePreviewBesideTheFormOnWideTerminals(t *testing.T) {
+	h := newHarness(t)
+	h.resize(120, 30)
+
+	h.openAgent("solo-indie", 0)
+
+	h.contains("PREVIEW — planner.md", "name: planner", "model: opus", "Plan it.")
+	h.fits(120, 30)
+}
+
+func TestPreviewTogglesOnNarrowTerminals(t *testing.T) {
+	h := newHarness(t)
+	h.openAgent("solo-indie", 0)
+	h.lacks("PREVIEW")
+
+	h.press("p")
+
+	h.contains("PREVIEW — planner.md", "---", "name: planner", "description: Breaks a task")
+	h.golden("agent-preview")
+	h.press("p")
+	h.lacks("PREVIEW")
+}
+
+func TestRenamingAnAgentUpdatesThePresetAndTheMainAgent(t *testing.T) {
+	h := newHarness(t)
+	h.openAgent("bug-hunt", 0) // debugger, the main agent
+
+	h.press("enter")
+	h.contains("Agent name", "debugger")
+	h.clear(len("debugger"))
+	h.typeText("detective")
+	h.press("enter")
+
+	b := h.stored("bug-hunt")
+	if b.Preset.Agents[0] != "detective" || b.Agents[0].Name != "detective" || b.Preset.Main == nil || *b.Preset.Main != "detective" {
+		t.Fatalf("agents = %v, main = %v", b.Preset.Agents, b.Preset.Main)
+	}
+	if h.agent("bug-hunt", "detective").Name() != "detective" {
+		t.Error("the name inside the file was not changed")
+	}
+	h.contains("Agent detective")
+}
+
+func TestAgentNamesAreCheckedInTheEditor(t *testing.T) {
+	h := newHarness(t)
+	h.openAgent("bug-hunt", 0)
+
+	h.press("enter")
+	h.clear(8)
+	h.typeText("tester")
+	h.press("enter")
+	h.contains("already has an agent named")
+	h.clear(6)
+	h.typeText("Bad Name")
+	h.press("enter")
+	h.contains("agent names use lowercase")
+}
+
+func TestEditingTheDescriptionInATextArea(t *testing.T) {
+	h := newHarness(t)
+	h.openAgent("solo-indie", 0)
+	h.field(fDescription)
+
+	h.press("enter")
+	h.contains("Description — what it does")
+	h.typeText(" Call it first.")
+	h.press("ctrl+s")
+
+	if got := h.agent("solo-indie", "planner").Description(); !strings.HasSuffix(got, "Call it first.") {
+		t.Fatalf("description = %q", got)
+	}
+	h.contains("Agent planner")
+}
+
+func TestChoosingTheModelOfAnAgent(t *testing.T) {
+	h := newHarness(t)
+	h.openAgent("solo-indie", 1) // reviewer: sonnet
+	h.field(fModel)
+
+	h.press("enter")
+	h.contains("Model", "inherit", "fable", "haiku", "Other model ID…")
+	h.press("down", "enter") // sonnet -> haiku (inherit, fable, opus, sonnet, haiku)
+
+	if v, _ := h.agent("solo-indie", "reviewer").Get("model"); v != "haiku" {
+		t.Fatalf("model = %v, want haiku", v)
+	}
+
+	h.field(fModel)
+	h.press("enter", "up", "up", "up", "up", "enter") // back to inherit
+	if _, ok := h.agent("solo-indie", "reviewer").Get("model"); ok {
+		t.Error("inherit must remove the field")
+	}
+}
+
+func TestAnAgentCanUseAFullModelID(t *testing.T) {
+	h := newHarness(t)
+	h.openAgent("solo-indie", 1)
+	h.field(fModel)
+
+	h.press("enter", "up", "up", "up", "up", "up")
+	h.press("enter") // wraps? stays on the first entry: inherit
+	h.field(fModel)
+	h.press("enter")
+	for i := 0; i < 8; i++ {
+		h.press("down")
+	}
+	h.press("enter")
+	h.contains("Model ID")
+	h.typeText("not a model")
+	h.press("enter")
+	h.contains("does not look like a model ID")
+	h.clear(11)
+	h.typeText("claude-sonnet-4-5")
+	h.press("enter")
+
+	if v, _ := h.agent("solo-indie", "reviewer").Get("model"); v != "claude-sonnet-4-5" {
+		t.Fatalf("model = %v", v)
+	}
+}
+
+func TestEffortAndPermissionModeAreChosenFromLists(t *testing.T) {
+	h := newHarness(t)
+	h.openAgent("solo-indie", 1)
+
+	h.field(fEffort)
+	h.press("enter", "down", "enter") // high -> xhigh? list: Not set, low, medium, high, xhigh, max
+	if v, _ := h.agent("solo-indie", "reviewer").Get("effort"); v != "xhigh" {
+		t.Errorf("effort = %v, want xhigh", v)
+	}
+
+	h.field(fPermission)
+	h.press("enter")
+	h.contains("Permission mode", "bypassPermissions", "asks for nothing")
+	h.press("down", "enter") // default -> acceptEdits
+	if v, _ := h.agent("solo-indie", "reviewer").Get("permissionMode"); v != "acceptEdits" {
+		t.Errorf("permissionMode = %v", v)
+	}
+}
+
+func TestToolsAreChosenWithCheckboxes(t *testing.T) {
+	h := newHarness(t)
+	h.openAgent("solo-indie", 1) // tools: Read, Grep
+
+	h.field(fTools)
+	h.press("enter")
+	h.contains("Tools", "[x] Read", "[ ] Write", "[x] Grep")
+	h.golden("agent-tools")
+	h.press("space")                          // Read off
+	h.press("down", "space")                  // Write on
+	h.press("down", "down", "space", "enter") // Edit, Bash on
+
+	if v, _ := h.agent("solo-indie", "reviewer").Get("tools"); v != "Write, Bash, Grep" {
+		t.Fatalf("tools = %v", v)
+	}
+}
+
+func TestToolsThatAreNotBuiltInStayChecked(t *testing.T) {
+	h := newHarness(t)
+	testutil.WriteFiles(t, h.paths.PresetDir("solo-indie"), map[string]string{
+		"agents/reviewer.md": agentFile("reviewer", "Reviews diffs for bugs. Use after any code change, before commit.", "tools: Read, mcp__github__get_file_contents\n", "Review it."),
+	})
+	h.openAgent("solo-indie", 1)
+
+	h.field(fTools)
+	h.press("enter")
+
+	h.contains("[x] mcp__github__get_file_contents")
+	h.press("enter")
+	if v, _ := h.agent("solo-indie", "reviewer").Get("tools"); !strings.Contains(v.(string), "mcp__github__get_file_contents") {
+		t.Errorf("the MCP tool was lost: %v", v)
+	}
+}
+
+func TestDisallowedToolsAndColor(t *testing.T) {
+	h := newHarness(t)
+	h.openAgent("solo-indie", 1)
+
+	h.field(fDisallowed)
+	h.press("enter", "down", "down", "down", "space", "enter") // Bash
+	if v, _ := h.agent("solo-indie", "reviewer").Get("disallowedTools"); v != "Bash" {
+		t.Errorf("disallowedTools = %v", v)
+	}
+
+	h.field(fColor)
+	h.press("enter")
+	h.contains("Color", "red", "cyan")
+	h.press("down", "down", "down", "enter") // green -> ... Not set, red, blue, green, yellow: from green(3) down 3 = pink?
+	if v, ok := h.agent("solo-indie", "reviewer").Get("color"); !ok || v == "green" {
+		t.Errorf("color = %v: it should have changed", v)
+	}
+}
+
+func TestMaxTurnsMustBeAPositiveNumber(t *testing.T) {
+	h := newHarness(t)
+	h.openAgent("solo-indie", 0)
+	h.field(fMaxTurns)
+
+	h.press("enter")
+	h.typeText("abc")
+	h.press("enter")
+	h.contains("whole number of 1 or more")
+	h.clear(3)
+	h.typeText("12")
+	h.press("enter")
+
+	if v, _ := h.agent("solo-indie", "planner").Get("maxTurns"); v != uint64(12) && v != int64(12) {
+		t.Fatalf("maxTurns = %#v", v)
+	}
+	h.field(fMaxTurns)
+	h.press("enter")
+	h.clear(2)
+	h.press("enter")
+	if _, ok := h.agent("solo-indie", "planner").Get("maxTurns"); ok {
+		t.Error("an empty value must remove the field")
+	}
+}
+
+func TestChangesKeepUnknownFieldsAndOrderTheFileCanonically(t *testing.T) {
+	h := newHarness(t)
+	testutil.WriteFiles(t, h.paths.PresetDir("solo-indie"), map[string]string{
+		"agents/planner.md": "---\ncolor: cyan\nname: planner\ndescription: Breaks a task into steps. Use before starting any large change.\nmy_custom: keep me\n---\nPlan it.\n",
+	})
+	h.openAgent("solo-indie", 0)
+
+	h.field(fModel)
+	h.press("enter", "down", "enter") // inherit -> fable
+
+	data, _ := os.ReadFile(filepath.Join(h.paths.PresetDir("solo-indie"), "agents", "planner.md"))
+	want := "---\nname: planner\ndescription: Breaks a task into steps. Use before starting any large change.\nmodel: fable\ncolor: cyan\nmy_custom: keep me\n---\nPlan it.\n"
+	if string(data) != want {
+		t.Fatalf("planner.md = %q\nwant %q", data, want)
+	}
+}
+
+func TestTheEditorShowsLintHintsForTheAgent(t *testing.T) {
+	h := newHarness(t)
+	testutil.WriteFiles(t, h.paths.PresetDir("solo-indie"), map[string]string{
+		"agents/planner.md": agentFile("planner", "Plans.", "tools: Read\nbogus_field: 1\n", "Plan it."),
+	})
+
+	h.openAgent("solo-indie", 0)
+
+	h.contains("CHECKS", "shorter than 40 characters", `unknown field "bogus_field"`)
+	h.fits(80, 24)
+}
+
+func TestAnUnreadableAgentFileExplainsHowToFixIt(t *testing.T) {
+	h := newHarness(t)
+	testutil.WriteFiles(t, h.paths.PresetDir("solo-indie"), map[string]string{"agents/planner.md": "no frontmatter"})
+
+	h.openAgent("solo-indie", 0)
+
+	h.contains("✗", "squad edit solo-indie planner --raw")
+	h.press("down", "enter")
+	h.press("esc")
+	h.contains("Solo Indie")
+}

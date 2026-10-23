@@ -69,6 +69,18 @@ type Permissions struct {
 	Extra                 map[string]any `yaml:"extra,omitempty"`
 }
 
+// Summary renders "acceptEdits · 4 allow · 1 ask · 2 deny", or "" for nil.
+func (p *Permissions) Summary() string {
+	if p == nil {
+		return ""
+	}
+	mode := p.DefaultMode
+	if mode == "" {
+		mode = "default"
+	}
+	return fmt.Sprintf("%s · %d allow · %d ask · %d deny", mode, len(p.Allow), len(p.Ask), len(p.Deny))
+}
+
 // Marshal renders preset.yaml.
 func Marshal(p Preset) ([]byte, error) {
 	return yaml.Marshal(p)

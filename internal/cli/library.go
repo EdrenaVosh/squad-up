@@ -4,14 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"runtime"
-	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/EdrenaVosh/squadup/internal/apply"
+	"github.com/EdrenaVosh/squadup/internal/editor"
 	"github.com/EdrenaVosh/squadup/internal/fsx"
 	"github.com/EdrenaVosh/squadup/internal/lint"
 	"github.com/EdrenaVosh/squadup/internal/preset"
@@ -50,6 +48,9 @@ func (a *app) newNew() *cobra.Command {
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(_ *cobra.Command, args []string) error {
 			if len(args) == 0 {
+				if a.canOpenInterface() {
+					return a.openInterface(tui.Start{Kind: tui.StartNew})
+				}
 				return &ExitError{Code: 1, Err: errors.New("no preset name given"), Fix: "use `squad new <name>`"}
 			}
 			name := args[0]
@@ -261,32 +262,29 @@ func fileExists(path string) bool {
 	return err == nil && !info.IsDir()
 }
 
-// editInterface opens the editor of the terminal interface.
+// editInterface opens the editor of the terminal interface, or explains how
+// to edit without one.
 func (a *app) editInterface(preset string, agent []string) error {
-	return &ExitError{
-		Code: 1,
-		Err:  errors.New("editing needs a terminal"),
-		Fix:  "run it in a terminal, or use --raw to open the file in $EDITOR",
+	if !a.canOpenInterface() {
+		return &ExitError{
+			Code: 1,
+			Err:  errors.New("editing needs a terminal"),
+			Fix:  "run it in a terminal, or use --raw to open the file in $EDITOR",
+		}
 	}
+	start := tui.Start{Kind: tui.StartEdit, Preset: preset}
+	if len(agent) > 0 {
+		start.Agent = agent[0]
+	}
+	return a.openInterface(start)
 }
 
 // runEditor opens a file in the user's editor and waits.
 func (a *app) runEditor(path string) error {
-	spec := os.Getenv("VISUAL")
-	if spec == "" {
-		spec = os.Getenv("EDITOR")
-	}
-	if spec == "" {
-		spec = "vi"
-		if runtime.GOOS == "windows" {
-			spec = "notepad"
-		}
-	}
-	fields := strings.Fields(spec)
-	cmd := exec.Command(fields[0], append(fields[1:], path)...)
+	cmd := editor.Command(path)
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = a.io.In, a.io.Out, a.io.Err
 	if err := cmd.Run(); err != nil {
-		return &ExitError{Code: 1, Err: fmt.Errorf("the editor %q failed: %w", fields[0], err), Fix: "set $EDITOR to an editor that works in this terminal"}
+		return &ExitError{Code: 1, Err: fmt.Errorf("the editor %q failed: %w", cmd.Args[0], err), Fix: "set $EDITOR to an editor that works in this terminal"}
 	}
 	return nil
 }
