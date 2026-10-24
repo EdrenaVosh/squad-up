@@ -33,8 +33,13 @@ var acceptedKeys = []string{
 // main agent has its own flag.
 var settingsKeys = []string{"model", "effortLevel", "permissions"}
 
+// EnvPreset names the environment variable that tells claude (and so its
+// status line command) which preset `squad run` started it with.
+const EnvPreset = "SQUADUP_RUN_PRESET"
+
 // Spec is everything claude is started with.
 type Spec struct {
+	Preset       string // name of the preset, passed on in EnvPreset
 	AgentsJSON   string // value of --agents; empty when the preset has no agents
 	SettingsJSON []byte // content of the file given to --settings
 	Main         string // value of --agent; empty for none
@@ -53,7 +58,7 @@ func maxArgBytes() int {
 // Build turns a preset into claude's arguments. resolved holds the managed
 // settings the preset stands for (see apply.Engine.Resolve).
 func Build(b preset.Bundle, resolved map[string]string) (Spec, error) {
-	var spec Spec
+	spec := Spec{Preset: b.Preset.Name}
 
 	agents := map[string]map[string]any{}
 	for _, file := range b.Agents {
@@ -192,7 +197,11 @@ func Prepare(bin string, spec Spec, extra []string) (*exec.Cmd, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	return exec.Command(bin, spec.Args(file.Name(), extra)...), cleanup, nil
+	cmd := exec.Command(bin, spec.Args(file.Name(), extra)...)
+	if spec.Preset != "" {
+		cmd.Env = append(os.Environ(), EnvPreset+"="+spec.Preset)
+	}
+	return cmd, cleanup, nil
 }
 
 // Run starts claude with the preset and waits for it. Interrupt and

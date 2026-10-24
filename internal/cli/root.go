@@ -137,7 +137,7 @@ func (a *app) newRoot() *cobra.Command {
 
 	root.AddCommand(newDoctor(), a.newList(), a.newStatus(), a.newCapture(), a.newInitial(),
 		a.newUse(), a.newRestore(), a.newUndo(), a.newLog(), a.newRun(), a.newModels(), a.newLint(),
-		a.newNew(), a.newClone(), a.newRename(), a.newRm(), a.newEdit(), a.newExport(), a.newImport(), a.newTemplates(), a.newCard(), a.newPin())
+		a.newNew(), a.newClone(), a.newRename(), a.newRm(), a.newEdit(), a.newExport(), a.newImport(), a.newTemplates(), a.newCard(), a.newPin(), a.newStatusline())
 	return root
 }
 
@@ -152,6 +152,9 @@ func (a *app) prepare(cmd *cobra.Command, args []string) error {
 		return &ExitError{Code: 1, Err: err, Fix: "pass --claude-dir and --home explicitly"}
 	}
 	a.paths = p
+	if isStatuslineLine(cmd) {
+		return nil // run by Claude Code on every redraw: no first-run capture, no welcome
+	}
 
 	if initial.Exists(p) {
 		return nil
@@ -200,6 +203,12 @@ func (a *app) openInterface(start tui.Start) error {
 		return &ExitError{Code: 1, Err: fmt.Errorf("the terminal interface stopped: %w", err), Fix: "use the commands instead; `squad --help` lists them"}
 	}
 	return nil
+}
+
+// isStatuslineLine is true for `squad statusline` itself, the command that
+// Claude Code runs to draw its status line.
+func isStatuslineLine(cmd *cobra.Command) bool {
+	return cmd.Name() == "statusline" && cmd.HasParent() && !cmd.Parent().HasParent()
 }
 
 // skipsPrepare is true for help and shell completion, which must never

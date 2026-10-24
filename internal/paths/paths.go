@@ -70,6 +70,15 @@ func (p Paths) BackupsDir() string { return filepath.Join(p.Home, "backups") }
 // CacheDir holds cached model probes.
 func (p Paths) CacheDir() string { return filepath.Join(p.Home, "cache") }
 
+// StatuslineFile is the record of the statusLine that `squad statusline
+// enable` replaced.
+func (p Paths) StatuslineFile() string { return filepath.Join(p.Home, "statusline.json") }
+
+// StatuslineBackupFile holds settings.json as it was before `statusline enable`.
+func (p Paths) StatuslineBackupFile() string {
+	return filepath.Join(p.Home, "statusline-settings.backup.json")
+}
+
 // LockFile guards against two concurrent writers.
 func (p Paths) LockFile() string { return filepath.Join(p.Home, ".lock") }
 

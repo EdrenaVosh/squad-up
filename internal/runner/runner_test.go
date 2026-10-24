@@ -280,3 +280,26 @@ func TestPrepareBuildsTheCommandAndTheTemporarySettingsFile(t *testing.T) {
 	}
 	cleanup() // safe to call again
 }
+
+func TestPrepareTellsClaudeWhichPresetItRunsWith(t *testing.T) {
+	spec, err := runner.Build(bundle(nil), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cmd, cleanup, err := runner.Prepare("/usr/bin/claude", spec, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+
+	found := false
+	for _, kv := range cmd.Env {
+		if kv == runner.EnvPreset+"=solo" {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("%s=solo is not in the environment", runner.EnvPreset)
+	}
+}
