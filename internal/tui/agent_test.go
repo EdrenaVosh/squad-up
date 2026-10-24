@@ -37,7 +37,7 @@ func (h *harness) agent(preset, name string) *agentfile.Agent {
 // field moves the cursor of the agent editor to the n-th field (0-based).
 func (h *harness) field(n int) {
 	h.t.Helper()
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 12; i++ {
 		h.press("up")
 	}
 	for i := 0; i < n; i++ {
@@ -48,6 +48,7 @@ func (h *harness) field(n int) {
 const (
 	fName = iota
 	fDescription
+	fShare
 	fModel
 	fEffort
 	fPermission

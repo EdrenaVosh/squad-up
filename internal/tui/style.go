@@ -109,6 +109,28 @@ func modelPill(model string) string {
 	return sMuted.Render("[" + name + "]")
 }
 
+// Sharing the squad's notes is teal, working in isolation is amber.
+var (
+	cShared   = lipgloss.Color("#2DD4BF")
+	cIsolated = lipgloss.Color("#E5A50A")
+)
+
+// sharePill is the state of an agent's context as a colored pill.
+func sharePill(shared bool) string {
+	if shared {
+		return lipgloss.NewStyle().Foreground(lipgloss.Color("#06201C")).Background(cShared).Bold(true).Render(" ⇄ shared ")
+	}
+	return lipgloss.NewStyle().Foreground(lipgloss.Color("#2A1B00")).Background(cIsolated).Bold(true).Render(" ⊘ isolated ")
+}
+
+// shareChip is the short mark of an agent's context for a tile.
+func shareChip(shared bool) string {
+	if shared {
+		return fg(cShared).Render("⇄ shared")
+	}
+	return fg(cIsolated).Render("⊘ isolated")
+}
+
 // effortSteps is how many bars an effort level lights up, out of 5.
 var effortSteps = map[string]int{"low": 1, "medium": 2, "high": 3, "xhigh": 4, "max": 5}
 

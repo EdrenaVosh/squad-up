@@ -14,6 +14,7 @@ import (
 	"github.com/EdrenaVosh/squadup/internal/lint"
 	"github.com/EdrenaVosh/squadup/internal/models"
 	"github.com/EdrenaVosh/squadup/internal/preset"
+	"github.com/EdrenaVosh/squadup/internal/team"
 	"github.com/EdrenaVosh/squadup/internal/workspace"
 )
 
@@ -28,6 +29,7 @@ type fieldID int
 const (
 	fName fieldID = iota
 	fDescription
+	fShare
 	fModel
 	fEffort
 	fPermission
@@ -42,7 +44,7 @@ var agentFields = []struct {
 	id    fieldID
 	label string
 }{
-	{fName, "Name"}, {fDescription, "Description"}, {fModel, "Model"}, {fEffort, "Effort"},
+	{fName, "Name"}, {fDescription, "Description"}, {fShare, "Shared context"}, {fModel, "Model"}, {fEffort, "Effort"},
 	{fPermission, "Permission mode"}, {fTools, "Tools"}, {fDisallowed, "Disallowed tools"},
 	{fMaxTurns, "Max turns"}, {fColor, "Color"}, {fPrompt, "Prompt"},
 }
@@ -154,6 +156,10 @@ func (e *agentEditor) key(m tea.KeyPressMsg) (screen, tea.Cmd) {
 		}
 	case "enter", "right", "l":
 		return e, e.edit(agentFields[e.cursor].id)
+	case "space", " ":
+		if agentFields[e.cursor].id == fShare {
+			return e, e.edit(fShare)
+		}
 	}
 	return e, nil
 }
@@ -168,6 +174,16 @@ func (e *agentEditor) edit(id fieldID) tea.Cmd {
 			e.agent.Set("description", v)
 			return e.persist()
 		}))
+	case fShare:
+		shared := !team.Shared(e.agent)
+		team.SetShared(e.agent, shared)
+		if cmd := e.persist(); cmd != nil {
+			return cmd
+		}
+		if shared {
+			return flash(e.agent.Name() + " shares the squad's notes")
+		}
+		return flash(e.agent.Name() + " works in isolation: no notes, only the task")
 	case fModel:
 		return push(e.modelChoice())
 	case fEffort:
@@ -257,6 +273,7 @@ func (e *agentEditor) rename(name string) tea.Cmd {
 	if e.bundle.Preset.Main != nil && *e.bundle.Preset.Main == old {
 		e.bundle.Preset.Main = &name
 	}
+	e.bundle.Preset.RenameInFlow(old, name)
 	return e.persist()
 }
 
@@ -411,8 +428,24 @@ func (e *agentEditor) info() workspace.AgentInfo {
 	return workspace.AgentInfo{
 		Name: e.agent.Name(), Model: e.str("model"), Effort: e.str("effort"), PermissionMode: e.str("permissionMode"),
 		Color: e.str("color"), Tools: len(e.toolList("tools")), ToolNames: e.toolList("tools"), Role: e.agent.Role(),
+		Shared: team.Shared(e.agent), Notes: notesAccess(e.agent),
 	}
 }
+
+// notesAccess is what the agent's tools allow of the notes.
+func notesAccess(a *agentfile.Agent) string {
+	switch read, write := team.Access(a); {
+	case !read:
+		return workspace.NotesNone
+	case !write:
+		return workspace.NotesRead
+	}
+	return workspace.NotesWrite
+}
+
+// together reports whether the preset has two agents or more, the least for
+// anything to be shared.
+func (e *agentEditor) together() bool { return len(e.bundle.Agents) >= 2 }
 
 func (e *agentEditor) formLines(w int, c viewCtx) []string {
 	var lines []string
@@ -437,6 +470,12 @@ func (e *agentEditor) valueOf(id fieldID) string {
 	case fDescription:
 		first, _, _ := strings.Cut(e.agent.Description(), "\n")
 		return first
+	case fShare:
+		v := sharePill(team.Shared(e.agent))
+		if !e.together() {
+			v += sMuted.Render(" alone")
+		}
+		return v
 	case fModel:
 		return modelPill(e.str("model"))
 	case fEffort:

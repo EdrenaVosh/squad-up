@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 
@@ -62,7 +63,7 @@ func TestBuildTurnsAgentFilesIntoTheAgentsFlag(t *testing.T) {
 	if reviewer["description"] != "Reviews diffs. Use after any code change, before commit." {
 		t.Errorf("description = %v", reviewer["description"])
 	}
-	if reviewer["prompt"] != "You are a strict code reviewer.\nReport findings by severity.\n" {
+	if prompt, _ := reviewer["prompt"].(string); !strings.HasPrefix(prompt, "You are a strict code reviewer.\nReport findings by severity.\n") {
 		t.Errorf("prompt = %q", reviewer["prompt"])
 	}
 	if !reflect.DeepEqual(reviewer["tools"], []any{"Read", "Grep", "Glob"}) {
@@ -301,5 +302,53 @@ func TestPrepareTellsClaudeWhichPresetItRunsWith(t *testing.T) {
 	}
 	if !found {
 		t.Errorf("%s=solo is not in the environment", runner.EnvPreset)
+	}
+}
+
+func TestBuildPassesTheFlowBriefWhenNoMainAgentCarriesIt(t *testing.T) {
+	b := bundle(nil)
+	b.Preset.Flow = &preset.Flow{Gate: "reviewer", Fix: "planner"}
+
+	spec, err := runner.Build(b, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !strings.Contains(spec.Append, "1 planner → 2 reviewer") {
+		t.Errorf("Append = %q", spec.Append)
+	}
+	args := spec.Args("s.json", nil)
+	if i := slices.Index(args, "--append-system-prompt"); i < 0 || args[i+1] != spec.Append {
+		t.Errorf("args = %q", args)
+	}
+
+	main := "planner"
+	b.Preset.Main = &main
+	if spec, _ = runner.Build(b, nil); spec.Append != "" {
+		t.Errorf("a main agent carries the brief, yet Append = %q", spec.Append)
+	}
+}
+
+func TestBuildDropsTheSquadOnlyField(t *testing.T) {
+	b := bundle(nil)
+	b.Agents[1].Data = []byte(strings.Replace(reviewerMD, "name: reviewer\n", "name: reviewer\nsquadShare: false\n", 1))
+
+	spec, err := runner.Build(b, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var got map[string]map[string]any
+	if err := json.Unmarshal([]byte(spec.AgentsJSON), &got); err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(spec.AgentsJSON, "squadShare") {
+		t.Errorf("the squad-only field reached claude:\n%s", spec.AgentsJSON)
+	}
+	if prompt, _ := got["reviewer"]["prompt"].(string); strings.Contains(prompt, "squad:notes") {
+		t.Errorf("an isolated agent got the notes: %q", prompt)
+	}
+	if prompt, _ := got["planner"]["prompt"].(string); !strings.Contains(prompt, "squad:notes") {
+		t.Errorf("a sharing agent did not: %q", prompt)
 	}
 }

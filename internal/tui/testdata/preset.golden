@@ -2,9 +2,9 @@
 │ Planner, reviewer and tester for one-person apps                             │
 │                                                                              │
 │ AGENTS                                                                       │
-│ ▌ SLOT 1  ■ planner         opus      ▂▃▅·· high     ■□□□□ plan              │
-│   SLOT 2  ■ reviewer        sonnet    ▂▃▅·· high     ■■□□□ default           │
-│   SLOT 3  ■ tester          haiku     ▂▃··· medium   ■■■□□ edits             │
+│ ▌ SLOT 1  ■ planner         opus      ▂▃▅·· high     ■□□□□ plan            ⇄…│
+│   SLOT 2  ■ reviewer        sonnet    ▂▃▅·· high     ■■□□□ default         ⇄…│
+│   SLOT 3  ■ tester          haiku     ▂▃··· medium   ■■■□□ edits           ⇄…│
 │   + add agent                                                                │
 │                                                                              │
 │ SETTINGS                                                                     │
@@ -12,10 +12,10 @@
 │   Effort          ▂▃▅·· high                                                 │
 │   Permissions     acceptEdits · 0 allow · 1 ask · 0 deny                     │
 │   Main agent      —                                                          │
+│   Team flow       off — separate helpers                                     │
 │   Mode            replace — your own agents are removed while equipped       │
 │                                                                              │
-│ LINT  ✓ clean  ·  ~53 tokens/session for names and descriptions              │
-│                                                                              │
+│ LINT  ✓ clean · 2 notes  ·  ~53 tokens/session for names and descriptions    │
 │                                                                              │
 │                                                                              │
 │                                                                              │

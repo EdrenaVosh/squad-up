@@ -1,0 +1,51 @@
+package workspace
+
+import (
+	"fmt"
+
+	"github.com/EdrenaVosh/squadup/internal/agentfile"
+	"github.com/EdrenaVosh/squadup/internal/preset"
+	"github.com/EdrenaVosh/squadup/internal/team"
+)
+
+// SetShared makes one agent of a stored preset share the squad's notes, or
+// work in isolation.
+func (w Workspace) SetShared(presetName, agent string, shared bool) error {
+	if presetName == "initial" {
+		return ErrProtected
+	}
+	b, err := w.Store().Load(presetName)
+	if err != nil {
+		return err
+	}
+	for i, file := range b.Agents {
+		if file.Name != agent {
+			continue
+		}
+		a, err := agentfile.Parse(file.Data)
+		if err != nil {
+			return fmt.Errorf("agent %s: %w", agent, err)
+		}
+		team.SetShared(a, shared)
+		data, err := a.Marshal()
+		if err != nil {
+			return err
+		}
+		b.Agents[i].Data = data
+		return w.Save(*b)
+	}
+	return fmt.Errorf("%w: preset %s has no agent %s", ErrNoAgent, presetName, agent)
+}
+
+// SetFlow sets the flow of a stored preset, or removes it when flow is nil.
+func (w Workspace) SetFlow(presetName string, flow *preset.Flow) error {
+	if presetName == "initial" {
+		return ErrProtected
+	}
+	b, err := w.Store().Load(presetName)
+	if err != nil {
+		return err
+	}
+	b.Preset.Flow = flow
+	return w.Save(*b)
+}

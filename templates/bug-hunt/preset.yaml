@@ -6,3 +6,6 @@ accent: red
 mode: replace
 main: null
 agents: [debugger, tester]
+flow:
+  gate: tester
+  fix: debugger

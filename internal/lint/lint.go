@@ -15,6 +15,7 @@ import (
 	"github.com/EdrenaVosh/squadup/internal/agentfile"
 	"github.com/EdrenaVosh/squadup/internal/models"
 	"github.com/EdrenaVosh/squadup/internal/preset"
+	"github.com/EdrenaVosh/squadup/internal/team"
 )
 
 // Level is the severity of a finding.
@@ -140,6 +141,8 @@ func presetRules(in Input, files []loaded, add adder) {
 			"add the agent to the preset or leave `main` empty")
 	}
 
+	teamRules(p, files, add)
+
 	have := map[string]bool{}
 	for _, in := range in.Agents {
 		have[strings.TrimSuffix(in.File, ".md")] = true
@@ -167,6 +170,38 @@ func presetRules(in Input, files []loaded, add adder) {
 			case "Bash", "Bash(*)", "WebFetch", "WebFetch(*)":
 				add(LevelWarn, "broad-allow", "preset.yaml", fmt.Sprintf("allow rule %q lets Claude Code run anything of that kind without asking", rule), "narrow it, for example Bash(npm run *)")
 			}
+		}
+	}
+}
+
+// teamRules checks what the shared notes and the flow ask of the agents' tools.
+func teamRules(p *preset.Preset, files []loaded, add adder) {
+	if len(p.Agents) < 2 {
+		return
+	}
+	for _, f := range files {
+		name := strings.TrimSuffix(f.file, ".md")
+		if !team.Shared(f.agent) {
+			continue
+		}
+		switch read, write := team.Access(f.agent); {
+		case !read:
+			add(LevelWarn, "notes-unreadable", f.file,
+				fmt.Sprintf("%q shares the squad's notes, but its tools cannot read files, so it gets none", name),
+				"add Read to its tools, or isolate it with `squad edit "+p.Name+" "+name+" --isolate`")
+		case !write:
+			add(LevelInfo, "notes-read-only", f.file,
+				fmt.Sprintf("%q can read the squad's notes but not write them; it hands its lines to the main agent", name), "")
+		}
+	}
+	if p.Flow == nil || p.Main == nil {
+		return
+	}
+	for _, f := range files {
+		if strings.TrimSuffix(f.file, ".md") == *p.Main && !team.CanDelegate(f.agent) {
+			add(LevelWarn, "lead-cannot-delegate", f.file,
+				fmt.Sprintf("the main agent %q runs the flow, but its tools do not include Agent, so it cannot hand work to the others", *p.Main),
+				"add Agent to its tools")
 		}
 	}
 }
@@ -201,7 +236,7 @@ func agentRules(f loaded, inPreset bool, add adder) {
 	}
 
 	for _, key := range a.Keys() {
-		if !slices.Contains(agentfile.KnownKeys, key) {
+		if !slices.Contains(agentfile.KnownKeys, key) && key != team.ShareKey {
 			msg := fmt.Sprintf("unknown field %q: Claude Code ignores it", key)
 			if s := suggest(key); s != "" {
 				msg += fmt.Sprintf("; did you mean %q?", s)

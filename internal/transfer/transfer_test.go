@@ -450,3 +450,27 @@ func TestDescribeSummarisesAPresetForAPreview(t *testing.T) {
 		t.Errorf("bare settings = %q", got)
 	}
 }
+
+func TestTheFlowAndAnAgentsIsolationTravelWithThePreset(t *testing.T) {
+	b := sampleBundle()
+	b.Preset.Flow = &preset.Flow{Gate: "reviewer", Fix: "planner", Rounds: 2}
+	b.Agents[1].Data = []byte(strings.Replace(reviewerAgent, "name: reviewer\n", "name: reviewer\nsquadShare: false\n", 1))
+
+	got := parseOne(t, b, Options{})
+
+	if f := got.Bundle.Preset.Flow; f == nil || f.Gate != "reviewer" || f.Fix != "planner" || f.Rounds != 2 {
+		t.Errorf("flow = %+v", f)
+	}
+	if !strings.Contains(string(got.Bundle.Agents[1].Data), "squadShare: false") {
+		t.Errorf("the isolation was lost:\n%s", got.Bundle.Agents[1].Data)
+	}
+}
+
+func TestAFlowThatNamesAnAgentOutsideThePresetIsRefused(t *testing.T) {
+	b := sampleBundle()
+	b.Preset.Flow = &preset.Flow{Gate: "ghost", Fix: "planner"}
+
+	if _, err := Parse(export(t, b), Options{}); err == nil || !strings.Contains(err.Error(), "flow.gate") {
+		t.Fatalf("Parse = %v", err)
+	}
+}

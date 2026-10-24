@@ -10,18 +10,19 @@ import (
 	"github.com/EdrenaVosh/squadup/internal/workspace"
 )
 
-// panel draws lines inside a small rounded box with its title in the top
-// edge. The box is exactly w×h cells.
+// panel draws lines inside a small box with its title in the top edge. The
+// box is exactly w×h cells. Panels hold the squad's own settings, so they have
+// square corners and a quiet edge; agents are rounded, colored tiles.
 func panel(title string, lines []string, w, h int) []string {
 	inner := w - 2
 	edge := fg(cDim)
 	head := " " + sMuted.Render(title) + " "
 	fill := max(inner-1-ansi.StringWidth(head), 0)
-	out := []string{edge.Render("╭─") + head + edge.Render(strings.Repeat("─", fill)+"╮")}
+	out := []string{edge.Render("┌─") + head + edge.Render(strings.Repeat("─", fill)+"┐")}
 	for _, l := range fit(lines, inner-2, h-2) {
 		out = append(out, edge.Render("│")+" "+l+" "+edge.Render("│"))
 	}
-	return append(out, edge.Render("╰"+strings.Repeat("─", inner)+"╯"))
+	return append(out, edge.Render("└"+strings.Repeat("─", inner)+"┘"))
 }
 
 // sideBySide joins blocks of lines of the same height with a gap.

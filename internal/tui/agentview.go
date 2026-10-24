@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/EdrenaVosh/squadup/internal/preset"
+	"github.com/EdrenaVosh/squadup/internal/team"
 )
 
 // The agent editor uses a wide layout from this size: the fields on the left,
@@ -33,7 +34,7 @@ func (e *agentEditor) viewWide(c viewCtx) string {
 	left := []string{" " + sMuted.Render("FIELDS"), ""}
 	left = append(left, e.formLines(leftW, c)...)
 	left = append(left, "")
-	for _, l := range agentTile(e.info(), e.idx+1, tileOpts{big: true, w: min(leftW-4, bigTileW+8), stage: 2}) {
+	for _, l := range agentTile(e.info(), e.idx+1, tileOpts{big: true, w: min(leftW-4, bigTileW+8), stage: 2, team: e.together()}) {
 		left = append(left, "  "+l)
 	}
 	left = append(left, "")
@@ -89,6 +90,8 @@ func (e *agentEditor) fieldHint(id fieldID) string {
 		return "enter · rename"
 	case fTools, fDisallowed:
 		return "enter · check tools"
+	case fShare:
+		return "enter or space · switch"
 	}
 	return "enter · change"
 }
@@ -101,6 +104,8 @@ func (e *agentEditor) fieldBody(id fieldID, w int) []string {
 			wrapAll(sMuted.Render("The name Claude sees, and the name of the file. Lowercase letters, digits and dashes, up to 64 characters; it must be unique in the preset."), w)...)
 	case fDescription:
 		return e.descriptionBody(w)
+	case fShare:
+		return e.shareBody(w)
 	case fModel:
 		return e.modelBody()
 	case fEffort:
@@ -144,6 +149,71 @@ func (e *agentEditor) descriptionBody(w int) []string {
 		out = append(out, sOK.Render("✓ it says what the agent does and when to use it"))
 	}
 	return out
+}
+
+// shareBody is the switch for the agent's context, what each side means, what
+// this agent can do with the notes, and what they cost.
+func (e *agentEditor) shareBody(w int) []string {
+	shared := team.Shared(e.agent)
+	on, off := sMuted.Render("○ shared"), sMuted.Render("○ isolated")
+	if shared {
+		on = sharePill(true)
+	} else {
+		off = sharePill(false)
+	}
+	out := []string{on + "   " + off, ""}
+
+	choiceLine := func(selected bool, name, text string) string {
+		mark := "  "
+		if selected {
+			mark = selBar() + " "
+		}
+		return mark + pad(sBold.Render(name), 11) + sMuted.Render(text)
+	}
+	out = append(out,
+		choiceLine(shared, "Shared", "reads "+team.NotesFile+" first and leaves what it learned last"),
+		choiceLine(!shared, "Isolated", "sees only the task it is given: for an independent review"),
+		"")
+
+	switch read, write := team.Access(e.agent); {
+	case !e.together():
+		out = append(out, sMuted.Render("Alone in this preset there is no one to share with. It starts to matter at two agents."))
+	case !shared:
+		out = append(out, sWarn.Render("⊘")+" It neither reads nor writes the notes, and the main agent hands it the task or the diff only.")
+	case !read:
+		out = append(out, sWarn.Render("!")+" Its tools cannot read files, so it gets no notes. Check Read in Tools.")
+	case !write:
+		out = append(out, sWarn.Render("!")+" Its tools can read but not write: it reads the notes and hands its own lines to the main agent.")
+	default:
+		out = append(out, sOK.Render("✓")+" It can read and write the notes.")
+	}
+	if shared && e.together() {
+		out = append(out, sMuted.Render(fmt.Sprintf("Costs about %d tokens in its prompt, plus the notes themselves (kept to 25 short lines).", team.NotesTokens())))
+	}
+	out = append(out, "", sMuted.Render("What the notes look like"))
+	for _, l := range team.ExampleNotes {
+		out = append(out, "  "+highlightNote(truncate(l, w-4)))
+	}
+	return append(out, "", sMuted.Render("Why this format: only what git cannot tell — decisions and why, what failed, what is still broken. Fixed items are deleted, so no ! line means the work is clean."))
+}
+
+// highlightNote colors the tag of a line of the notes.
+func highlightNote(l string) string {
+	tag, rest, ok := strings.Cut(l, " ")
+	if !ok {
+		return l
+	}
+	switch tag {
+	case "D":
+		return sOK.Render(tag) + " " + rest
+	case "X":
+		return sMuted.Render(tag) + " " + sMuted.Render(rest)
+	case "!":
+		return sErr.Render(tag) + " " + rest
+	case ">":
+		return fg(cShared).Render(tag) + " " + rest
+	}
+	return sBold.Render(tag) + " " + rest
 }
 
 func (e *agentEditor) modelBody() []string {

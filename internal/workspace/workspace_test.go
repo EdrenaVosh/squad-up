@@ -365,9 +365,9 @@ func TestCardDescribesAPreset(t *testing.T) {
 	}
 	want := []workspace.AgentInfo{
 		{Name: "alpha", Model: "sonnet", Effort: "low", PermissionMode: "plan", Color: "cyan", Tools: 1, ToolNames: []string{"Read"},
-			Role: "alpha agent.", Description: "alpha agent. Use when alpha is needed.", Prompt: "Body of alpha."},
+			Role: "alpha agent.", Description: "alpha agent. Use when alpha is needed.", Prompt: "Body of alpha.", Shared: true, Notes: workspace.NotesRead},
 		{Name: "beta", Tools: 1, ToolNames: []string{"Read"},
-			Role: "beta agent.", Description: "beta agent. Use when beta is needed.", Prompt: "Body of beta."},
+			Role: "beta agent.", Description: "beta agent. Use when beta is needed.", Prompt: "Body of beta.", Shared: true, Notes: workspace.NotesRead},
 	}
 	if !reflect.DeepEqual(c.Agents, want) {
 		t.Errorf("agents = %+v, want %+v", c.Agents, want)
@@ -651,5 +651,31 @@ func TestFindAgentLooksInTheNamedPresetThenTheEquippedOneThenEverywhere(t *testi
 	}
 	if name, data, err := w.FindAgent("", "tester"); err != nil || name != "second" || !strings.Contains(string(data), "Second tester.") {
 		t.Errorf("equipped: %q, %v", name, err)
+	}
+}
+
+func TestTheCardTellsWhoSharesTheNotesAndWhatTheFlowIs(t *testing.T) {
+	ws := setup(t)
+	if err := ws.SetShared("solo", "tester", false); err != nil {
+		t.Fatal(err)
+	}
+	if err := ws.SetFlow("solo", &preset.Flow{Gate: "tester", Fix: "planner"}); err != nil {
+		t.Fatal(err)
+	}
+
+	c, err := ws.Card("solo")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !c.Sharing || c.Flow == nil || !c.Flow.Loops() {
+		t.Errorf("sharing %v, flow %+v", c.Sharing, c.Flow)
+	}
+	shared := map[string]bool{}
+	for _, a := range c.Agents {
+		shared[a.Name] = a.Shared
+	}
+	if shared["tester"] || !shared["planner"] {
+		t.Errorf("shared = %v", shared)
 	}
 }

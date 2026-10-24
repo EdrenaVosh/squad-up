@@ -46,7 +46,59 @@ type Preset struct {
 	Mode        string   `yaml:"mode"`
 	Main        *string  `yaml:"main"`
 	Agents      []string `yaml:"agents,flow"`
+	Flow        *Flow    `yaml:"flow,omitempty"`
 	Settings    Settings `yaml:"settings,omitempty"`
+}
+
+// DefaultRounds is how many times the gate may send work back when a flow
+// does not say.
+const DefaultRounds = 3
+
+// MaxRounds is the most rounds a flow may ask for.
+const MaxRounds = 9
+
+// Flow makes the agents a team: the main agent hands work down the slots in
+// order. When Gate and Fix are both set, the gate agent checks the result and
+// the fix agent gets its defects back until there are none or Rounds is spent.
+type Flow struct {
+	Gate   string `yaml:"gate,omitempty" json:"gate,omitempty"`
+	Fix    string `yaml:"fix,omitempty" json:"fix,omitempty"`
+	Rounds int    `yaml:"rounds,omitempty" json:"rounds,omitempty"`
+}
+
+// Loops reports whether the flow sends defects back.
+func (f *Flow) Loops() bool { return f != nil && f.Gate != "" && f.Fix != "" }
+
+// RenameInFlow follows an agent's new name in the flow.
+func (p *Preset) RenameInFlow(old, name string) {
+	if p.Flow == nil {
+		return
+	}
+	if p.Flow.Gate == old {
+		p.Flow.Gate = name
+	}
+	if p.Flow.Fix == old {
+		p.Flow.Fix = name
+	}
+}
+
+// PruneFlow drops the review loop when the agent it needs is gone. The order
+// of the flow stays: it is the slots.
+func (p *Preset) PruneFlow() {
+	if p.Flow == nil || !p.Flow.Loops() {
+		return
+	}
+	if !slices.Contains(p.Agents, p.Flow.Gate) || !slices.Contains(p.Agents, p.Flow.Fix) {
+		p.Flow.Gate, p.Flow.Fix, p.Flow.Rounds = "", "", 0
+	}
+}
+
+// MaxRounds is Rounds, or DefaultRounds when unset.
+func (f *Flow) MaxRounds() int {
+	if f == nil || f.Rounds <= 0 {
+		return DefaultRounds
+	}
+	return f.Rounds
 }
 
 // Settings are the managed settings.json keys a preset sets. An empty field
@@ -128,6 +180,22 @@ func (p Preset) Validate() error {
 			add("agents: %q is listed twice", name)
 		}
 		seen[name] = true
+	}
+	if f := p.Flow; f != nil {
+		if (f.Gate == "") != (f.Fix == "") {
+			add("flow: gate and fix go together; set both or neither")
+		}
+		for field, name := range map[string]string{"gate": f.Gate, "fix": f.Fix} {
+			if name != "" && !seen[name] {
+				add("flow.%s: %q is not among the agents", field, name)
+			}
+		}
+		if f.Gate != "" && f.Gate == f.Fix {
+			add("flow: the gate and the fix agent must be different agents")
+		}
+		if f.Rounds < 0 || f.Rounds > MaxRounds {
+			add("flow.rounds: %d must be between 1 and %d", f.Rounds, MaxRounds)
+		}
 	}
 	return errors.Join(errs...)
 }

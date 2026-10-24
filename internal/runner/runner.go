@@ -19,6 +19,7 @@ import (
 
 	"github.com/EdrenaVosh/squadup/internal/agentfile"
 	"github.com/EdrenaVosh/squadup/internal/preset"
+	"github.com/EdrenaVosh/squadup/internal/team"
 )
 
 // acceptedKeys are the frontmatter fields `--agents` understands, besides the
@@ -43,6 +44,7 @@ type Spec struct {
 	AgentsJSON   string // value of --agents; empty when the preset has no agents
 	SettingsJSON []byte // content of the file given to --settings
 	Main         string // value of --agent; empty for none
+	Append       string // value of --append-system-prompt: the flow brief when no main agent carries it
 }
 
 // maxArgBytes is the longest --agents value squad passes on the command line:
@@ -60,8 +62,16 @@ func maxArgBytes() int {
 func Build(b preset.Bundle, resolved map[string]string) (Spec, error) {
 	spec := Spec{Preset: b.Preset.Name}
 
+	files, err := team.Compile(b)
+	if err != nil {
+		return Spec{}, err
+	}
+	if b.Preset.Main == nil {
+		spec.Append = team.Brief(b)
+	}
+
 	agents := map[string]map[string]any{}
-	for _, file := range b.Agents {
+	for _, file := range files {
 		def, err := agentDefinition(file.Data)
 		if err != nil {
 			return Spec{}, fmt.Errorf("agent %q: %w", file.Name, err)
@@ -168,6 +178,9 @@ func (s Spec) Args(settingsPath string, extra []string) []string {
 	args = append(args, "--settings", settingsPath)
 	if s.Main != "" {
 		args = append(args, "--agent", s.Main)
+	}
+	if s.Append != "" {
+		args = append(args, "--append-system-prompt", s.Append)
 	}
 	return append(args, extra...)
 }

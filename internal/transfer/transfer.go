@@ -77,6 +77,7 @@ type presetDoc struct {
 	Accent      string          `json:"accent,omitempty"`
 	Mode        string          `json:"mode"`
 	Main        *string         `json:"main,omitempty"`
+	Flow        *preset.Flow    `json:"flow,omitempty"`
 	Settings    preset.Settings `json:"settings,omitzero"`
 }
 
@@ -104,7 +105,7 @@ func toEntry(b preset.Bundle) (entry, error) {
 	p := b.Preset
 	e := entry{Preset: &presetDoc{
 		Name: p.Name, Title: p.Title, Description: p.Description, Accent: p.Accent,
-		Mode: p.Mode, Main: p.Main, Settings: p.Settings,
+		Mode: p.Mode, Main: p.Main, Flow: p.Flow, Settings: p.Settings,
 	}}
 	byName := map[string]preset.AgentFile{}
 	for _, a := range b.Agents {
@@ -213,7 +214,7 @@ func read(e entry, opts Options) (Imported, error) {
 	d := e.Preset
 	p := preset.Preset{
 		Schema: preset.SchemaVersion, Name: d.Name, Title: d.Title, Description: d.Description,
-		Accent: d.Accent, Mode: d.Mode, Main: d.Main, Agents: []string{}, Settings: d.Settings,
+		Accent: d.Accent, Mode: d.Mode, Main: d.Main, Flow: d.Flow, Agents: []string{}, Settings: d.Settings,
 	}
 
 	var imp Imported

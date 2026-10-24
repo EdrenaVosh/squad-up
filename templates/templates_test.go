@@ -8,6 +8,7 @@ import (
 	"github.com/EdrenaVosh/squadup/internal/agentfile"
 	"github.com/EdrenaVosh/squadup/internal/lint"
 	"github.com/EdrenaVosh/squadup/internal/preset"
+	"github.com/EdrenaVosh/squadup/internal/team"
 	"github.com/EdrenaVosh/squadup/templates"
 )
 
@@ -139,4 +140,26 @@ func TestTemplatesAreAlwaysFreshCopies(t *testing.T) {
 		t.Error("Load shares memory between calls")
 	}
 	_ = preset.Bundle{}
+}
+
+func TestTheFlowsOfTheTemplatesAddUp(t *testing.T) {
+	for id, gate := range map[string]string{"refactor-day": "reviewer", "bug-hunt": "tester"} {
+		b, err := templates.Load(id)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if f := b.Preset.Flow; f == nil || f.Gate != gate || !f.Loops() {
+			t.Errorf("%s flow = %+v, want a review loop checked by %s", id, f, gate)
+		}
+	}
+	b, _ := templates.Load("refactor-day")
+	for _, a := range b.Agents {
+		agent, err := agentfile.Parse(a.Data)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if isolated := !team.Shared(agent); isolated != (a.Name == "reviewer") {
+			t.Errorf("%s isolated = %v: only the independent reviewer works alone", a.Name, isolated)
+		}
+	}
 }

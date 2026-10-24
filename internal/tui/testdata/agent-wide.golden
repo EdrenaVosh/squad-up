@@ -3,9 +3,10 @@
 │                                                 │ ────────────────────────────────────────────────────────────────────────────────────── │
 │ ▌ Name              planner                     │                                                                                        │
 │   Description       Breaks a task into steps. U…│ planner                                                                                │
-│   Model              opus                       │                                                                                        │
-│   Effort            ▂▃▅·· high                  │ The name Claude sees, and the name of the file. Lowercase letters, digits and dashes,  │
-│   Permission mode   ■□□□□ plan                  │ up to 64 characters; it must be unique in the preset.                                  │
+│   Shared context     ⇄ shared                   │                                                                                        │
+│   Model              opus                       │ The name Claude sees, and the name of the file. Lowercase letters, digits and dashes,  │
+│   Effort            ▂▃▅·· high                  │ up to 64 characters; it must be unique in the preset.                                  │
+│   Permission mode   ■□□□□ plan                  │                                                                                        │
 │   Tools             ‹Read› ‹Grep› ‹Glob›        │                                                                                        │
 │   Disallowed tools  —                           │                                                                                        │
 │   Max turns         —                           │                                                                                        │
@@ -23,12 +24,11 @@
 │  │ effort  ▂▃▅·· high                 │         │                                                                                        │
 │  │ access  ■□□□□ plan                 │         │                                                                                        │
 │  │ tools   ‹Read› ‹Grep› ‹Glob›       │         │                                                                                        │
-│  │                                    │         │                                                                                        │
+│  │ context ⇄ shared                   │         │                                                                                        │
 │  ╰────────────────────────────────────╯         │                                                                                        │
 │                                                 │                                                                                        │
 │ CHECKS                                          │                                                                                        │
 │   ✓ nothing to fix                              │                                                                                        │
-│                                                 │                                                                                        │
 │                                                 │                                                                                        │
 │                                                 │                                                                                        │
 │                                                 │                                                                                        │

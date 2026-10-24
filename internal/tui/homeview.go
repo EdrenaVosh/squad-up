@@ -256,17 +256,22 @@ func (h *home) detail(w, rows, headerRows, listW int, c viewCtx) []string {
 	if title == "" {
 		title = card.Name
 	}
-	head := []string{spread(" "+accentDot(card.Accent)+" "+sBold.Render(title), badge+" ", w)}
+	titleW := w - 2 - lipglossWidth(badge) - 1
+	head := []string{}
 	switch {
 	case card.Error != "":
+		head = append(head, spread(" "+accentDot(card.Accent)+" "+sBold.Render(title), badge+" ", w))
 		return fit(append(head, " "+sErr.Render(truncate("✗ "+card.Error, w-2)), "",
 			" "+sMuted.Render(truncate("Fix preset.yaml, then come back. `squad lint "+card.Name+"` has the details.", w-2))), w, rows)
 	case card.Initial && card.CapturedAt != nil:
-		head = append(head, " "+sMuted.Render(captured(card)))
+		head = append(head, spread(" "+accentDot(card.Accent)+" "+sBold.Render(title)+sMuted.Render("  "+truncate(captured(card), max(titleW-lipglossWidth(title)-6, 0))), badge+" ", w))
 	default:
-		head = append(head, " "+sMuted.Render(typewriter(truncate(card.Description, w-2), frames)))
+		desc := typewriter(truncate(card.Description, max(titleW-lipglossWidth(title)-6, 0)), frames)
+		head = append(head, spread(" "+accentDot(card.Accent)+" "+sBold.Render(title)+sMuted.Render("  "+desc), badge+" ", w))
 	}
-	head = append(head, "")
+	head = append(head,
+		sectionBand("AGENTS", plural(len(card.Agents), "slot")+" · in order", w-2, c.shift(), true),
+		flowStrip(card, w-2))
 
 	// The layout under the title does not depend on how many agents there are:
 	// the roster has room for one or two rows of equal tiles, and the panels
@@ -276,7 +281,7 @@ func (h *home) detail(w, rows, headerRows, listW int, c viewCtx) []string {
 	ph := min(max(rows-len(head)-region-2, panelH), 14)
 	showPanels := rows-len(head)-region-1 >= panelH
 
-	opts := rosterOpts{frames: frames, frame: c.frame, selected: h.agent, live: live, big: true}
+	opts := rosterOpts{frames: frames, frame: c.frame, selected: h.agent, live: live, big: true, team: card.Sharing}
 	roster, rects, _ := rosterLines(card.Agents, w-2, region, opts)
 	for _, r := range rects {
 		h.tiles = append(h.tiles, tileHit{
@@ -292,7 +297,11 @@ func (h *home) detail(w, rows, headerRows, listW int, c viewCtx) []string {
 	}
 
 	if showPanels {
-		out = append(out, "")
+		if ph > panelH { // spare room: a gap between the agents and the squad's own cards
+			out = append(out, "")
+			ph--
+		}
+		out = append(out, sectionBand("SQUAD", "settings, cost and health of the whole preset", w-2, c.shift(), false))
 		for _, l := range panelsRow(card, h.activity, h.plan, h.planErr, w-2, ph) {
 			out = append(out, " "+l)
 		}

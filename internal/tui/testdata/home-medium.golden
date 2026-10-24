@@ -3,9 +3,9 @@
 │   ▀▀▀▄ █ ▀▄▀ █   █ █▀▀▀█ █   █ █   █ █▀▀▀      ✦                               ✦      ◇ initial is active  │
 │  ▀▀▀▀   ▀▀ ▀  ▀▀▀  ▀   ▀ ▀▀▀▀   ▀▀▀  ▀        ✦                    ✦✦          ✓ in sync with your config  │
 │────────────────────────────────────────────────────────────────────────────────────────────────────────────│
-│ PRESETS 3                    │ ● Bug Hunt                                                                  │
-│                              │ A debugger and a tester for tracking down a failure                         │
-│ ▌ ○ Bug Hunt                 │                                                                             │
+│ PRESETS 3                    │ ● Bug Hunt  A debugger and a tester for tracking down a failure             │
+│                              │ ◆ AGENTS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2 slots · in order   │
+│ ▌ ○ Bug Hunt                 │ separate helpers · set a Team flow to link them                             │
 │ ▌   ■ ■ 2 agents             │ ┏━ 1 ━━━━━━━━━━━━━━━━━━━━━━━━┓ ╭─ 2 ────────────────────────╮               │
 │ ▌   A debugger and a tester… │ ┃ ■ debugger                 ┃ │ ■ tester                   │               │
 │                              │ ┃                            ┃ │                            │               │
@@ -17,16 +17,16 @@
 │     ■ ■ ■ 3 agents           │ ┃ effort  ····· —            ┃ │ effort  ····· —            │               │
 │     Planner, reviewer and t… │ ┃ access  ■■□□□ default      ┃ │ access  ■■□□□ default      │               │
 │                              │ ┃ tools   ‹Read› ‹Bash›      ┃ │ tools   ‹Read› ‹Bash›      │               │
-│                              │ ┃                            ┃ │                            │               │
+│                              │ ┃ context ⇄ shared           ┃ │ context ⇄ shared           │               │
 │                              │ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ╰────────────────────────────╯               │
-│                              │                                                                             │
-│                              │ ╭─ SETTINGS ────────────────────────╮ ╭─ CONTEXT COST · TOKENS/CALL ──────╮ │
+│                              │ ▪ SQUAD ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄ settings, cost and health of the whole preset   │
+│                              │ ┌─ SETTINGS ────────────────────────┐ ┌─ CONTEXT COST · TOKENS/CALL ──────┐ │
 │                              │ │ Model        haiku                │ │ debugger    ████████████░░░░    3 │ │
 │                              │ │ Effort      ····· —               │ │ tester      ████████████████    4 │ │
 │                              │ │ Permissions —                     │ │                                   │ │
 │ ──────────────────────────── │ │ Main agent  debugger              │ │ ~34 tokens per session            │ │
 │   ● initial         ● ACTIVE │ │ Mode        replace               │ │                                   │ │
 │     ■ ■ ■ 3 agents           │ │ Rules                             │ │                                   │ │
-│     your original setup      │ ╰───────────────────────────────────╯ ╰───────────────────────────────────╯ │
+│     your original setup      │ └───────────────────────────────────┘ └───────────────────────────────────┘ │
 ╰──────────────────────────────┴─────────────────────────────────────────────────────────────────────────────╯
   ↑↓  preset   ←→  agent   enter  open   a  edit agent   e  equip   t  try   n  new   ?  help   q  quit

@@ -24,6 +24,7 @@ const (
 	rowEffort
 	rowPerms
 	rowMain
+	rowFlow
 	rowMode
 )
 
@@ -84,7 +85,7 @@ func (p *presetScreen) rows() []row {
 	for i := range p.bundle.Agents {
 		rows = append(rows, row{kind: rowAgent, agent: i})
 	}
-	return append(rows, row{kind: rowAdd}, row{kind: rowModel}, row{kind: rowEffort}, row{kind: rowPerms}, row{kind: rowMain}, row{kind: rowMode})
+	return append(rows, row{kind: rowAdd}, row{kind: rowModel}, row{kind: rowEffort}, row{kind: rowPerms}, row{kind: rowMain}, row{kind: rowFlow}, row{kind: rowMode})
 }
 
 func (p *presetScreen) current() (row, bool) {
@@ -194,6 +195,8 @@ func (p *presetScreen) activate(r row) (screen, tea.Cmd) {
 			p.bundle.Preset.Main = &o.value
 			return tea.Batch(p.save(), flash("The main agent's prompt replaces Claude Code's whole system prompt"))
 		}))
+	case rowFlow:
+		return p, push(p.flowChoice())
 	case rowMode:
 		options := []option{
 			{label: "replace", note: "your own agents are removed while it is equipped", value: preset.ModeReplace},
@@ -262,6 +265,7 @@ func (p *presetScreen) removeAgentFlow(i int) screen {
 		if p.bundle.Preset.Main != nil && *p.bundle.Preset.Main == name {
 			p.bundle.Preset.Main = nil
 		}
+		p.bundle.Preset.PruneFlow()
 		p.cursor = min(p.cursor, len(p.bundle.Agents))
 		return p.save()
 	})
@@ -317,6 +321,7 @@ func (p *presetScreen) View(c viewCtx) string {
 		{rowEffort, "Effort", effortBars(p.card.Effort)},
 		{rowPerms, "Permissions", orDash(p.card.Permissions, "—")},
 		{rowMain, "Main agent", orDash(p.card.Main, "—")},
+		{rowFlow, "Team flow", flowWords(p.card)},
 		{rowMode, "Mode", modeWords(p.card.Mode)},
 	} {
 		add(p.line(row{kind: s.kind}, sMuted.Render(pad(s.label, 16))+s.value, inner))
@@ -338,7 +343,10 @@ func (p *presetScreen) View(c viewCtx) string {
 func (p *presetScreen) slotLine(i int, a workspace.AgentInfo, inner int) string {
 	text := fmt.Sprintf("%s  %s %s %s %s %s",
 		sMuted.Render(fmt.Sprintf("SLOT %d", i+1)), swatch(a.Color),
-		pad(sBold.Render(truncate(a.Name, 14)), 14), pad(modelPill(a.Model), 10), pad(effortBars(a.Effort), 14), permissionStrength(a.PermissionMode))
+		pad(sBold.Render(truncate(a.Name, 14)), 14), pad(modelPill(a.Model), 10), pad(effortBars(a.Effort), 14), pad(permissionStrength(a.PermissionMode), 22))
+	if p.card.Sharing {
+		text += shareChip(a.Shared)
+	}
 	return p.line(row{kind: rowAgent, agent: i}, text, inner)
 }
 
@@ -349,6 +357,87 @@ func (p *presetScreen) line(r row, text string, inner int) string {
 		prefix = " " + selBar() + " "
 	}
 	return truncate(prefix+text, inner)
+}
+
+// flowWords says in a line how the agents of a card work together.
+func flowWords(c workspace.Card) string {
+	switch {
+	case c.Flow == nil:
+		return "off " + sMuted.Render("— separate helpers")
+	case c.Flow.Loops():
+		return fmt.Sprintf("review loop %s %s %s %s", sMuted.Render("—"), c.Flow.Gate, sMuted.Render("checks,"), c.Flow.Fix+sMuted.Render(fmt.Sprintf(" fixes · up to %d", c.Flow.MaxRounds())))
+	}
+	return "in order " + sMuted.Render("— down the slots, no loop")
+}
+
+// flowChoice asks how the agents work together. The review loop asks on: who
+// checks, who fixes, and how many rounds.
+func (p *presetScreen) flowChoice() screen {
+	current := 0
+	switch f := p.bundle.Preset.Flow; {
+	case f.Loops():
+		current = 2
+	case f != nil:
+		current = 1
+	}
+	options := []option{
+		{label: "Off", note: "separate helpers: Claude calls them as it sees fit", value: "off"},
+		{label: "In order", note: "the main agent hands work down the slots", value: "order"},
+		{label: "Review loop", note: "the last check sends defects back to the one who fixes them", value: "loop"},
+	}
+	return newChoice("Team flow", options, current, func(o option) tea.Cmd {
+		switch o.value {
+		case "off":
+			p.bundle.Preset.Flow = nil
+			return p.save()
+		case "order":
+			p.bundle.Preset.Flow = &preset.Flow{}
+			return tea.Batch(p.save(), p.flowNote())
+		}
+		if len(p.bundle.Preset.Agents) < 2 {
+			return flashErr("A review loop needs two agents: one to check and one to fix")
+		}
+		return push(p.agentChoice("Who checks the work?", "the gate: runs last and reports defects", "", func(gate string) tea.Cmd {
+			return push(p.agentChoice("Who fixes the defects?", "gets only the defects back, then the gate runs again", gate, func(fix string) tea.Cmd {
+				return push(p.roundsChoice(gate, fix))
+			}))
+		}))
+	})
+}
+
+func (p *presetScreen) agentChoice(title, note, skip string, then func(string) tea.Cmd) screen {
+	var options []option
+	for _, a := range p.bundle.Preset.Agents {
+		if a != skip {
+			options = append(options, option{label: a, note: note, value: a})
+		}
+	}
+	return newChoice(title, options, 0, func(o option) tea.Cmd { return then(o.value) })
+}
+
+func (p *presetScreen) roundsChoice(gate, fix string) screen {
+	var options []option
+	for n := 1; n <= preset.MaxRounds; n++ {
+		note := ""
+		if n == preset.DefaultRounds {
+			note = "the default"
+		}
+		options = append(options, option{label: fmt.Sprintf("%d", n), note: note, value: fmt.Sprintf("%d", n)})
+	}
+	return newChoice("How many rounds at most?", options, preset.DefaultRounds-1, func(o option) tea.Cmd {
+		var n int
+		_, _ = fmt.Sscanf(o.value, "%d", &n)
+		p.bundle.Preset.Flow = &preset.Flow{Gate: gate, Fix: fix, Rounds: n}
+		return tea.Batch(p.save(), p.flowNote())
+	})
+}
+
+// flowNote tells where a flow runs, when no main agent carries it.
+func (p *presetScreen) flowNote() tea.Cmd {
+	if p.bundle.Preset.Main == nil {
+		return flash("No main agent: `squad run` passes the flow to Claude Code; to equip it, set a main agent")
+	}
+	return nil
 }
 
 func modeWords(mode string) string {

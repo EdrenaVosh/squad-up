@@ -35,6 +35,7 @@ type tileOpts struct {
 	selected bool // the agent the cursor is on
 	live     bool // the preset is equipped: the tile shows a heartbeat
 	frame    int  // the animation frame
+	team     bool // the agents work as a squad, so the tile says if it shares the notes
 }
 
 // equalizer is four bars that move: the agents of an equipped preset are alive.
@@ -108,10 +109,22 @@ func agentTile(a workspace.AgentInfo, slot int, o tileOpts) []string {
 	if o.selected {
 		name = sAccent.Render(truncate(a.Name, inner-4))
 	}
-	lines = append(lines, row(swatch(a.Color)+" "+name))
+	nameRow := swatch(a.Color) + " " + name
+	if o.team && !o.big {
+		nameRow = swatch(a.Color) + " " + sBold.Render(truncate(a.Name, inner-6))
+		if o.selected {
+			nameRow = swatch(a.Color) + " " + sAccent.Render(truncate(a.Name, inner-6))
+		}
+		mark := fg(cShared).Render("⇄")
+		if !a.Shared {
+			mark = fg(cIsolated).Render("⊘")
+		}
+		nameRow = pad(nameRow, inner-3) + mark
+	}
+	lines = append(lines, row(nameRow))
 	if o.stage >= 2 {
 		if o.big {
-			lines = append(lines, bigTileBody(a, inner, row)...)
+			lines = append(lines, bigTileBody(a, inner, row, o.team)...)
 		} else {
 			lines = append(lines,
 				row(modelOrDashW(a.Model, inner-2)),
@@ -128,7 +141,7 @@ func agentTile(a workspace.AgentInfo, slot int, o tileOpts) []string {
 
 // bigTileBody is what the large tile shows under the name: what the agent is
 // for, then its model, effort, access and tools, each with a label.
-func bigTileBody(a workspace.AgentInfo, inner int, row func(string) string) []string {
+func bigTileBody(a workspace.AgentInfo, inner int, row func(string) string, team bool) []string {
 	out := []string{row(""), row(fg(cDim).Render(strings.Repeat("─", inner-2)))}
 	role := wrapText(orDash(a.Role, "No description yet."), inner-2)
 	for i := 0; i < 2; i++ {
@@ -142,11 +155,15 @@ func bigTileBody(a workspace.AgentInfo, inner int, row func(string) string) []st
 		out = append(out, row(sMuted.Render(text)))
 	}
 	labeled := func(label, value string) string { return row(sMuted.Render(pad(label, 8)) + value) }
-	return append(out, row(""),
+	out = append(out, row(""),
 		labeled("model", modelOrDashW(a.Model, inner-10)),
 		labeled("effort", effortBars(a.Effort)),
 		labeled("access", permissionStrength(a.PermissionMode)),
 		labeled("tools", toolsLine(a, inner-10)))
+	if team {
+		out = append(out, labeled("context", shareChip(a.Shared)))
+	}
+	return out
 }
 
 // toolsLine fits as many tool chips as there are room for, then a count.
@@ -200,6 +217,7 @@ type rosterOpts struct {
 	selected int  // the selected agent, or -1
 	live     bool // the preset is equipped
 	big      bool // large tiles
+	team     bool // the agents share notes, so the tiles say who does
 }
 
 // rosterLines lays the agents out as rows of equal tiles that fit w cells.
@@ -231,7 +249,7 @@ func rosterLines(agents []workspace.AgentInfo, w, h int, o rosterOpts) ([]string
 		for i := r * perRow; i < min((r+1)*perRow, len(agents)); i++ {
 			stage := min(max((o.frames-i*dealDelay+2)/2, 0), 2)
 			tiles = append(tiles, agentTile(agents[i], i+1, tileOpts{
-				big: o.big, w: tw, stage: stage, selected: i == o.selected, live: o.live, frame: o.frame,
+				big: o.big, w: tw, stage: stage, selected: i == o.selected, live: o.live, frame: o.frame, team: o.team,
 			}))
 			rects = append(rects, tileRect{x: (i - r*perRow) * (tw + 1), y: len(out), w: tw, h: th, index: i})
 		}

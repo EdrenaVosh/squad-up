@@ -19,6 +19,7 @@ import (
 	"github.com/EdrenaVosh/squadup/internal/paths"
 	"github.com/EdrenaVosh/squadup/internal/preset"
 	"github.com/EdrenaVosh/squadup/internal/settings"
+	"github.com/EdrenaVosh/squadup/internal/team"
 )
 
 // Engine changes the Claude Code config. All writes go through Execute.
@@ -358,7 +359,11 @@ func (e Engine) desiredFromBundle(b *preset.Bundle, meta *initial.Meta) (*desire
 			return nil, err
 		}
 	}
-	for _, a := range b.Agents {
+	compiled, err := team.Compile(*b)
+	if err != nil {
+		return nil, fmt.Errorf("preset %q: %w", name, err)
+	}
+	for _, a := range compiled {
 		rel := a.Name + ".md"
 		if _, taken := d.files[rel]; taken {
 			d.conflicts = append(d.conflicts, fmt.Sprintf("preset agent %q collides with your Initial agent agents/%s (mode extend); rename the agent or use mode replace", a.Name, rel))

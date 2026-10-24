@@ -262,6 +262,7 @@ func (e Engine) saveAgentEdit(b *preset.Bundle, d DriftItem) error {
 	name := strings.TrimSuffix(strings.TrimPrefix(d.Path, "agents/"), ".md")
 	if d.Kind == DriftMissing {
 		b.Preset.Agents = removeString(b.Preset.Agents, name)
+		b.Preset.PruneFlow()
 		for i, a := range b.Agents {
 			if a.Name == name {
 				b.Agents = append(b.Agents[:i], b.Agents[i+1:]...)

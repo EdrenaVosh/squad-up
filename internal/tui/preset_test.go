@@ -93,7 +93,7 @@ func TestEffortModeAndMainAgentAreChosenFromLists(t *testing.T) {
 		t.Errorf("main = %v, want planner", b.Preset.Main)
 	}
 
-	h.press("down")                   // Mode
+	h.press("down", "down")           // Team flow, Mode
 	h.press("enter", "down", "enter") // replace -> extend
 	if got := h.stored("solo-indie").Preset.Mode; got != preset.ModeExtend {
 		t.Errorf("mode = %q, want extend", got)

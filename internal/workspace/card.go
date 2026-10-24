@@ -12,6 +12,7 @@ import (
 	"github.com/EdrenaVosh/squadup/internal/lint"
 	"github.com/EdrenaVosh/squadup/internal/preset"
 	"github.com/EdrenaVosh/squadup/internal/settings"
+	"github.com/EdrenaVosh/squadup/internal/team"
 )
 
 // AgentInfo is what a slot of a preset shows about its agent.
@@ -26,7 +27,16 @@ type AgentInfo struct {
 	Role           string // the first sentence of its description
 	Description    string
 	Prompt         string // the system prompt, trimmed
+	Shared         bool   // shares the squad's notes (the default); false when isolated
+	Notes          string // what its tools allow of the notes: NotesWrite, NotesRead or NotesNone
 }
+
+// What an agent can do with the squad's notes, given its tools.
+const (
+	NotesWrite = "write"
+	NotesRead  = "read"
+	NotesNone  = "none"
+)
 
 // AgentCost is what an agent adds to the context.
 type AgentCost struct {
@@ -44,6 +54,8 @@ type Card struct {
 	Effort        string
 	Permissions   string // "acceptEdits · 4 allow · 1 ask · 2 deny", or "" when not set
 	Agents        []AgentInfo
+	Flow          *preset.Flow // how the agents work as a team; nil when they do not
+	Sharing       bool         // whether the notes are in use: a stored preset of two agents or more
 	Costs         []AgentCost
 	Findings      []lint.Finding // errors and warnings; notes are only counted
 	Errors        int
@@ -100,8 +112,10 @@ func (w Workspace) fillPreset(c *Card) error {
 		c.Main = *p.Main
 	}
 	c.Permissions = p.Settings.Permissions.Summary()
+	c.Flow = p.Flow
+	c.Sharing = len(p.Agents) >= 2
 	for _, name := range p.Agents {
-		info := AgentInfo{Name: name}
+		info := AgentInfo{Name: name, Shared: true, Notes: NotesWrite}
 		if data, err := os.ReadFile(filepath.Join(w.Paths.PresetDir(c.Name), "agents", name+".md")); err == nil {
 			info = agentInfo(name, data)
 		}
@@ -142,10 +156,17 @@ func (w Workspace) fillInitial(c *Card) error {
 }
 
 func agentInfo(name string, data []byte) AgentInfo {
-	info := AgentInfo{Name: name}
+	info := AgentInfo{Name: name, Shared: true, Notes: NotesWrite}
 	a, err := agentfile.Parse(data)
 	if err != nil {
 		return info
+	}
+	info.Shared = team.Shared(a)
+	switch read, write := team.Access(a); {
+	case !read:
+		info.Notes = NotesNone
+	case !write:
+		info.Notes = NotesRead
 	}
 	get := func(key string) string {
 		if v, ok := a.Get(key); ok && v != nil {

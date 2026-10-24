@@ -53,6 +53,7 @@ func cardLines(c workspace.Card, w, h int, o rosterOpts) []string {
 	}
 
 	room := max(h-len(header)-len(footer), 1)
+	o.team = c.Sharing
 	roster, _, _ := rosterLines(c.Agents, w-2, room, o)
 	for i := range roster {
 		roster[i] = " " + roster[i]

@@ -298,3 +298,51 @@ func TestEveryFindingHasARuleAndAMessage(t *testing.T) {
 		}
 	}
 }
+
+func TestTeamRulesCheckTheToolsTheNotesAndTheFlowNeed(t *testing.T) {
+	agent := func(name, extra string) lint.Agent {
+		return lint.Agent{File: name + ".md", Data: []byte("---\nname: " + name + "\ndescription: Does " + name + " work. Use when needed.\n" + extra + "---\nYou are " + name + ".\n")}
+	}
+	lead := "lead"
+	p := &preset.Preset{
+		Schema: 1, Name: "t", Mode: "replace", Main: &lead, Agents: []string{"lead", "dev", "ro", "blind"},
+		Flow: &preset.Flow{Gate: "ro", Fix: "dev"},
+	}
+	report := lint.Run(lint.Input{Name: "t", Preset: p, Agents: []lint.Agent{
+		agent("lead", "tools: Read, Write\n"),
+		agent("dev", ""),
+		agent("ro", "tools: Read, Grep\n"),
+		agent("blind", "tools: Write\n"),
+	}})
+
+	rules := map[string]string{}
+	for _, f := range report.Findings {
+		rules[f.Rule+" "+f.File] = f.Message
+	}
+	for _, want := range []string{"lead-cannot-delegate lead.md", "notes-read-only ro.md", "notes-unreadable blind.md"} {
+		if _, ok := rules[want]; !ok {
+			t.Errorf("no finding %q in %v", want, rules)
+		}
+	}
+	for _, unwanted := range []string{"notes-unreadable dev.md", "notes-read-only dev.md", "lead-cannot-delegate dev.md"} {
+		if _, ok := rules[unwanted]; ok {
+			t.Errorf("unexpected finding %q", unwanted)
+		}
+	}
+}
+
+func TestIsolatedAgentsAndLonelyPresetsGetNoNotesFindings(t *testing.T) {
+	p := &preset.Preset{Schema: 1, Name: "t", Mode: "replace", Agents: []string{"a", "b"}}
+	data := func(name string) []byte {
+		return []byte("---\nname: " + name + "\ndescription: Does " + name + ". Use when needed.\ntools: Write\nsquadShare: false\n---\nbody\n")
+	}
+	report := lint.Run(lint.Input{Name: "t", Preset: p, Agents: []lint.Agent{{File: "a.md", Data: data("a")}, {File: "b.md", Data: data("b")}}})
+	for _, f := range report.Findings {
+		if strings.HasPrefix(f.Rule, "notes-") {
+			t.Errorf("isolated agents were checked for the notes: %+v", f)
+		}
+		if f.Rule == "unknown-field" {
+			t.Errorf("squadShare is a known field: %+v", f)
+		}
+	}
+}

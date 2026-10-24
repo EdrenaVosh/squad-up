@@ -221,3 +221,86 @@ func TestSettingsSurviveAJSONRoundTrip(t *testing.T) {
 		t.Errorf("empty lists must be left out: %s", data)
 	}
 }
+
+func TestFlowRoundTripsAndStaysOutOfPresetsWithoutOne(t *testing.T) {
+	p := sample()
+	data, err := preset.Marshal(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(data), "flow:") {
+		t.Errorf("a preset without a flow wrote one:\n%s", data)
+	}
+
+	p.Flow = &preset.Flow{Gate: "tester", Fix: "reviewer", Rounds: 2}
+	data, err = preset.Marshal(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := preset.Unmarshal(data)
+	if err != nil {
+		t.Fatalf("%v\n%s", err, data)
+	}
+	if !reflect.DeepEqual(got.Flow, p.Flow) {
+		t.Errorf("flow = %+v, want %+v", got.Flow, p.Flow)
+	}
+}
+
+func TestFlowValidation(t *testing.T) {
+	cases := map[string]struct {
+		flow *preset.Flow
+		want string
+	}{
+		"ok":           {&preset.Flow{Gate: "tester", Fix: "planner", Rounds: 3}, ""},
+		"order only":   {&preset.Flow{}, ""},
+		"half a loop":  {&preset.Flow{Gate: "tester"}, "set both or neither"},
+		"unknown gate": {&preset.Flow{Gate: "ghost", Fix: "planner"}, `flow.gate: "ghost" is not among the agents`},
+		"same agent":   {&preset.Flow{Gate: "tester", Fix: "tester"}, "must be different"},
+		"too many":     {&preset.Flow{Gate: "tester", Fix: "planner", Rounds: 10}, "flow.rounds"},
+		"negative":     {&preset.Flow{Gate: "tester", Fix: "planner", Rounds: -1}, "flow.rounds"},
+	}
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			p := sample()
+			p.Flow = tc.flow
+			err := p.Validate()
+			switch {
+			case tc.want == "" && err != nil:
+				t.Fatalf("Validate = %v", err)
+			case tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)):
+				t.Fatalf("Validate = %v, want %q", err, tc.want)
+			}
+		})
+	}
+}
+
+func TestFlowRounds(t *testing.T) {
+	if got := (*preset.Flow)(nil).MaxRounds(); got != preset.DefaultRounds {
+		t.Errorf("nil flow rounds = %d", got)
+	}
+	if got := (&preset.Flow{Rounds: 5}).MaxRounds(); got != 5 {
+		t.Errorf("rounds = %d", got)
+	}
+	if (&preset.Flow{Gate: "a"}).Loops() || !(&preset.Flow{Gate: "a", Fix: "b"}).Loops() {
+		t.Error("Loops needs both gate and fix")
+	}
+}
+
+func TestTheFlowFollowsRenamesAndLosesItsLoopWithAnAgent(t *testing.T) {
+	p := sample()
+	p.Flow = &preset.Flow{Gate: "tester", Fix: "planner", Rounds: 2}
+
+	p.RenameInFlow("tester", "qa")
+	if p.Flow.Gate != "qa" || p.Flow.Fix != "planner" {
+		t.Fatalf("flow = %+v", p.Flow)
+	}
+
+	p.PruneFlow() // "qa" is not an agent of the sample
+	if p.Flow == nil || p.Flow.Loops() || p.Flow.Rounds != 0 {
+		t.Errorf("flow = %+v, want the order kept and the loop gone", p.Flow)
+	}
+	if err := p.Validate(); err != nil {
+		t.Errorf("a pruned preset must be valid: %v", err)
+	}
+	(&preset.Preset{}).PruneFlow() // no flow: nothing to do
+}

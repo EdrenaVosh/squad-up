@@ -234,6 +234,7 @@ func (a *app) newRm() *cobra.Command {
 func (a *app) newEdit() *cobra.Command {
 	var raw bool
 	var promptFile string
+	var share, isolate bool
 	cmd := &cobra.Command{
 		Use:   "edit <preset> [agent]",
 		Short: "Edit a preset or one of its agents",
@@ -259,6 +260,9 @@ func (a *app) newEdit() *cobra.Command {
 			if promptFile != "" {
 				return a.setPromptFromFile(name, args[1:], promptFile)
 			}
+			if share || isolate {
+				return a.setShared(name, args[1:], share)
+			}
 			if !raw {
 				return a.editInterface(name, args[1:])
 			}
@@ -277,6 +281,9 @@ func (a *app) newEdit() *cobra.Command {
 		},
 	}
 	cmd.Flags().BoolVar(&raw, "raw", false, "open the file in $EDITOR instead of the terminal interface")
+	cmd.Flags().BoolVar(&share, "share", false, "let the agent read and write the squad's shared notes (the default)")
+	cmd.Flags().BoolVar(&isolate, "isolate", false, "keep the agent out of the shared notes, e.g. for an independent code review")
+	cmd.MarkFlagsMutuallyExclusive("share", "isolate")
 	cmd.Flags().StringVar(&promptFile, "prompt-file", "", "replace the agent's prompt with the text of this Markdown file")
 	return cmd
 }
@@ -333,5 +340,23 @@ func (a *app) setPromptFromFile(preset string, agent []string, path string) erro
 		return libraryError(err, cloneInitialFix)
 	}
 	printf(a.io.Out, "The prompt of %s is now the text of %s (%s).\n", agent[0], filepath.Base(path), plural(strings.Count(text, "\n"), "line"))
+	return nil
+}
+
+func (a *app) setShared(preset string, agent []string, shared bool) error {
+	if len(agent) != 1 {
+		return &ExitError{Code: 2, Err: errors.New("--share and --isolate need the agent they apply to"), Fix: "use `squad edit <preset> <agent> --isolate`"}
+	}
+	if err := a.workspace().SetShared(preset, agent[0], shared); err != nil {
+		if errors.Is(err, workspace.ErrNoAgent) {
+			return &ExitError{Code: 1, Err: err, Fix: "`squad lint " + preset + "` shows the agents of the preset"}
+		}
+		return libraryError(err, cloneInitialFix)
+	}
+	if shared {
+		printf(a.io.Out, "%s shares the squad's notes.\n", agent[0])
+	} else {
+		printf(a.io.Out, "%s works in isolation: it neither reads nor writes the notes, and the main agent hands it only the task.\n", agent[0])
+	}
 	return nil
 }
