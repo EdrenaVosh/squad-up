@@ -364,8 +364,10 @@ func TestCardDescribesAPreset(t *testing.T) {
 		t.Errorf("permissions = %q, main = %q", c.Permissions, c.Main)
 	}
 	want := []workspace.AgentInfo{
-		{Name: "alpha", Model: "sonnet", Effort: "low", PermissionMode: "plan", Color: "cyan", Tools: 1},
-		{Name: "beta", Tools: 1},
+		{Name: "alpha", Model: "sonnet", Effort: "low", PermissionMode: "plan", Color: "cyan", Tools: 1, ToolNames: []string{"Read"},
+			Role: "alpha agent.", Description: "alpha agent. Use when alpha is needed.", Prompt: "Body of alpha."},
+		{Name: "beta", Tools: 1, ToolNames: []string{"Read"},
+			Role: "beta agent.", Description: "beta agent. Use when beta is needed.", Prompt: "Body of beta."},
 	}
 	if !reflect.DeepEqual(c.Agents, want) {
 		t.Errorf("agents = %+v, want %+v", c.Agents, want)

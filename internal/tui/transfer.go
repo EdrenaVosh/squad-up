@@ -180,7 +180,7 @@ func (s *importScreen) View(c viewCtx) string {
 		lines = append(lines, " "+sMuted.Render("Hooks and MCP servers: "+state))
 	}
 	lines = lines[min(s.scroll, max(len(lines)-1, 0)):]
-	return box(ImportTitle, truncate(sourceLabel(s.source), c.w/2), lines, c.w, c.h, 0)
+	return c.box(ImportTitle, truncate(sourceLabel(s.source), c.w/2), lines, 0)
 }
 
 // sourceLabel shortens a file path to its name; links and gists stay whole.

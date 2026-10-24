@@ -175,7 +175,7 @@ func (s *permsScreen) View(c viewCtx) string {
 	} else {
 		lines = append(lines, permissionLines(shown, inner)...)
 	}
-	return box("Permissions", s.bundle.Preset.Name, lines, c.w, c.h, 0)
+	return c.box("Permissions", s.bundle.Preset.Name, lines, 0)
 }
 
 // permissionLines lists a permission set, one rule per line.
@@ -364,7 +364,7 @@ func (c *customPerms) View(v viewCtx) string {
 		lines = append(lines, cursorLine(index)+sAccent.Render("+")+" "+sMuted.Render("add rule"))
 		index++
 	}
-	return box("Custom permissions", c.bundle.Preset.Name, lines, v.w, v.h, 0)
+	return v.box("Custom permissions", c.bundle.Preset.Name, lines, 0)
 }
 
 func listTitle(list string) string {

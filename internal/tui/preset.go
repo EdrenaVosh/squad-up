@@ -292,7 +292,7 @@ func (p *presetScreen) View(c viewCtx) string {
 
 	if p.loadErr != "" {
 		add(" " + sErr.Render(truncate("✗ "+p.loadErr, inner-2)))
-		return box(title, right, lines, c.w, c.h, 0)
+		return c.box(title, right, lines, 0)
 	}
 	add(" " + sMuted.Render(truncate(p.card.Description, inner-2)))
 	add("")
@@ -331,7 +331,7 @@ func (p *presetScreen) View(c viewCtx) string {
 		shown++
 		add("   " + findingMark(f.Level) + " " + truncate(f.Message, inner-6))
 	}
-	return box(title, right, lines, c.w, c.h, 0)
+	return c.box(title, right, lines, 0)
 }
 
 // slotLine draws one agent row, with the cursor if it is the current one.

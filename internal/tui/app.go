@@ -62,6 +62,7 @@ type viewCtx struct {
 	claude string
 	frame  int  // the animation frame, advancing while Animate is on
 	anim   bool // whether anything should animate
+	ox, oy int  // where the top left of the screen sits in the terminal
 }
 
 type hint struct{ key, label string }
@@ -69,6 +70,20 @@ type hint struct{ key, label string }
 // finisher is implemented by a screen that must not be shown again once
 // something else has done its job: the welcome screen, after a first preset.
 type finisher interface{ finished() bool }
+
+// fullscreen is implemented by a screen that uses the whole terminal. Every
+// other screen opens in a window in the middle, so that a big terminal is not
+// filled with empty space.
+type fullscreen interface{ fullscreen() bool }
+
+// The window the other screens open in, at most.
+const (
+	windowW = 120
+	windowH = 36
+	// The main screen stops growing here; more space is margin.
+	homeMaxW = 200
+	homeMaxH = 50
+)
 
 // screen is one page of the interface; the app keeps a stack of them.
 type screen interface {
@@ -84,7 +99,9 @@ type screen interface {
 // Navigation and status messages.
 type (
 	pushMsg struct{ s screen }
-	popMsg  struct {
+	// pushAllMsg opens several screens at once, the last one on top.
+	pushAllMsg struct{ screens []screen }
+	popMsg     struct {
 		n    int
 		then tea.Cmd
 	}
@@ -97,7 +114,10 @@ type (
 )
 
 func push(s screen) tea.Cmd { return func() tea.Msg { return pushMsg{s} } }
-func pop() tea.Cmd          { return func() tea.Msg { return popMsg{n: 1} } }
+func pushAll(screens ...screen) tea.Cmd {
+	return func() tea.Msg { return pushAllMsg{screens} }
+}
+func pop() tea.Cmd { return func() tea.Msg { return popMsg{n: 1} } }
 
 // popThen closes the top screen, then runs the command: the order is fixed,
 // unlike two commands sent together.
@@ -218,6 +238,13 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case pushMsg:
 		a.stack = append(a.stack, m.s)
 		return a, m.s.Init()
+	case pushAllMsg:
+		var cmds []tea.Cmd
+		for _, s := range m.screens {
+			a.stack = append(a.stack, s)
+			cmds = append(cmds, s.Init())
+		}
+		return a, tea.Batch(cmds...)
 	case popMsg:
 		return a.pop(m)
 	case reloadMsg:
@@ -268,7 +295,15 @@ func (a *App) View() tea.View {
 		note := sWarn.Render("Terminal too small") + "\n" + sMuted.Render("squadup needs 80×24")
 		content = lipgloss.Place(a.w, a.h, lipgloss.Center, lipgloss.Center, note)
 	default:
-		body := a.top().View(viewCtx{w: a.w, h: a.h - 1, claude: a.claude, frame: a.frame, anim: a.env.Animate})
+		ctx := viewCtx{w: a.w, h: a.h - 1, claude: a.claude, frame: a.frame, anim: a.env.Animate}
+		var body string
+		maxW, maxH := windowW, windowH
+		if _, ok := a.top().(fullscreen); ok {
+			maxW, maxH = homeMaxW, homeMaxH
+		}
+		ctx.w, ctx.h = min(a.w, maxW), min(a.h-1, maxH)
+		ctx.ox, ctx.oy = (a.w-ctx.w)/2, (a.h-1-ctx.h)/2
+		body = lipgloss.Place(a.w, a.h-1, lipgloss.Center, lipgloss.Center, a.top().View(ctx))
 		content = body + "\n" + a.footer()
 	}
 	v := tea.NewView(content)

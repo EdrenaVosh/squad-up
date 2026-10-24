@@ -11,7 +11,7 @@ import (
 // the agents as a roster of tiles that deal in one after another. frames is
 // how long ago the card started to appear. When the tiles do not fit, the
 // agents become a compact list.
-func cardLines(c workspace.Card, w, h, frames int) []string {
+func cardLines(c workspace.Card, w, h int, o rosterOpts) []string {
 	badge := ""
 	switch {
 	case c.Active && c.Initial:
@@ -37,7 +37,7 @@ func cardLines(c workspace.Card, w, h, frames int) []string {
 	case c.Initial && c.CapturedAt != nil:
 		header = append(header, " "+sMuted.Render(truncate(captured(c), w-2)))
 	default:
-		header = append(header, " "+sMuted.Render(typewriter(truncate(c.Description, w-2), frames)))
+		header = append(header, " "+sMuted.Render(typewriter(truncate(c.Description, w-2), o.frames)))
 	}
 	header = append(header, "")
 
@@ -53,7 +53,7 @@ func cardLines(c workspace.Card, w, h, frames int) []string {
 	}
 
 	room := max(h-len(header)-len(footer), 1)
-	roster := rosterLines(c.Agents, w-2, room, frames)
+	roster, _, _ := rosterLines(c.Agents, w-2, room, o)
 	for i := range roster {
 		roster[i] = " " + roster[i]
 	}

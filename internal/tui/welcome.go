@@ -132,7 +132,12 @@ func (w *welcomeScreen) View(c viewCtx) string {
 	var lines []string
 	add := func(l ...string) { lines = append(lines, l...) }
 
-	add(logoLines(inner, w.appear.frames(c))...)
+	if c.h >= 30 {
+		tall := c.h >= 34 && c.w >= 100
+		add(bigLogoBlock(inner, w.appear.frames(c), c.shift(), 0, tall, c.anim)...)
+	} else {
+		add(logoLines(inner, w.appear.frames(c))...)
+	}
 	add("")
 	if s.Clean {
 		add(" "+sBold.Render(CleanSetup), "")
@@ -165,7 +170,7 @@ func (w *welcomeScreen) View(c viewCtx) string {
 	if w.probing {
 		add("", " "+spinner(c.frame)+" "+sAccent.Render("Checking models…"))
 	}
-	return box("Welcome to squadup", "", lines, c.w, c.h, 0)
+	return c.box("Welcome to squadup", "", lines, 0)
 }
 
 func issuesText(s initial.Summary) string {

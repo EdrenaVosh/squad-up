@@ -365,7 +365,7 @@ func (e *agentEditor) View(c viewCtx) string {
 			" " + sMuted.Render("The file cannot be read as an agent. Fix it in your editor:"),
 			"   squad edit " + e.bundle.Preset.Name + " " + name + " --raw",
 		}
-		return box(title, e.bundle.Preset.Name, lines, c.w, c.h, 0)
+		return c.box(title, e.bundle.Preset.Name, lines, 0)
 	}
 
 	form := e.formLines(inner, c)
@@ -377,19 +377,19 @@ func (e *agentEditor) View(c viewCtx) string {
 		left := append(form, "")
 		left = append(left, checks...)
 		side := []string{" " + sMuted.Render("AS IT APPEARS IN YOUR SQUAD")}
-		for _, l := range agentTile(e.info(), e.idx+1, 2) {
+		for _, l := range agentTile(e.info(), e.idx+1, tileOpts{w: 28, stage: 2, tall: true}) {
 			side = append(side, " "+l)
 		}
 		side = append(side, "")
 		side = append(side, e.previewLines(inner-formW-1)...)
-		return box(title, right, panes(left, side, formW, inner), c.w, c.h, formW)
+		return c.box(title, right, panes(left, side, formW, inner), formW)
 	}
 	if e.preview {
-		return box(title+" · preview", right, e.previewLines(inner), c.w, c.h, 0)
+		return c.box(title+" · preview", right, e.previewLines(inner), 0)
 	}
 	lines := append(form, "")
 	lines = append(lines, checks...)
-	return box(title, right, lines, c.w, c.h, 0)
+	return c.box(title, right, lines, 0)
 }
 
 // info is the agent as the roster shows it.

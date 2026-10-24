@@ -2,14 +2,14 @@
 │ Planner, reviewer and tester for one-person apps                             │
 │                                                                              │
 │ AGENTS                                                                       │
-│ ▌ SLOT 1  ■ planner         opus      ▂▃▅▁▁ high     ▰▱▱▱▱ plan              │
-│   SLOT 2  ■ reviewer        sonnet    ▂▃▅▁▁ high     ▰▰▱▱▱ default           │
-│   SLOT 3  ■ tester          haiku     ▂▃▁▁▁ medium   ▰▰▰▱▱ edits             │
+│ ▌ SLOT 1  ■ planner         opus      ▂▃▅·· high     ■□□□□ plan              │
+│   SLOT 2  ■ reviewer        sonnet    ▂▃▅·· high     ■■□□□ default           │
+│   SLOT 3  ■ tester          haiku     ▂▃··· medium   ■■■□□ edits             │
 │   + add agent                                                                │
 │                                                                              │
 │ SETTINGS                                                                     │
 │   Default model    sonnet                                                    │
-│   Effort          ▂▃▅▁▁ high                                                 │
+│   Effort          ▂▃▅·· high                                                 │
 │   Permissions     acceptEdits · 0 allow · 1 ask · 0 deny                     │
 │   Main agent      —                                                          │
 │   Mode            replace — your own agents are removed while equipped       │

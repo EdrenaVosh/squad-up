@@ -44,33 +44,29 @@ func gradient(n int) []color.Color {
 	return lipgloss.Blend1D(n, brandStops...)
 }
 
-// gradientText colors each cell of s along the gradient. A positive shine
-// sweeps a bright band across it: shine is the band's position in cells.
-func gradientText(s string, shine float64) string {
-	runes := []rune(s)
-	colors := gradient(len(runes))
-	var b strings.Builder
-	for i, r := range runes {
-		c := colors[i]
-		if shine > 0 {
-			if d := math.Abs(float64(i) - shine); d < 3 {
-				c = lipgloss.Lighten(c, 0.55*(1-d/3))
-			}
-		}
-		b.WriteString(lipgloss.NewStyle().Foreground(c).Bold(true).Render(string(r)))
-	}
-	return b.String()
+// flowPeriod is how many colors one loop of the flowing gradient has.
+const flowPeriod = 72
+
+// flowCycle is the brand gradient there and back, so that it loops without a
+// seam: amber → pink → violet → blue → violet → pink → amber.
+var flowCycle = lipgloss.Blend1D(flowPeriod,
+	brandStops[0], brandStops[1], brandStops[2], brandStops[3], brandStops[2], brandStops[1], brandStops[0])
+
+// flowColor is the color of cell i of a run of n cells, a loop of the gradient
+// spread over the run, moved along by shift. Counting shift up makes the
+// colors flow.
+func flowColor(i, n, shift int) color.Color {
+	return flowCycle[((i*flowPeriod/max(n, 1)+shift)%flowPeriod+flowPeriod)%flowPeriod]
 }
 
-// shineAt is where the highlight of a wordmark of n cells is at a frame, or 0
-// while it rests. It sweeps once every 4 seconds.
-func shineAt(frame, n int) float64 {
-	const period = 50 // frames: 4 s at 80 ms
-	t := frame % period
-	if t > n+8 {
-		return 0
+// gradientText colors each cell of s along the flowing gradient.
+func gradientText(s string, shift int) string {
+	runes := []rune(s)
+	var b strings.Builder
+	for i, r := range runes {
+		b.WriteString(lipgloss.NewStyle().Foreground(flowColor(i, len(runes), shift)).Bold(true).Render(string(r)))
 	}
-	return float64(t) - 4
+	return b.String()
 }
 
 // blend mixes two colors; t = 0 is a, t = 1 is b.
@@ -120,7 +116,7 @@ var effortSteps = map[string]int{"low": 1, "medium": 2, "high": 3, "xhigh": 4, "
 func effortBars(level string) string {
 	n, ok := effortSteps[level]
 	if !ok {
-		return sMuted.Render("▁▁▁▁▁ —")
+		return sMuted.Render("····· —")
 	}
 	heights := []string{"▂", "▃", "▅", "▆", "█"}
 	var b strings.Builder
@@ -128,7 +124,7 @@ func effortBars(level string) string {
 		if i < n {
 			b.WriteString(fg(brandStops[min(i*len(brandStops)/len(heights), len(brandStops)-1)]).Render(h))
 		} else {
-			b.WriteString(fg(cDim).Render("▁"))
+			b.WriteString(fg(cDim).Render("·"))
 		}
 	}
 	return b.String() + " " + level
@@ -150,7 +146,7 @@ func permissionStrength(mode string) string {
 		level = 2
 	}
 	c := permissionColors[level-1]
-	return fg(c).Render(strings.Repeat("▰", level)) + fg(cDim).Render(strings.Repeat("▱", 5-level)) + " " + shortMode(mode)
+	return fg(c).Render(strings.Repeat("■", level)) + fg(cDim).Render(strings.Repeat("□", 5-level)) + " " + shortMode(mode)
 }
 
 var spinnerFrames = []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}

@@ -3,7 +3,10 @@ package tui_test
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+
+	tea "charm.land/bubbletea/v2"
 
 	"github.com/EdrenaVosh/squadup/internal/tui"
 )
@@ -22,7 +25,7 @@ func TestSelectionMovesTheCard(t *testing.T) {
 	h.contains("Refactor Day", "architect")
 	h.lacks("Bug Hunt")
 	h.press("j")
-	h.contains("Solo Indie", "─ 3 ", "tester")
+	h.contains("Solo Indie", " 3 ", "tester")
 	h.press("up", "k")
 	h.contains("Bug Hunt")
 }
@@ -39,7 +42,7 @@ func TestInitialIsActiveUntilAPresetIsEquipped(t *testing.T) {
 
 	h.goTo("initial")
 
-	h.contains("● ACTIVE", "your original setup · captured 2026-10-24", "─ 1 ", "docs-writer")
+	h.contains("● ACTIVE", "your original setup · captured 2026-10-24", " 1 ", "docs-writer")
 	h.golden("home-initial")
 }
 
@@ -259,4 +262,65 @@ func TestTooSmallTerminalSaysSo(t *testing.T) {
 	h.resize(30, 8)
 
 	h.contains("Terminal too small")
+}
+
+func TestHomeOnABigTerminalUsesTheSpace(t *testing.T) {
+	h := newHarness(t)
+	h.resize(200, 52)
+
+	h.contains("PRESETS", "██", "IF YOU EQUIP IT", "SETTINGS", "CONTEXT COST", "HEALTH", "PROMPT", "claude 2.1.309", "3 presets · 6 agents")
+	h.goldenAt("home-wide", 200, 52)
+}
+
+func TestHomeOnAMediumTerminal(t *testing.T) {
+	h := newHarness(t)
+	h.resize(110, 32)
+
+	h.contains("PRESETS", "▀", "SETTINGS", "Bug Hunt")
+	h.goldenAt("home-medium", 110, 32)
+}
+
+func TestTheArrowKeysPickAnAgentAndAOpensItsEditor(t *testing.T) {
+	h := newHarness(t)
+	h.resize(160, 44)
+	h.contains("┏━ 1 ")
+
+	h.press("right")
+	h.contains("┏━ 2 ", "tester · PROMPT")
+	h.press("left", "left") // wraps around
+	h.contains("┏━ 2 ")
+	h.press("a")
+	h.contains("Agent tester")
+	h.press("esc", "esc")
+	h.contains("PRESETS")
+}
+
+func TestHomeOfInitialCannotEditAnAgent(t *testing.T) {
+	h := newHarness(t)
+	h.goTo("initial")
+	h.press("a")
+	h.contains("clone it first")
+}
+
+func TestClickingATileSelectsItAndASecondClickEditsIt(t *testing.T) {
+	h := newHarness(t)
+	h.resize(160, 44)
+	h.view()
+	h.press("down", "down") // Solo Indie: three agents
+	h.view()
+
+	// Tile 2 begins right of the list; find a cell inside it on the screen.
+	x, y := 0, 0
+	for row, line := range strings.Split(h.view(), "\n") {
+		if i := strings.Index(line, "╭─ 2 "); i >= 0 {
+			x, y = len([]rune(line[:i]))+3, row+2
+		}
+	}
+	if x == 0 {
+		t.Fatalf("tile 2 not found:\n%s", h.view())
+	}
+	h.send(tea.MouseClickMsg{X: x, Y: y, Button: tea.MouseLeft})
+	h.contains("┏━ 2 ")
+	h.send(tea.MouseClickMsg{X: x, Y: y, Button: tea.MouseLeft})
+	h.contains("Agent reviewer")
 }

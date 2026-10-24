@@ -248,7 +248,13 @@ func (h *harness) fits(w, ht int) {
 // golden compares the screen with testdata/<name>.golden.
 func (h *harness) golden(name string) {
 	h.t.Helper()
-	h.fits(80, 24)
+	h.goldenAt(name, 80, 24)
+}
+
+// goldenAt is golden for a terminal of another size.
+func (h *harness) goldenAt(name string, w, ht int) {
+	h.t.Helper()
+	h.fits(w, ht)
 	path := filepath.Join("testdata", name+".golden")
 	got := h.view()
 	if *update {

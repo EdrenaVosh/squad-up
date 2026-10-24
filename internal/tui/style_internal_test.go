@@ -17,32 +17,14 @@ func TestGradientHasOneColorPerCell(t *testing.T) {
 	}
 }
 
-func TestGradientTextKeepsTheTextAndShineOnlyChangesColors(t *testing.T) {
-	plain := gradientText("◆ squadup", 0)
-	shining := gradientText("◆ squadup", 4)
+func TestGradientTextKeepsTheTextAndFlowsWithTheShift(t *testing.T) {
+	a, b := gradientText("◆ squadup", 0), gradientText("◆ squadup", 12)
 
-	if ansi.Strip(plain) != "◆ squadup" || ansi.Strip(shining) != "◆ squadup" {
-		t.Errorf("text changed: %q %q", ansi.Strip(plain), ansi.Strip(shining))
+	if ansi.Strip(a) != "◆ squadup" || ansi.Strip(b) != "◆ squadup" {
+		t.Errorf("text changed: %q %q", ansi.Strip(a), ansi.Strip(b))
 	}
-	if plain == shining {
-		t.Error("a shine at 4 changes nothing")
-	}
-}
-
-func TestTheShineSweepsThenRests(t *testing.T) {
-	prev := -100.0
-	for frame := 0; frame <= 10; frame++ {
-		pos := shineAt(frame, 10)
-		if pos <= prev {
-			t.Errorf("the shine stands still or goes back at frame %d: %v after %v", frame, pos, prev)
-		}
-		prev = pos
-	}
-	if got := shineAt(40, 10); got != 0 {
-		t.Errorf("the shine should rest at frame 40, got %v", got)
-	}
-	if got := shineAt(50, 10); got == 0 {
-		t.Error("the shine should start again every 50 frames")
+	if a == b {
+		t.Error("a shift of 12 changes nothing")
 	}
 }
 
@@ -65,7 +47,7 @@ func TestPulseBreathesBetweenTwoColors(t *testing.T) {
 
 func TestEffortBarsRiseWithTheLevel(t *testing.T) {
 	want := map[string]string{
-		"low": "▂▁▁▁▁ low", "medium": "▂▃▁▁▁ medium", "high": "▂▃▅▁▁ high", "xhigh": "▂▃▅▆▁ xhigh", "max": "▂▃▅▆█ max", "": "▁▁▁▁▁ —", "weird": "▁▁▁▁▁ —",
+		"low": "▂···· low", "medium": "▂▃··· medium", "high": "▂▃▅·· high", "xhigh": "▂▃▅▆· xhigh", "max": "▂▃▅▆█ max", "": "····· —", "weird": "····· —",
 	}
 	for level, text := range want {
 		if got := ansi.Strip(effortBars(level)); got != text {
@@ -76,7 +58,7 @@ func TestEffortBarsRiseWithTheLevel(t *testing.T) {
 
 func TestPermissionStrengthGrowsAndShortensLongModes(t *testing.T) {
 	for mode, text := range map[string]string{
-		"plan": "▰▱▱▱▱ plan", "": "▰▰▱▱▱ default", "acceptEdits": "▰▰▰▱▱ edits", "auto": "▰▰▰▰▱ auto", "bypassPermissions": "▰▰▰▰▰ bypass",
+		"plan": "■□□□□ plan", "": "■■□□□ default", "acceptEdits": "■■■□□ edits", "auto": "■■■■□ auto", "bypassPermissions": "■■■■■ bypass",
 	} {
 		if got := ansi.Strip(permissionStrength(mode)); got != text {
 			t.Errorf("permissionStrength(%q) = %q, want %q", mode, got, text)
@@ -131,7 +113,8 @@ func agents(n int) []workspace.AgentInfo {
 
 func TestRosterDealsTilesInOneAfterAnother(t *testing.T) {
 	count := func(frames int) (placeholders, full int) {
-		text := ansi.Strip(strings.Join(rosterLines(agents(3), 55, 20, frames), "\n"))
+		lines, _, _ := rosterLines(agents(3), 55, 20, rosterOpts{frames: frames, selected: -1})
+		text := ansi.Strip(strings.Join(lines, "\n"))
 		return strings.Count(text, "· · ·"), strings.Count(text, "▂▃▅")
 	}
 	if p, f := count(0); p != 2 || f != 0 {
@@ -146,7 +129,7 @@ func TestRosterDealsTilesInOneAfterAnother(t *testing.T) {
 }
 
 func TestRosterFallsBackToAListWhenTilesDoNotFit(t *testing.T) {
-	lines := rosterLines(agents(9), 55, 8, 100)
+	lines, _, _ := rosterLines(agents(9), 55, 8, rosterOpts{frames: 100, selected: -1})
 	if len(lines) > 8 {
 		t.Fatalf("%d lines in 8", len(lines))
 	}
@@ -157,8 +140,63 @@ func TestRosterFallsBackToAListWhenTilesDoNotFit(t *testing.T) {
 }
 
 func TestRosterWrapsTilesIntoRows(t *testing.T) {
-	text := ansi.Strip(strings.Join(rosterLines(agents(4), 55, 20, 100), "\n"))
+	lines, _, _ := rosterLines(agents(4), 55, 20, rosterOpts{frames: 100, selected: -1})
+	text := ansi.Strip(strings.Join(lines, "\n"))
 	if strings.Count(text, "╭") != 4 || strings.Count(text, "\n") != 2*tileH {
 		t.Errorf("4 agents at 3 per row should make 2 rows:\n%s", text)
+	}
+}
+
+func TestTheBigLogoIsMadeOfBlocksAndKeepsItsShape(t *testing.T) {
+	for _, tall := range []bool{false, true} {
+		lines := bigLogo(tall, 0)
+		want := 3
+		if tall {
+			want = 5
+		}
+		if len(lines) != want {
+			t.Fatalf("tall=%v: %d rows, want %d", tall, len(lines), want)
+		}
+		for i, l := range lines {
+			if w := ansi.StringWidth(l); w != bigLogoWidth(tall) {
+				t.Errorf("tall=%v row %d is %d cells wide, want %d", tall, i, w, bigLogoWidth(tall))
+			}
+		}
+		if strings.Join(lines, "") == ansi.Strip(strings.Join(lines, "")) {
+			t.Errorf("tall=%v: the logo has no color", tall)
+		}
+	}
+	if bigLogoWidth(false) != 41 || bigLogoWidth(true) != 82 {
+		t.Errorf("widths = %d, %d", bigLogoWidth(false), bigLogoWidth(true))
+	}
+}
+
+func TestTheBigLogoSpellsTheWord(t *testing.T) {
+	plain := ansi.Strip(strings.Join(bigLogo(true, 0), "\n"))
+	// The first letter, S, starts with a gap in its top-left pixel.
+	first := strings.Split(plain, "\n")
+	if !strings.HasPrefix(first[0], "  ██████") || !strings.HasPrefix(first[1], "██") {
+		t.Errorf("the S is wrong:\n%s", plain)
+	}
+	if strings.Count(plain, "\n") != 4 {
+		t.Errorf("expected five rows:\n%s", plain)
+	}
+}
+
+func TestTheLogoColorsFlowWithTheShift(t *testing.T) {
+	if strings.Join(bigLogo(false, 0), "") == strings.Join(bigLogo(false, 9), "") {
+		t.Error("shifting the gradient changes nothing")
+	}
+	if ansi.Strip(strings.Join(bigLogo(false, 0), "")) != ansi.Strip(strings.Join(bigLogo(false, 9), "")) {
+		t.Error("shifting the gradient changed the shape")
+	}
+}
+
+func TestTheGradientLoopsWithoutASeam(t *testing.T) {
+	a, b := flowColor(3, 20, 0), flowColor(3, 20, flowPeriod)
+	ar, ag, ab, _ := a.RGBA()
+	br, bg, bb, _ := b.RGBA()
+	if ar != br || ag != bg || ab != bb {
+		t.Error("a full period should come back to the same color")
 	}
 }

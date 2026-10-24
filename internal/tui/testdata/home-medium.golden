@@ -1,0 +1,32 @@
+╭─ ◆ squadup ──────────────────────────────────────────────────────────────────────── claude 2.1.309 · opus ─╮
+│  ▄▀▀▀▀ ▄▀▀▀▄ █   █ ▄▀▀▀▄ █▀▀▀▄ █   █ █▀▀▀▄                  ✦ ✦                   claude 2.1.309 ·  opus   │
+│   ▀▀▀▄ █ ▀▄▀ █   █ █▀▀▀█ █   █ █   █ █▀▀▀      ✦                               ✦      ◇ initial is active  │
+│  ▀▀▀▀   ▀▀ ▀  ▀▀▀  ▀   ▀ ▀▀▀▀   ▀▀▀  ▀        ✦                    ✦✦          ✓ in sync with your config  │
+│────────────────────────────────────────────────────────────────────────────────────────────────────────────│
+│ PRESETS 3                    │ ● Bug Hunt                                                                  │
+│                              │ A debugger and a tester for tracking down a failure                         │
+│ ▌ ○ Bug Hunt                 │                                                                             │
+│ ▌   ■ ■ 2 agents             │ ┏━ 1 ━━━━━━━━━━━━━━━━━━━━━━━━┓ ╭─ 2 ────────────────────────╮               │
+│ ▌   A debugger and a tester… │ ┃ ■ debugger                 ┃ │ ■ tester                   │               │
+│                              │ ┃ [inherit]                  ┃ │ [inherit]                  │               │
+│   ○ Refactor Day             │ ┃ ····· —                    ┃ │ ····· —                    │               │
+│     ■ 1 agent                │ ┃ ■■□□□ default              ┃ │ ■■□□□ default              │               │
+│     Keeps your agents and a… │ ┃ 2 tools                    ┃ │ 2 tools                    │               │
+│                              │ ┃ Finds the root cause of a  ┃ │ Writes a failing test for  │               │
+│   ● Solo Indie               │ ┃ failure.                   ┃ │ a bug.                     │               │
+│     ■ ■ ■ 3 agents           │ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ╰────────────────────────────╯               │
+│     Planner, reviewer and t… │                                                                             │
+│                              │ ╭─ SETTINGS ────────────────────────╮ ╭─ CONTEXT COST · TOKENS/CALL ──────╮ │
+│                              │ │ Model        haiku                │ │ debugger    ████████████░░░░    3 │ │
+│                              │ │ Effort      ····· —               │ │ tester      ████████████████    4 │ │
+│                              │ │ Permissions —                     │ │                                   │ │
+│                              │ │ Main agent  debugger              │ │ ~34 tokens per session            │ │
+│                              │ │ Mode        replace               │ │                                   │ │
+│                              │ │ Rules                             │ │                                   │ │
+│                              │ ╰───────────────────────────────────╯ ╰───────────────────────────────────╯ │
+│ ──────────────────────────── │                                                                             │
+│   ● initial         ● ACTIVE │                                                                             │
+│     ■ ■ ■ 3 agents           │                                                                             │
+│     your original setup      │                                                                             │
+╰──────────────────────────────┴─────────────────────────────────────────────────────────────────────────────╯
+  ↑↓  preset   ←→  agent   enter  open   a  edit agent   e  equip   t  try   n  new   ?  help   q  quit

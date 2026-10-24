@@ -41,6 +41,7 @@ var (
 	sErr    = fg(cErr)
 	sWarn   = fg(cWarn)
 	sBold   = lipgloss.NewStyle().Bold(true)
+	sPlain  = lipgloss.NewStyle()
 )
 
 // swatch is the colored square in front of an agent.
@@ -103,15 +104,36 @@ func box(title, right string, lines []string, w, h, dividerAt int) string {
 	return frame(title, 0, right, lines, w, h, dividerAt)
 }
 
-// frame is box with a shining title: shine is the position of the highlight
-// in the title (see gradientText), 0 for none.
-func frame(title string, shine float64, right string, lines []string, w, h, dividerAt int) string {
+// box draws a frame the size of the view, its edges flowing with the frame
+// clock.
+//
+// On a tall terminal the window is only as high as its content (with a floor),
+// and the app centers it; on a small one it takes all the height.
+func (c viewCtx) box(title, right string, lines []string, dividerAt int) string {
+	h := c.h
+	if c.h >= 30 {
+		h = min(c.h, max(len(lines)+3, 22))
+	}
+	return frame(title, c.shift(), right, lines, c.w, h, dividerAt)
+}
+
+// shift is how far the flowing gradient has moved: one step per frame while
+// animation is on.
+func (c viewCtx) shift() int {
+	if !c.anim {
+		return 0
+	}
+	return c.frame
+}
+
+// frame is box with a flowing gradient: shift moves the colors of the edges
+// and of the title along (see flowColor).
+func frame(title string, shift int, right string, lines []string, w, h, dividerAt int) string {
 	inner := w - 2
-	colors := gradient(w)
 	edge := func(from int, text string) string {
 		var b strings.Builder
 		for i, r := range []rune(text) {
-			b.WriteString(fg(colors[min(from+i, w-1)]).Render(string(r)))
+			b.WriteString(fg(flowColor(from+i, w, shift)).Render(string(r)))
 		}
 		return b.String()
 	}
@@ -133,7 +155,7 @@ func frame(title string, shine float64, right string, lines []string, w, h, divi
 		titleText = " " + truncate(title, max(w-6, 1)) + " "
 		fill = max(room-ansi.StringWidth(titleText), 0)
 	}
-	top := edge(0, "╭─") + gradientText(titleText, shine) + edge(2+ansi.StringWidth(titleText), strings.Repeat("─", fill)) + label +
+	top := edge(0, "╭─") + gradientText(titleText, shift) + edge(2+ansi.StringWidth(titleText), strings.Repeat("─", fill)) + label +
 		edge(w-2, "─╮")
 	rows := []string{top}
 

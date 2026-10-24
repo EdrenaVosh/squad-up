@@ -91,6 +91,7 @@ type Entry struct {
 	Active      bool       `json:"active"`
 	Initial     bool       `json:"initial"`
 	Accent      string     `json:"accent,omitempty"`
+	Colors      []string   `json:"colors,omitempty"` // the color of each agent, "" when it has none
 	CapturedAt  *time.Time `json:"capturedAt,omitempty"`
 	Error       string     `json:"error,omitempty"`
 }
@@ -121,6 +122,7 @@ func (w Workspace) Entries() ([]Entry, error) {
 			e.Error = firstLine(err.Error())
 		} else {
 			e.Title, e.Description, e.Agents, e.Accent = p.Title, p.Description, len(p.Agents), p.Accent
+			e.Colors = w.agentColors(name, p.Agents)
 		}
 		entries = append(entries, e)
 	}
@@ -581,4 +583,21 @@ func (w Workspace) FindAgent(presetName, agent string) (string, []byte, error) {
 		return found[0], data, err
 	}
 	return "", nil, &AmbiguousAgentError{Agent: agent, Presets: found}
+}
+
+// agentColors reads the color of each agent of a preset from its file.
+func (w Workspace) agentColors(preset string, agents []string) []string {
+	colors := make([]string, len(agents))
+	for i, name := range agents {
+		data, err := os.ReadFile(filepath.Join(w.Paths.PresetDir(preset), "agents", name+".md"))
+		if err != nil {
+			continue
+		}
+		if a, err := agentfile.Parse(data); err == nil {
+			if v, ok := a.Get("color"); ok && v != nil {
+				colors[i] = fmt.Sprint(v)
+			}
+		}
+	}
+	return colors
 }

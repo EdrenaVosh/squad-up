@@ -2,8 +2,8 @@
 │ ▌ Name              planner                                                  │
 │   Description       Breaks a task into steps. Use before starting any large …│
 │   Model              opus                                                    │
-│   Effort            ▂▃▅▁▁ high                                               │
-│   Permission mode   ▰▱▱▱▱ plan                                               │
+│   Effort            ▂▃▅·· high                                               │
+│   Permission mode   ■□□□□ plan                                               │
 │   Tools             ‹Read› ‹Grep› ‹Glob›                                     │
 │   Disallowed tools  —                                                        │
 │   Max turns         —                                                        │

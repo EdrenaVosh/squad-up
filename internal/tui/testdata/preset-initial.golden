@@ -2,13 +2,13 @@
 │ Your original Claude Code setup                                              │
 │                                                                              │
 │ AGENTS                                                                       │
-│   SLOT 1  ■ docs-writer    [inherit]  ▁▁▁▁▁ —        ▰▰▱▱▱ default           │
-│   SLOT 2  ■ reviewer       [inherit]  ▁▁▁▁▁ —        ▰▰▱▱▱ default           │
-│   SLOT 3  ■ tester         [inherit]  ▁▁▁▁▁ —        ▰▰▱▱▱ default           │
+│   SLOT 1  ■ docs-writer    [inherit]  ····· —        ■■□□□ default           │
+│   SLOT 2  ■ reviewer       [inherit]  ····· —        ■■□□□ default           │
+│   SLOT 3  ■ tester         [inherit]  ····· —        ■■□□□ default           │
 │                                                                              │
 │ SETTINGS                                                                     │
 │   Default model    opus                                                      │
-│   Effort          ▂▃▅▁▁ high                                                 │
+│   Effort          ▂▃▅·· high                                                 │
 │   Permissions     acceptEdits · 1 allow · 0 ask · 0 deny                     │
 │   Main agent      —                                                          │
 │   Mode            replace — your own agents are removed while equipped       │

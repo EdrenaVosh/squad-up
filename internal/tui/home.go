@@ -29,8 +29,19 @@ type home struct {
 	loadErr   string
 	appear    reveal // the roster of the selected preset dealing in
 	hits      []hitRow
+	tiles     []tileHit
 	topRows   int // screen rows above the frame: the drift banner
+	agent     int // the selected agent of the card
+	cardName  string
+	activity  []apply.JournalEntry
+	listW     int // width of the list column, as last drawn
+	ox, oy    int // where the screen sits in the terminal, for the mouse
+	plan      *apply.Plan
+	planErr   string
 }
+
+// tileHit is an agent tile and where it was drawn on the screen.
+type tileHit struct{ x, y, w, h, index int }
 
 // hitRow is a list row and where it was drawn, for the mouse.
 type hitRow struct{ line, index int }
@@ -45,6 +56,8 @@ func newHome(ws workspace.Workspace) *home {
 }
 
 func (h *home) Init() tea.Cmd { return nil }
+
+func (h *home) fullscreen() bool { return true }
 
 // visible returns the entries the filter lets through; Initial always stays.
 func (h *home) visible() []workspace.Entry {
@@ -84,6 +97,9 @@ func (h *home) reload(keep string) {
 		h.drift, _ = apply.Drift(h.ws.Paths, state)
 	}
 
+	if journal, err := h.ws.Engine().Journal(); err == nil {
+		h.activity = recent(journal, 6)
+	}
 	h.model = ""
 	for _, e := range entries {
 		if e.Active {
@@ -121,6 +137,15 @@ func (h *home) loadCard() {
 	if e == nil {
 		h.card = workspace.Card{}
 		return
+	}
+	if e.Name != h.cardName {
+		h.cardName, h.agent = e.Name, 0
+	}
+	h.plan, h.planErr = nil, ""
+	if plan, err := h.ws.Engine().PlanUse(e.Name, apply.Options{}); err != nil {
+		h.planErr = firstLine(err.Error())
+	} else {
+		h.plan = plan
 	}
 	c, err := h.ws.Card(e.Name)
 	if err != nil {
@@ -166,11 +191,23 @@ func (h *home) Update(msg tea.Msg) (screen, tea.Cmd) {
 // click selects the list row under the mouse; a click on the selected row
 // opens it.
 func (h *home) click(m tea.Mouse) (screen, tea.Cmd) {
-	if m.Button != tea.MouseLeft || m.X > listWidth {
+	if m.Button != tea.MouseLeft {
+		return h, nil
+	}
+	for _, t := range h.tiles {
+		if m.X >= t.x && m.X < t.x+t.w && m.Y >= t.y && m.Y < t.y+t.h {
+			if t.index == h.agent {
+				return h, h.editAgent()
+			}
+			h.agent = t.index
+			return h, nil
+		}
+	}
+	if m.X-h.ox > h.listW {
 		return h, nil
 	}
 	for _, hit := range h.hits {
-		if m.Y != hit.line+1+h.topRows {
+		if m.Y != hit.line+1+h.topRows+h.oy {
 			continue
 		}
 		if hit.index == h.cursor {
@@ -229,6 +266,12 @@ func (h *home) updateKeys(m tea.KeyPressMsg) (screen, tea.Cmd) {
 			h.cursor = 0
 			h.loadCard()
 		}
+	case "left", "h":
+		h.moveAgent(-1)
+	case "right", "l":
+		h.moveAgent(1)
+	case "a":
+		return h, h.editAgent()
 	case "n":
 		var base *string
 		if sel != nil {
@@ -272,6 +315,22 @@ func (h *home) updateKeys(m tea.KeyPressMsg) (screen, tea.Cmd) {
 	return h, nil
 }
 
+// moveAgent moves the selection among the agents of the card.
+func (h *home) moveAgent(delta int) {
+	if n := len(h.card.Agents); n > 0 {
+		h.agent = (h.agent + delta + n) % n
+	}
+}
+
+// editAgent opens the editor of the selected agent.
+func (h *home) editAgent() tea.Cmd {
+	sel := h.selected()
+	if sel == nil || sel.Initial || h.agent >= len(h.card.Agents) {
+		return flashErr("Initial is your own setup: clone it first (c), then edit the copy")
+	}
+	return pushAll(newEditStart(h.ws, Start{Kind: StartEdit, Preset: sel.Name, Agent: h.card.Agents[h.agent].Name})...)
+}
+
 func (h *home) move(delta int) {
 	n := len(h.visible())
 	if n == 0 {
@@ -286,7 +345,7 @@ func (h *home) Hints() []hint {
 		return []hint{{"enter", "keep filter"}, {"esc", "clear"}}
 	}
 	return []hint{
-		{"↑↓", "select"}, {"enter", "open"}, {"e", "equip"}, {"t", "try"}, {"n", "new"},
+		{"↑↓", "preset"}, {"←→", "agent"}, {"enter", "open"}, {"a", "edit agent"}, {"e", "equip"}, {"t", "try"}, {"n", "new"},
 		{"c", "clone"}, {"r", "rename"}, {"d", "delete"}, {"i", "import"}, {"x", "export"}, {"/", "filter"}, {"?", "help"}, {"q", "quit"},
 	}
 }
@@ -295,15 +354,13 @@ func (h *home) View(c viewCtx) string {
 	rows := c.h
 	banner := ""
 	h.topRows = 0
+	h.tiles = h.tiles[:0]
 	if len(h.drift) > 0 {
 		banner = sWarn.Render(truncate(" ⚠ Manual edits detected in the equipped preset ("+plural(len(h.drift), "file")+" or setting). They are asked about when you switch.", c.w)) + "\n"
 		rows--
 		h.topRows = 1
 	}
-	shine := 0.0
-	if c.anim {
-		shine = shineAt(c.frame, 10)
-	}
+	shine := c.shift()
 
 	inner := c.w - 2
 	label := ""
@@ -314,12 +371,18 @@ func (h *home) View(c viewCtx) string {
 		}
 	}
 
+	if c.w >= spaciousW && c.h >= spaciousH {
+		return banner + h.viewSpacious(c, rows, label)
+	}
+	h.listW, h.ox, h.oy = listWidth, c.ox, c.oy
 	if c.w < 2*listWidth+10 {
 		left := h.listLines(inner, rows-2, c)
 		return banner + frame("◆ squadup", shine, label, left, c.w, rows, 0)
 	}
 	left := h.listLines(listWidth, rows-2, c)
-	right := cardLines(h.card, inner-listWidth-1, rows-2, h.appear.frames(c))
+	right := cardLines(h.card, inner-listWidth-1, rows-2, rosterOpts{
+		frames: h.appear.frames(c), frame: c.frame, selected: h.agent, live: h.card.Active && !h.card.Initial,
+	})
 	return banner + frame("◆ squadup", shine, label, panes(left, right, listWidth, inner), c.w, rows, listWidth)
 }
 

@@ -14,7 +14,24 @@ const (
 // logoLines draws the logo in three lines of w cells: the wordmark appearing
 // letter by letter, the eight agent colors popping in and then rippling, and
 // the tagline typing itself out. frames is how long ago it started.
-func logoLines(w, frames int) []string {
+func logoLines(w, frames int) []string { return compactLogo(w, frames) }
+
+// bigLogoBlock is the block-letter wordmark wiped in from the left, with stars
+// twinkling on both sides, then the agent squares and the tagline.
+func bigLogoBlock(w, frames, shift, row0 int, tall, anim bool) []string {
+	logo := bigLogoWipe(tall, shift, frames*2)
+	logoW := bigLogoWidth(tall)
+	side := max((w-logoW)/2, 0)
+	out := make([]string, 0, len(logo)+2)
+	for i, l := range logo {
+		out = append(out, twinkle(side, row0+i, shift, anim)+l+twinkle(max(w-side-logoW, 0), row0+i, shift+7, anim))
+	}
+	compact := compactLogo(w, frames)
+	return append(out, compact[1], compact[2])
+}
+
+// compactLogo is the small logo of terminals too small for the big one.
+func compactLogo(w, frames int) []string {
 	runes := []rune(wordmark)
 	shown := min(frames/2+1, len(runes))
 	colors := gradient(len(runes))

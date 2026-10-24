@@ -180,18 +180,18 @@ func (e *equipScreen) View(c viewCtx) string {
 		for _, l := range wrapText(e.planErr, inner-4) {
 			add("   " + l)
 		}
-		return box(title, "", lines, c.w, c.h, 0)
+		return c.box(title, "", lines, 0)
 	case e.state == equipDone:
-		return box(title, "", e.doneLines(c), c.w, c.h, 0)
+		return c.box(title, "", e.doneLines(c), 0)
 	case e.state == equipFailed:
 		add("", " "+sErr.Render("✗ Nothing was changed."), "")
 		for _, l := range wrapText(e.failure, inner-4) {
 			add("   " + l)
 		}
-		return box(title, "", lines, c.w, c.h, 0)
+		return c.box(title, "", lines, 0)
 	case e.plan.NoOp:
 		add("", " "+sOK.Render("✓ "+nothingToChange(e.name)))
-		return box(title, "", lines, c.w, c.h, 0)
+		return c.box(title, "", lines, 0)
 	}
 
 	add("")
@@ -236,7 +236,7 @@ func (e *equipScreen) View(c viewCtx) string {
 	}
 	lines = fit(lines, inner, max(c.h-4, 1))
 	lines = append(lines, "", e.buttons(inner))
-	return box(title, e.plan.Mode, lines, c.w, c.h, 0)
+	return c.box(title, e.plan.Mode, lines, 0)
 }
 
 func (e *equipScreen) editsChoice() string {

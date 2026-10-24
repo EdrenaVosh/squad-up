@@ -22,6 +22,17 @@ type AgentInfo struct {
 	PermissionMode string
 	Color          string
 	Tools          int // how many tools it is limited to; 0 means all of them
+	ToolNames      []string
+	Role           string // the first sentence of its description
+	Description    string
+	Prompt         string // the system prompt, trimmed
+}
+
+// AgentCost is what an agent adds to the context.
+type AgentCost struct {
+	Name        string
+	Description int // tokens loaded into every session
+	Prompt      int // tokens loaded when the agent is called
 }
 
 // Card is everything the terminal interface shows about one preset.
@@ -33,6 +44,8 @@ type Card struct {
 	Effort        string
 	Permissions   string // "acceptEdits · 4 allow · 1 ask · 2 deny", or "" when not set
 	Agents        []AgentInfo
+	Costs         []AgentCost
+	Findings      []lint.Finding // errors and warnings; notes are only counted
 	Errors        int
 	Warnings      int
 	Infos         int
@@ -58,6 +71,14 @@ func (w Workspace) Card(name string) (Card, error) {
 	}
 	c.Errors, c.Warnings, c.Infos = report.Count(lint.LevelError), report.Count(lint.LevelWarn), report.Count(lint.LevelInfo)
 	c.SessionTokens = report.Cost.SessionTokens
+	for _, f := range report.Findings {
+		if f.Level != lint.LevelInfo {
+			c.Findings = append(c.Findings, f)
+		}
+	}
+	for _, a := range report.Cost.Agents {
+		c.Costs = append(c.Costs, AgentCost{Name: a.Name, Description: a.DescriptionTokens, Prompt: a.PromptTokens})
+	}
 
 	switch {
 	case c.Error != "":
@@ -136,14 +157,18 @@ func agentInfo(name string, data []byte) AgentInfo {
 	if v, ok := a.Get("tools"); ok {
 		switch list := v.(type) {
 		case []any:
-			info.Tools = len(list)
+			for _, t := range list {
+				info.ToolNames = append(info.ToolNames, fmt.Sprint(t))
+			}
 		case string:
 			for _, t := range strings.Split(list, ",") {
-				if strings.TrimSpace(t) != "" {
-					info.Tools++
+				if t = strings.TrimSpace(t); t != "" {
+					info.ToolNames = append(info.ToolNames, t)
 				}
 			}
 		}
+		info.Tools = len(info.ToolNames)
 	}
+	info.Role, info.Description, info.Prompt = a.Role(), a.Description(), strings.TrimSpace(a.Prompt())
 	return info
 }
