@@ -19,9 +19,10 @@ import (
 func (a *app) newRun() *cobra.Command {
 	var dryRun bool
 	cmd := &cobra.Command{
-		Use:   "run <preset> [-- claude arguments]",
+		Use:   "run [preset] [-- claude arguments]",
 		Short: "Start claude with a preset for this session only; nothing is written to ~/.claude",
-		Long: "Starts claude with the preset's agents (--agents) and settings (--settings) for one session.\n" +
+		Long: "Without a preset name, the one pinned by the nearest .squadup file (see `squad pin`) runs.\n" +
+			"Starts claude with the preset's agents (--agents) and settings (--settings) for one session.\n" +
 			"Nothing is written to your Claude config. The agents are added to your own agents in ~/.claude/agents,\n" +
 			"they do not replace them: Claude Code offers no way to hide those.\n" +
 			"Everything after -- goes to claude, after squad's own flags, so it can override them.",
@@ -30,6 +31,17 @@ func (a *app) newRun() *cobra.Command {
 			names, extra := args, []string(nil)
 			if dash := cmd.ArgsLenAtDash(); dash >= 0 {
 				names, extra = args[:dash], args[dash:]
+			}
+			if len(names) == 0 {
+				pin, err := a.projectPin()
+				if err != nil {
+					return err
+				}
+				if pin == nil {
+					return &ExitError{Code: 1, Err: errors.New("which preset should run?"), Fix: "use `squad run <preset> [-- claude arguments]`, or pin one to this project with `squad pin <preset>`; `squad list` shows the presets"}
+				}
+				printf(a.io.Err, "Using %q, pinned by %s\n", pin.Preset, pin.File)
+				names = []string{pin.Preset}
 			}
 			if len(names) != 1 {
 				return &ExitError{Code: 1, Err: errors.New("which preset should run?"), Fix: "use `squad run <preset> [-- claude arguments]`; `squad list` shows the presets"}

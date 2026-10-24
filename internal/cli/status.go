@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -47,6 +48,14 @@ type statusJSON struct {
 	ClaudeDir string      `json:"claudeDir"`
 	Home      string      `json:"home"`
 	Warnings  []string    `json:"warnings"`
+	Pinned    *pinnedJSON `json:"pinned,omitempty"`
+}
+
+// pinnedJSON is the preset the project pins with a .squadup file.
+type pinnedJSON struct {
+	Preset  string `json:"preset"`
+	File    string `json:"file"`
+	Matches bool   `json:"matches"` // whether it is the equipped preset
 }
 
 func (a *app) newStatus() *cobra.Command {
@@ -82,6 +91,21 @@ func (a *app) newStatus() *cobra.Command {
 			st.Models = a.modelsSummary(st.Claude)
 			if model := os.Getenv("ANTHROPIC_MODEL"); model != "" {
 				st.Warnings = append(st.Warnings, tui.ModelOverride(model))
+			}
+
+			pin, err := a.projectPin()
+			if err != nil {
+				st.Warnings = append(st.Warnings, err.Error())
+			}
+			if pin != nil {
+				st.Pinned = &pinnedJSON{Preset: pin.Preset, File: pin.File, Matches: pin.Preset == st.Active}
+				if !st.Pinned.Matches {
+					equipped := "nothing is equipped"
+					if st.Active != "" {
+						equipped = st.Active + " is equipped"
+					}
+					st.Warnings = append(st.Warnings, fmt.Sprintf("This project pins %s (%s), but %s. Run `squad use %s`.", pin.Preset, pin.File, equipped, pin.Preset))
+				}
 			}
 
 			if asJSON {
@@ -148,6 +172,9 @@ func renderStatus(a *app, st statusJSON) {
 			parts = append(parts, "not logged in")
 		}
 		row("Claude", strings.Join(nonEmpty(parts...), " · "))
+	}
+	if st.Pinned != nil && st.Pinned.Matches {
+		row("Pinned", st.Pinned.Preset+" · "+st.Pinned.File)
 	}
 	row("Models", modelsRow(st.Models))
 	row("Config dir", st.ClaudeDir)
