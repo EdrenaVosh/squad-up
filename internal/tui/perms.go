@@ -149,7 +149,7 @@ func (s *permsScreen) View(c viewCtx) string {
 	for i, name := range names {
 		mark := "  "
 		if i == s.cursor {
-			mark = sAccent.Render("▸ ")
+			mark = selBar() + " "
 		}
 		tag := ""
 		if (i == 0 && current == "") || name == current || (i == len(names)-1 && current == "Custom") {
@@ -348,7 +348,7 @@ func (c *customPerms) View(v viewCtx) string {
 	var lines []string
 	cursorLine := func(i int) string {
 		if i == c.cursor {
-			return " " + sAccent.Render("▸") + " "
+			return " " + selBar() + " "
 		}
 		return "   "
 	}

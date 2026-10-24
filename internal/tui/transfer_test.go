@@ -243,7 +243,7 @@ func TestHelpMentionsImportAndExport(t *testing.T) {
 func (h *harness) choose(label string) {
 	h.t.Helper()
 	for i := 0; i < 12; i++ {
-		if strings.Contains(h.view(), "› "+label) {
+		if strings.Contains(h.view(), "▌ "+label) {
 			h.press("enter")
 			return
 		}

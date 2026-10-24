@@ -30,6 +30,10 @@ Presets of agent teams for [Claude Code](https://code.claude.com): switch them w
 | `squad initial [--recapture]` | Show your original setup, or capture it again |
 | `squad doctor` | Check that Claude Code is installed and logged in |
 
+## The interface
+
+Run `squad` in a terminal. Arrow keys or the mouse select, `enter` opens, `e` equips (with a preview), `t` tries a preset for one session, `n` creates, `i` imports, `x` exports, `?` helps. The interface animates; set `SQUADUP_NO_ANIM=1` to keep it still. `NO_COLOR`, `CI`, a dumb terminal or a pipe get plain text instead.
+
 ## Claude Code plugin
 
 `plugin/` holds a small Claude Code plugin, and `.claude-plugin/marketplace.json` makes this repository a marketplace for it. Once the repository is published:

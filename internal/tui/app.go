@@ -45,6 +45,9 @@ type Env struct {
 	// ClaudeVersion is shown in the title bar; when empty it is looked up.
 	ClaudeVersion string
 	Start         Start
+	// Animate turns the motion on: a frame clock runs and screens animate.
+	// Tests and terminals that should stay still leave it off.
+	Animate bool
 }
 
 // minimum size the interface is laid out for.
@@ -57,6 +60,8 @@ const (
 type viewCtx struct {
 	w, h   int
 	claude string
+	frame  int  // the animation frame, advancing while Animate is on
+	anim   bool // whether anything should animate
 }
 
 type hint struct{ key, label string }
@@ -115,6 +120,7 @@ type App struct {
 	stack  []screen
 	flash  flashState
 	claude string
+	frame  int
 }
 
 // New builds the interface. It starts at 80×24 until the terminal reports its
@@ -151,6 +157,9 @@ func (a *App) Init() tea.Cmd {
 	}
 	if a.claude == "" {
 		cmds = append(cmds, lookupClaude)
+	}
+	if a.env.Animate {
+		cmds = append(cmds, tick())
 	}
 	return tea.Batch(cmds...)
 }
@@ -189,9 +198,17 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		a.flash = flashState{}
 		return a.forward(msg)
+	case tickMsg:
+		a.frame++
+		if a.env.Animate {
+			return a, tick()
+		}
+		return a, nil
 	case claudeMsg:
 		a.claude = m.version
 		return a, nil
+	case tea.MouseMsg:
+		return a.forward(msg)
 	case tryDoneMsg:
 		a.flash = flashState{}
 		return a.Update(tryDone(m))
@@ -251,11 +268,12 @@ func (a *App) View() tea.View {
 		note := sWarn.Render("Terminal too small") + "\n" + sMuted.Render("squadup needs 80×24")
 		content = lipgloss.Place(a.w, a.h, lipgloss.Center, lipgloss.Center, note)
 	default:
-		body := a.top().View(viewCtx{w: a.w, h: a.h - 1, claude: a.claude})
+		body := a.top().View(viewCtx{w: a.w, h: a.h - 1, claude: a.claude, frame: a.frame, anim: a.env.Animate})
 		content = body + "\n" + a.footer()
 	}
 	v := tea.NewView(content)
 	v.AltScreen = true
+	v.MouseMode = tea.MouseModeCellMotion
 	v.WindowTitle = "squadup"
 	return v
 }
@@ -263,11 +281,11 @@ func (a *App) View() tea.View {
 // footer shows the status message, or else as many key hints as fit.
 func (a *App) footer() string {
 	if a.flash.text != "" {
-		style := sOK
+		style, icon := sOK, "✓ "
 		if a.flash.err {
-			style = sErr
+			style, icon = sErr, "✗ "
 		}
-		return " " + style.Render(truncate(a.flash.text, a.w-2))
+		return " " + style.Render(truncate(icon+a.flash.text, a.w-2))
 	}
 	return " " + renderHints(a.top().Hints(), a.w-2)
 }
@@ -278,7 +296,7 @@ func renderHints(hints []hint, w int) string {
 	render := func(hs []hint) string {
 		parts := make([]string, len(hs))
 		for i, h := range hs {
-			parts[i] = sAccent.Render(h.key) + " " + sMuted.Render(h.label)
+			parts[i] = keycap(h.key) + " " + sMuted.Render(h.label)
 		}
 		return strings.Join(parts, "  ")
 	}

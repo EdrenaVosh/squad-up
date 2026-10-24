@@ -4,6 +4,7 @@ import (
 	"flag"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -265,12 +266,15 @@ func (h *harness) golden(name string) {
 	}
 }
 
+// selectedRow matches the highlighted line of the preset list.
+var selectedRow = regexp.MustCompile(`▌ \S [^│\n]*`)
+
 // goTo moves the selection of the main screen to the named preset.
 func (h *harness) goTo(name string) {
 	h.t.Helper()
 	for i := 0; i < 12; i++ {
 		v := h.view()
-		if strings.Contains(v, "▸ ○ "+name) || strings.Contains(v, "▸ ● "+name) || strings.Contains(v, "▸ ◇ "+name) {
+		if selectedRow.MatchString(v) && strings.Contains(selectedRow.FindString(v), " "+name) {
 			return
 		}
 		h.press("down")

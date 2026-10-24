@@ -231,7 +231,7 @@ func (s *choiceScreen) View(c viewCtx) string {
 		o := s.options[i]
 		mark := "  "
 		if i == s.cursor {
-			mark = sAccent.Render("› ")
+			mark = selBar() + " "
 		}
 		box := ""
 		if s.multi {

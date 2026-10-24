@@ -24,6 +24,7 @@ type welcomeScreen struct {
 	meta    *initial.Meta
 	cursor  int
 	probing bool
+	appear  reveal // the logo drawing itself
 }
 
 func newWelcome(ws workspace.Workspace, meta *initial.Meta) *welcomeScreen {
@@ -131,6 +132,7 @@ func (w *welcomeScreen) View(c viewCtx) string {
 	var lines []string
 	add := func(l ...string) { lines = append(lines, l...) }
 
+	add(logoLines(inner, w.appear.frames(c))...)
 	add("")
 	if s.Clean {
 		add(" "+sBold.Render(CleanSetup), "")
@@ -156,12 +158,12 @@ func (w *welcomeScreen) View(c viewCtx) string {
 		mark := "  "
 		label := ch.label
 		if i == w.cursor {
-			mark, label = sAccent.Render("▸ "), sBold.Render(ch.label)
+			mark, label = selBar()+" ", sBold.Render(ch.label)
 		}
 		add(truncate(" "+mark+pad(label, 32)+sMuted.Render(ch.note), inner))
 	}
 	if w.probing {
-		add("", " "+sAccent.Render("Checking models…"))
+		add("", " "+spinner(c.frame)+" "+sAccent.Render("Checking models…"))
 	}
 	return box("Welcome to squadup", "", lines, c.w, c.h, 0)
 }

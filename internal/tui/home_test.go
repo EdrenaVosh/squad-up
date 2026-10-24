@@ -22,7 +22,7 @@ func TestSelectionMovesTheCard(t *testing.T) {
 	h.contains("Refactor Day", "architect")
 	h.lacks("Bug Hunt")
 	h.press("j")
-	h.contains("Solo Indie", "SLOT 3", "tester")
+	h.contains("Solo Indie", "─ 3 ", "tester")
 	h.press("up", "k")
 	h.contains("Bug Hunt")
 }
@@ -30,7 +30,7 @@ func TestSelectionMovesTheCard(t *testing.T) {
 func TestStartsOnTheEquippedPresetAndMarksIt(t *testing.T) {
 	h := equipped(t, "solo-indie")
 
-	h.contains("▸ ● solo-indie", "● EQUIPPED", "Solo Indie")
+	h.contains("▌ ◉ solo-indie", "● EQUIPPED", "Solo Indie")
 	h.golden("home-equipped")
 }
 
@@ -39,7 +39,7 @@ func TestInitialIsActiveUntilAPresetIsEquipped(t *testing.T) {
 
 	h.goTo("initial")
 
-	h.contains("● ACTIVE", "your original setup · captured 2026-10-24", "SLOT 1", "docs-writer")
+	h.contains("● ACTIVE", "your original setup · captured 2026-10-24", "─ 1 ", "docs-writer")
 	h.golden("home-initial")
 }
 

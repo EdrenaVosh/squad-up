@@ -7,9 +7,11 @@ import (
 	"github.com/EdrenaVosh/squadup/internal/workspace"
 )
 
-// cardLines draws the card of a preset in w cells and h lines. When the agents
-// do not fit, the table loses its tail first.
-func cardLines(c workspace.Card, w, h int) []string {
+// cardLines draws the card of a preset in w cells and h lines: the title, and
+// the agents as a roster of tiles that deal in one after another. frames is
+// how long ago the card started to appear. When the tiles do not fit, the
+// agents become a compact list.
+func cardLines(c workspace.Card, w, h, frames int) []string {
 	badge := ""
 	switch {
 	case c.Active && c.Initial:
@@ -23,7 +25,7 @@ func cardLines(c workspace.Card, w, h int) []string {
 	if title == "" {
 		title = c.Name
 	}
-	header := []string{spread(" "+sBold.Render(title), badge+" ", w)}
+	header := []string{spread(" "+accentDot(c.Accent)+" "+sBold.Render(title), badge+" ", w)}
 
 	switch {
 	case c.Error != "":
@@ -35,19 +37,9 @@ func cardLines(c workspace.Card, w, h int) []string {
 	case c.Initial && c.CapturedAt != nil:
 		header = append(header, " "+sMuted.Render(truncate(captured(c), w-2)))
 	default:
-		header = append(header, " "+sMuted.Render(truncate(c.Description, w-2)))
+		header = append(header, " "+sMuted.Render(typewriter(truncate(c.Description, w-2), frames)))
 	}
 	header = append(header, "")
-
-	var slots []string
-	for i, a := range c.Agents {
-		slots = append(slots, fmt.Sprintf(" %s  %s %s %s %s %s",
-			sMuted.Render(fmt.Sprintf("SLOT %d", i+1)),
-			swatch(a.Color), pad(a.Name, 12), pad(orDash(a.Model, "inherit"), 8), pad(orDash(a.Effort, "—"), 7), orDash(a.PermissionMode, "default")))
-	}
-	if len(slots) == 0 {
-		slots = []string{" " + sMuted.Render("no agents yet")}
-	}
 
 	leftW := min((w-2)*55/100, 30)
 	pair := func(l1, v1, l2, v2 string) string {
@@ -55,16 +47,42 @@ func cardLines(c workspace.Card, w, h int) []string {
 	}
 	footer := []string{
 		"",
-		pair("Default model", orDash(c.Model, "—"), "Main agent", orDash(c.Main, "—")),
+		pair("Default model", modelOrDash(c.Model), "Main agent", orDash(c.Main, "—")),
 		pair("Permissions", permissionWord(c), "Mode", orDash(c.Mode, "—")),
 		" " + sMuted.Render(pad("Lint", 15)) + lintWord(c) + sMuted.Render(fmt.Sprintf(" · ~%d tokens/session", c.SessionTokens)),
 	}
 
 	room := max(h-len(header)-len(footer), 1)
-	if len(slots) > room {
-		slots = append(slots[:room-1], " "+sMuted.Render(fmt.Sprintf("… +%d more", len(slots)-room+1)))
+	roster := rosterLines(c.Agents, w-2, room, frames)
+	for i := range roster {
+		roster[i] = " " + roster[i]
 	}
-	return fit(append(append(header, slots...), footer...), w, h)
+	return fit(append(append(header, roster...), footer...), w, h)
+}
+
+// accentDot is the colored dot of a preset's accent.
+func accentDot(accent string) string {
+	if c, ok := agentColors[accent]; ok {
+		return fg(c).Render("●")
+	}
+	return sMuted.Render("●")
+}
+
+// modelOrDash is a model pill, or a dash when the preset sets none.
+func modelOrDash(model string) string {
+	if model == "" {
+		return sMuted.Render("—")
+	}
+	return modelPill(model)
+}
+
+// typewriter shows the first characters of s: six more with every frame.
+func typewriter(s string, frames int) string {
+	runes := []rune(s)
+	if n := frames * 6; n < len(runes) {
+		return string(runes[:n]) + "▍"
+	}
+	return s
 }
 
 func captured(c workspace.Card) string {

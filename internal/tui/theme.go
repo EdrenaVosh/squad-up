@@ -98,38 +98,58 @@ func fit(lines []string, w, h int) []string {
 // box draws a rounded frame of exactly w×h cells around the lines, which are
 // fitted to w-2 cells. dividerAt is the inner column of a vertical divider the
 // caller draws inside the lines (0 for none); the bottom edge joins it with ┴.
+// The top and bottom edges run along the brand gradient.
 func box(title, right string, lines []string, w, h, dividerAt int) string {
-	inner := w - 2
-	edge := sMuted
-	bar := func(n int) string { return strings.Repeat("─", max(n, 0)) }
+	return frame(title, 0, right, lines, w, h, dividerAt)
+}
 
-	left := " " + sAccent.Render(title) + " "
+// frame is box with a shining title: shine is the position of the highlight
+// in the title (see gradientText), 0 for none.
+func frame(title string, shine float64, right string, lines []string, w, h, dividerAt int) string {
+	inner := w - 2
+	colors := gradient(w)
+	edge := func(from int, text string) string {
+		var b strings.Builder
+		for i, r := range []rune(text) {
+			b.WriteString(fg(colors[min(from+i, w-1)]).Render(string(r)))
+		}
+		return b.String()
+	}
+	side := fg(cDim).Render("│")
+
 	label := ""
 	if right != "" {
 		label = " " + sMuted.Render(right) + " "
 	}
 	// "╭─" and "─╮" take 4 cells of the w.
-	fill := w - 4 - ansi.StringWidth(left) - ansi.StringWidth(label)
+	room := w - 4
+	titleText := " " + title + " "
+	fill := room - ansi.StringWidth(titleText) - ansi.StringWidth(label)
 	if fill < 1 {
 		label = ""
-		fill = w - 4 - ansi.StringWidth(left)
+		fill = room - ansi.StringWidth(titleText)
 	}
 	if fill < 0 {
-		left = " " + sAccent.Render(truncate(title, max(w-6, 1))) + " "
-		fill = max(w-4-ansi.StringWidth(left), 0)
+		titleText = " " + truncate(title, max(w-6, 1)) + " "
+		fill = max(room-ansi.StringWidth(titleText), 0)
 	}
-	rows := []string{edge.Render("╭─") + left + edge.Render(bar(fill)) + label + edge.Render("─╮")}
+	top := edge(0, "╭─") + gradientText(titleText, shine) + edge(2+ansi.StringWidth(titleText), strings.Repeat("─", fill)) + label +
+		edge(w-2, "─╮")
+	rows := []string{top}
 
-	for _, l := range fit(lines, inner, h-2) {
-		rows = append(rows, edge.Render("│")+l+edge.Render("│"))
+	for i, l := range fit(lines, inner, h-2) {
+		// The divider runs the full height, also below where the panes end.
+		if dividerAt > 0 && dividerAt < inner && i >= len(lines) {
+			l = strings.Repeat(" ", dividerAt) + fg(cDim).Render("│") + strings.Repeat(" ", inner-dividerAt-1)
+		}
+		rows = append(rows, side+l+side)
 	}
 
+	bottom := "╰" + strings.Repeat("─", inner) + "╯"
 	if dividerAt > 0 && dividerAt < inner {
-		rows = append(rows, edge.Render("╰"+bar(dividerAt)+"┴"+bar(inner-dividerAt-1)+"╯"))
-	} else {
-		rows = append(rows, edge.Render("╰"+bar(inner)+"╯"))
+		bottom = "╰" + strings.Repeat("─", dividerAt) + "┴" + strings.Repeat("─", inner-dividerAt-1) + "╯"
 	}
-	return strings.Join(rows, "\n")
+	return strings.Join(append(rows, edge(0, bottom)), "\n")
 }
 
 // lipglossWidth is the width of a string in terminal cells, ignoring styling.

@@ -1,5 +1,5 @@
 ╭─ Custom permissions ────────────────────────────────────────────── bug-hunt ─╮
-│ ▸ Default mode  default                                                      │
+│ ▌ Default mode  default                                                      │
 │                                                                              │
 │ ALLOW — runs without asking                                                  │
 │   + add rule                                                                 │
@@ -21,4 +21,4 @@
 │                                                                              │
 │                                                                              │
 ╰──────────────────────────────────────────────────────────────────────────────╯
- ↑↓ move  enter edit  x delete rule  esc back
+  ↑↓  move   enter  edit   x  delete rule   esc  back

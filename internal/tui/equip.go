@@ -34,6 +34,7 @@ type equipScreen struct {
 	state    equipState
 	result   *apply.Result
 	failure  string
+	appear   reveal // the celebration after a successful equip
 }
 
 func newEquip(ws workspace.Workspace, name string) *equipScreen {
@@ -129,6 +130,7 @@ func (e *equipScreen) apply() tea.Cmd {
 		return nil
 	}
 	e.state, e.result = equipDone, res
+	e.appear.restart()
 	return nil
 }
 
@@ -180,13 +182,7 @@ func (e *equipScreen) View(c viewCtx) string {
 		}
 		return box(title, "", lines, c.w, c.h, 0)
 	case e.state == equipDone:
-		add("", " "+sOK.Render("✓ Done."), "")
-		add(" " + sMuted.Render("A backup of the previous state was taken: "+e.result.BackupID))
-		add(" " + sMuted.Render("`squad undo` goes back, `squad restore` returns your original setup."))
-		for _, n := range e.plan.Notes {
-			add("", " "+sWarn.Render(truncate("! "+n, inner-2)))
-		}
-		return box(title, "", lines, c.w, c.h, 0)
+		return box(title, "", e.doneLines(c), c.w, c.h, 0)
 	case e.state == equipFailed:
 		add("", " "+sErr.Render("✗ Nothing was changed."), "")
 		for _, l := range wrapText(e.failure, inner-4) {

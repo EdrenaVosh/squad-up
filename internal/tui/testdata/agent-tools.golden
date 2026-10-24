@@ -4,7 +4,7 @@
                                                                                 
         ╭─ Tools ──────────────────────────────────────────────────────╮        
         │                                                              │        
-        │ › [x] Read                                                   │        
+        │ ▌ [x] Read                                                   │        
         │   [ ] Write                                                  │        
         │   [ ] Edit                                                   │        
         │   [ ] Bash                                                   │        
@@ -21,4 +21,4 @@
                                                                                 
                                                                                 
                                                                                 
- ↑↓ move  space toggle  enter keep  esc cancel
+  ↑↓  move   space  toggle   enter  keep   esc  cancel

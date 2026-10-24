@@ -4,7 +4,7 @@
 │                                                                              │
 │    Not set    use the permissions of my original setup                       │
 │    Careful    asks before most actions and never reads your .env files       │
-│  ▸ Balanced   edits files freely, still asks before git push (current)       │
+│  ▌ Balanced   edits files freely, still asks before git push (current)       │
 │    Autopilot  a classifier approves safe actions, so there are few prompts   │
 │    Custom…    write the allow, ask and deny rules myself                     │
 │                                                                              │
@@ -21,4 +21,4 @@
 │                                                                              │
 │                                                                              │
 ╰──────────────────────────────────────────────────────────────────────────────╯
- ↑↓ move  enter pick  esc back
+  ↑↓  move   enter  pick   esc  back

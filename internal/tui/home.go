@@ -27,7 +27,13 @@ type home struct {
 	filter    textinput.Model
 	filtering bool
 	loadErr   string
+	appear    reveal // the roster of the selected preset dealing in
+	hits      []hitRow
+	topRows   int // screen rows above the frame: the drift banner
 }
+
+// hitRow is a list row and where it was drawn, for the mouse.
+type hitRow struct{ line, index int }
 
 func newHome(ws workspace.Workspace) *home {
 	h := &home{ws: ws}
@@ -110,6 +116,7 @@ func (h *home) equippedPreset() string {
 }
 
 func (h *home) loadCard() {
+	h.appear.restart()
 	e := h.selected()
 	if e == nil {
 		h.card = workspace.Card{}
@@ -137,11 +144,42 @@ func (h *home) Update(msg tea.Msg) (screen, tea.Cmd) {
 			return h, flashErr(err.Error())
 		}
 		return h, push(next)
+	case tea.MouseClickMsg:
+		return h.click(tea.Mouse(m))
+	case tea.MouseWheelMsg:
+		switch m.Button {
+		case tea.MouseWheelUp:
+			h.move(-1)
+		case tea.MouseWheelDown:
+			h.move(1)
+		}
+		return h, nil
 	case tea.KeyPressMsg:
 		if h.filtering {
 			return h.updateFilter(m)
 		}
 		return h.updateKeys(m)
+	}
+	return h, nil
+}
+
+// click selects the list row under the mouse; a click on the selected row
+// opens it.
+func (h *home) click(m tea.Mouse) (screen, tea.Cmd) {
+	if m.Button != tea.MouseLeft || m.X > listWidth {
+		return h, nil
+	}
+	for _, hit := range h.hits {
+		if m.Y != hit.line+1+h.topRows {
+			continue
+		}
+		if hit.index == h.cursor {
+			if sel := h.selected(); sel != nil {
+				return h, push(newPresetScreen(h.ws, sel.Name))
+			}
+		}
+		h.cursor = hit.index
+		h.loadCard()
 	}
 	return h, nil
 }
@@ -256,9 +294,15 @@ func (h *home) Hints() []hint {
 func (h *home) View(c viewCtx) string {
 	rows := c.h
 	banner := ""
+	h.topRows = 0
 	if len(h.drift) > 0 {
 		banner = sWarn.Render(truncate(" ⚠ Manual edits detected in the equipped preset ("+plural(len(h.drift), "file")+" or setting). They are asked about when you switch.", c.w)) + "\n"
 		rows--
+		h.topRows = 1
+	}
+	shine := 0.0
+	if c.anim {
+		shine = shineAt(c.frame, 10)
 	}
 
 	inner := c.w - 2
@@ -271,12 +315,12 @@ func (h *home) View(c viewCtx) string {
 	}
 
 	if c.w < 2*listWidth+10 {
-		left := h.listLines(inner, rows-2)
-		return banner + box("squadup", label, left, c.w, rows, 0)
+		left := h.listLines(inner, rows-2, c)
+		return banner + frame("◆ squadup", shine, label, left, c.w, rows, 0)
 	}
-	left := h.listLines(listWidth, rows-2)
-	right := cardLines(h.card, inner-listWidth-1, rows-2)
-	return banner + box("squadup", label, panes(left, right, listWidth, inner), c.w, rows, listWidth)
+	left := h.listLines(listWidth, rows-2, c)
+	right := cardLines(h.card, inner-listWidth-1, rows-2, h.appear.frames(c))
+	return banner + frame("◆ squadup", shine, label, panes(left, right, listWidth, inner), c.w, rows, listWidth)
 }
 
 // panes puts two columns side by side with a divider; every line comes out
@@ -292,13 +336,14 @@ func panes(left, right []string, leftW, inner int) []string {
 		if i < len(right) {
 			r = right[i]
 		}
-		out[i] = pad(l, leftW) + sMuted.Render("│") + pad(r, inner-leftW-1)
+		out[i] = pad(l, leftW) + fg(cDim).Render("│") + pad(r, inner-leftW-1)
 	}
 	return out
 }
 
 // listLines draws the preset list: presets first, Initial below a rule.
-func (h *home) listLines(w, rows int) []string {
+func (h *home) listLines(w, rows int, c viewCtx) []string {
+	h.hits = h.hits[:0]
 	lines := []string{" " + sMuted.Render("PRESETS"), ""}
 	vis := h.visible()
 
@@ -322,7 +367,8 @@ func (h *home) listLines(w, rows int) []string {
 		start = h.cursor - room + 1
 	}
 	for i := start; i < len(presets) && i < start+room; i++ {
-		lines = append(lines, entryLine(presets[i], i == h.cursor, w))
+		h.hits = append(h.hits, hitRow{line: len(lines), index: i})
+		lines = append(lines, entryLine(presets[i], i == h.cursor, w, c))
 	}
 	if len(presets) == 0 {
 		msg := "no presets yet — n to create"
@@ -338,7 +384,8 @@ func (h *home) listLines(w, rows int) []string {
 	lines = lines[:min(len(lines), max(rows-2-btoi(h.filtering || h.query != ""), 0))]
 	lines = append(lines, " "+sMuted.Render(strings.Repeat("─", max(w-2, 0))))
 	if initialEntry != nil {
-		lines = append(lines, entryLine(*initialEntry, h.cursor == len(presets), w))
+		h.hits = append(h.hits, hitRow{line: len(lines), index: len(presets)})
+		lines = append(lines, entryLine(*initialEntry, h.cursor == len(presets), w, c))
 	}
 	if h.filtering {
 		lines = append(lines, " "+h.filter.View())
@@ -355,17 +402,25 @@ func btoi(b bool) int {
 	return 0
 }
 
-func entryLine(e workspace.Entry, selected bool, w int) string {
-	marker := "○"
+func entryLine(e workspace.Entry, selected bool, w int, c viewCtx) string {
+	marker := sMuted.Render("○")
 	switch {
+	case e.Active && !e.Initial:
+		marker = fg(brandStops[0]).Bold(true).Render("◉")
 	case e.Active:
 		marker = sAccent.Render("●")
 	case e.Initial:
 		marker = sMuted.Render("◇")
+	case agentColors[e.Accent] != nil:
+		marker = accentDot(e.Accent)
 	}
 	name := truncate(e.Name, w-5)
 	if selected {
-		return " " + sAccent.Render("▸") + " " + marker + " " + sBold.Render(name)
+		bar := fg(pulse(c.frame, brandStops[0], brandStops[1])).Render("▌")
+		if !c.anim {
+			bar = fg(brandStops[0]).Render("▌")
+		}
+		return " " + bar + " " + marker + " " + sBold.Render(name)
 	}
 	if e.Error != "" {
 		name = sErr.Render(name)

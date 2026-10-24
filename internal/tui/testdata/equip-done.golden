@@ -1,7 +1,17 @@
 ╭─ Equip solo-indie ───────────────────────────────────────────────────────────╮
 │                                                                              │
-│ ✓ Done.                                                                      │
 │                                                                              │
+│                                                                              │
+│                                                                              │
+│                               ✦ Squad ready ✦                                │
+│                                                                              │
+│                                 ✓ ■ planner                                  │
+│                                 ✓ ■ reviewer                                 │
+│                                  ✓ ■ tester                                  │
+│                                                                              │
+│                ████████████████████████████████████████ 100%                 │
+│                                                                              │
+│ ✓ Done.                                                                      │
 │ A backup of the previous state was taken: 2026-10-24T09-30-00                │
 │ `squad undo` goes back, `squad restore` returns your original setup.         │
 │                                                                              │
@@ -10,15 +20,5 @@
 │                                                                              │
 │                                                                              │
 │                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
 ╰──────────────────────────────────────────────────────────────────────────────╯
- any key close
+  any key  close

@@ -191,7 +191,7 @@ func (a *app) useColor() bool {
 
 // openInterface runs the terminal interface, starting on the given screen.
 func (a *app) openInterface(start tui.Start) error {
-	env := tui.Env{Paths: a.paths, Now: a.now, Start: start}
+	env := tui.Env{Paths: a.paths, Now: a.now, Start: start, Animate: os.Getenv("SQUADUP_NO_ANIM") == ""}
 	if start.Kind == tui.StartHome {
 		env.Welcome = a.welcome
 	}

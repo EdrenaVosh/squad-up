@@ -313,8 +313,8 @@ func (p *presetScreen) View(c viewCtx) string {
 		label string
 		value string
 	}{
-		{rowModel, "Default model", orDash(p.card.Model, "—")},
-		{rowEffort, "Effort", orDash(p.card.Effort, "—")},
+		{rowModel, "Default model", modelOrDash(p.card.Model)},
+		{rowEffort, "Effort", effortBars(p.card.Effort)},
 		{rowPerms, "Permissions", orDash(p.card.Permissions, "—")},
 		{rowMain, "Main agent", orDash(p.card.Main, "—")},
 		{rowMode, "Mode", modeWords(p.card.Mode)},
@@ -338,7 +338,7 @@ func (p *presetScreen) View(c viewCtx) string {
 func (p *presetScreen) slotLine(i int, a workspace.AgentInfo, inner int) string {
 	text := fmt.Sprintf("%s  %s %s %s %s %s",
 		sMuted.Render(fmt.Sprintf("SLOT %d", i+1)), swatch(a.Color),
-		pad(a.Name, 14), pad(orDash(a.Model, "inherit"), 8), pad(orDash(a.Effort, "—"), 7), orDash(a.PermissionMode, "default"))
+		pad(sBold.Render(truncate(a.Name, 14)), 14), pad(modelPill(a.Model), 10), pad(effortBars(a.Effort), 14), permissionStrength(a.PermissionMode))
 	return p.line(row{kind: rowAgent, agent: i}, text, inner)
 }
 
@@ -346,7 +346,7 @@ func (p *presetScreen) slotLine(i int, a workspace.AgentInfo, inner int) string 
 func (p *presetScreen) line(r row, text string, inner int) string {
 	prefix := "   "
 	if cur, ok := p.current(); ok && cur == r {
-		prefix = " " + sAccent.Render("▸") + " "
+		prefix = " " + selBar() + " "
 	}
 	return truncate(prefix+text, inner)
 }

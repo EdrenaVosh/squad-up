@@ -35,7 +35,7 @@ func TestTheCurrentProfileIsMarkedAndPreselected(t *testing.T) {
 
 	h.openPerms("solo-indie", 3)
 
-	h.contains("▸ Balanced", "(current)")
+	h.contains("▌ Balanced", "(current)")
 }
 
 func TestPickingAProfileSavesItAndGoesBack(t *testing.T) {

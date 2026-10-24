@@ -368,7 +368,7 @@ func (e *agentEditor) View(c viewCtx) string {
 		return box(title, e.bundle.Preset.Name, lines, c.w, c.h, 0)
 	}
 
-	form := e.formLines(inner)
+	form := e.formLines(inner, c)
 	checks := e.checkLines(inner)
 	right := e.bundle.Preset.Name + " · " + fmt.Sprintf("slot %d", e.idx+1)
 
@@ -376,7 +376,13 @@ func (e *agentEditor) View(c viewCtx) string {
 		formW := 50
 		left := append(form, "")
 		left = append(left, checks...)
-		return box(title, right, panes(left, e.previewLines(inner-formW-1), formW, inner), c.w, c.h, formW)
+		side := []string{" " + sMuted.Render("AS IT APPEARS IN YOUR SQUAD")}
+		for _, l := range agentTile(e.info(), e.idx+1, 2) {
+			side = append(side, " "+l)
+		}
+		side = append(side, "")
+		side = append(side, e.previewLines(inner-formW-1)...)
+		return box(title, right, panes(left, side, formW, inner), c.w, c.h, formW)
 	}
 	if e.preview {
 		return box(title+" · preview", right, e.previewLines(inner), c.w, c.h, 0)
@@ -386,14 +392,26 @@ func (e *agentEditor) View(c viewCtx) string {
 	return box(title, right, lines, c.w, c.h, 0)
 }
 
-func (e *agentEditor) formLines(w int) []string {
+// info is the agent as the roster shows it.
+func (e *agentEditor) info() workspace.AgentInfo {
+	return workspace.AgentInfo{
+		Name: e.agent.Name(), Model: e.str("model"), Effort: e.str("effort"), PermissionMode: e.str("permissionMode"),
+		Color: e.str("color"), Tools: len(e.toolList("tools")),
+	}
+}
+
+func (e *agentEditor) formLines(w int, c viewCtx) []string {
 	var lines []string
 	for i, f := range agentFields {
-		prefix := "   "
+		prefix, label := "   ", sMuted.Render(pad(f.label, 18))
 		if i == e.cursor {
-			prefix = " " + sAccent.Render("▸") + " "
+			bar := fg(pulse(c.frame, brandStops[0], brandStops[1])).Render("▌")
+			if !c.anim {
+				bar = fg(brandStops[0]).Render("▌")
+			}
+			prefix, label = " "+bar+" ", sBold.Render(pad(f.label, 18))
 		}
-		lines = append(lines, truncate(prefix+sMuted.Render(pad(f.label, 18))+e.valueOf(f.id), w))
+		lines = append(lines, truncate(prefix+label+e.valueOf(f.id), w))
 	}
 	return lines
 }
@@ -401,20 +419,20 @@ func (e *agentEditor) formLines(w int) []string {
 func (e *agentEditor) valueOf(id fieldID) string {
 	switch id {
 	case fName:
-		return e.agent.Name()
+		return sBold.Render(e.agent.Name())
 	case fDescription:
 		first, _, _ := strings.Cut(e.agent.Description(), "\n")
 		return first
 	case fModel:
-		return orDash(e.str("model"), "inherit")
+		return modelPill(e.str("model"))
 	case fEffort:
-		return orDash(e.str("effort"), "—")
+		return effortBars(e.str("effort"))
 	case fPermission:
-		return orDash(e.str("permissionMode"), "default")
+		return permissionStrength(e.str("permissionMode"))
 	case fTools:
-		return orDash(strings.Join(e.toolList("tools"), ", "), "all tools")
+		return toolChips(e.toolList("tools"), "all tools")
 	case fDisallowed:
-		return orDash(strings.Join(e.toolList("disallowedTools"), ", "), "—")
+		return toolChips(e.toolList("disallowedTools"), "—")
 	case fMaxTurns:
 		return orDash(e.str("maxTurns"), "—")
 	case fColor:
@@ -431,9 +449,27 @@ func (e *agentEditor) valueOf(id fieldID) string {
 		if lines == 1 {
 			word = "line"
 		}
-		return fmt.Sprintf("%d %s · enter opens your editor", lines, word)
+		return fmt.Sprintf("%d %s %s", lines, word, sMuted.Render("· enter opens your editor"))
 	}
 	return ""
+}
+
+// toolChips lists tools as small tags; when there are none it shows the
+// fallback.
+func toolChips(tools []string, none string) string {
+	if len(tools) == 0 {
+		return sMuted.Render(none)
+	}
+	const shown = 4
+	chips := make([]string, 0, shown+1)
+	for i, t := range tools {
+		if i == shown {
+			chips = append(chips, sMuted.Render(fmt.Sprintf("+%d", len(tools)-shown)))
+			break
+		}
+		chips = append(chips, fg(cAccent).Render("‹")+t+fg(cAccent).Render("›"))
+	}
+	return strings.Join(chips, " ")
 }
 
 // checkLines shows what the linter says about this agent.
@@ -457,11 +493,32 @@ func (e *agentEditor) checkLines(w int) []string {
 	return lines
 }
 
-// previewLines is the file as it will be saved.
+// previewLines is the file as it will be saved, with the frontmatter colored
+// and the prompt numbered.
 func (e *agentEditor) previewLines(w int) []string {
 	lines := []string{" " + sMuted.Render("PREVIEW — "+e.bundle.Agents[e.idx].Name+".md")}
+	dashes, body := 0, 0
 	for _, l := range strings.Split(strings.TrimRight(string(e.data()), "\n"), "\n") {
-		lines = append(lines, " "+truncate(strings.ReplaceAll(l, "\t", "  "), w-2))
+		l = strings.ReplaceAll(l, "\t", "  ")
+		switch {
+		case dashes < 2 && l == "---":
+			dashes++
+			lines = append(lines, " "+fg(cDim).Render(l))
+		case dashes < 2:
+			lines = append(lines, truncate(" "+highlightYAML(l), w-1))
+		default:
+			body++
+			lines = append(lines, truncate(fmt.Sprintf(" %s %s", fg(cDim).Render(fmt.Sprintf("%2d", body)), l), w-1))
+		}
 	}
 	return lines
+}
+
+// highlightYAML colors the key of a `key: value` line.
+func highlightYAML(line string) string {
+	key, value, ok := strings.Cut(line, ":")
+	if !ok || strings.HasPrefix(strings.TrimSpace(key), "-") {
+		return line
+	}
+	return fg(agentColors["cyan"]).Render(key+":") + value
 }

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 
 	"github.com/EdrenaVosh/squadup/internal/agentfile"
 	"github.com/EdrenaVosh/squadup/internal/initial"
@@ -20,6 +21,7 @@ type AgentInfo struct {
 	Effort         string
 	PermissionMode string
 	Color          string
+	Tools          int // how many tools it is limited to; 0 means all of them
 }
 
 // Card is everything the terminal interface shows about one preset.
@@ -131,5 +133,17 @@ func agentInfo(name string, data []byte) AgentInfo {
 		return ""
 	}
 	info.Model, info.Effort, info.PermissionMode, info.Color = get("model"), get("effort"), get("permissionMode"), get("color")
+	if v, ok := a.Get("tools"); ok {
+		switch list := v.(type) {
+		case []any:
+			info.Tools = len(list)
+		case string:
+			for _, t := range strings.Split(list, ",") {
+				if strings.TrimSpace(t) != "" {
+					info.Tools++
+				}
+			}
+		}
+	}
 	return info
 }

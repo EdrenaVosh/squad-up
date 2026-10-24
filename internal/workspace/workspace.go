@@ -90,6 +90,7 @@ type Entry struct {
 	Agents      int        `json:"agents"`
 	Active      bool       `json:"active"`
 	Initial     bool       `json:"initial"`
+	Accent      string     `json:"accent,omitempty"`
 	CapturedAt  *time.Time `json:"capturedAt,omitempty"`
 	Error       string     `json:"error,omitempty"`
 }
@@ -119,7 +120,7 @@ func (w Workspace) Entries() ([]Entry, error) {
 		if p, err := w.Store().LoadPreset(name); err != nil {
 			e.Error = firstLine(err.Error())
 		} else {
-			e.Title, e.Description, e.Agents = p.Title, p.Description, len(p.Agents)
+			e.Title, e.Description, e.Agents, e.Accent = p.Title, p.Description, len(p.Agents), p.Accent
 		}
 		entries = append(entries, e)
 	}
