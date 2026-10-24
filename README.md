@@ -24,9 +24,22 @@ Presets of agent teams for [Claude Code](https://code.claude.com): switch them w
 | `squad export [preset]` | Write a preset to `<name>.squad.json` (`-o -` for stdout, `--all`, `--gist` for a secret gist via `gh`) |
 | `squad import <file\|https-link\|gist:id\|->` | Add a shared preset after a preview; it is never equipped (`--as`, `--force`, `--allow-hooks`, `--accept-risks`) |
 | `squad card <agent>` | An agent as a card: role, model, tools, permission strength (`--preset`) |
+| `squad pin <preset>` | Pin a preset to this project (a `.squadup` file with its name; `--clear` removes it). `squad run` with no name then uses the nearest one |
+| `squad statusline enable\|disable\|status` | Show ◆ and the equipped preset in the Claude Code status line; your own line keeps running first |
 | `squad log` | Operations that changed your config, newest first |
 | `squad initial [--recapture]` | Show your original setup, or capture it again |
 | `squad doctor` | Check that Claude Code is installed and logged in |
+
+## Claude Code plugin
+
+`plugin/` holds a small Claude Code plugin, and `.claude-plugin/marketplace.json` makes this repository a marketplace for it. Once the repository is published:
+
+```
+/plugin marketplace add EdrenaVosh/squadup
+/plugin install squadup@squadup
+```
+
+`/squadup:squad` then shows the equipped preset and the list; `/squadup:squad bug-hunt` switches. It only calls the `squad` tool, so squad has to be installed. Try it before publishing with `claude plugin marketplace add .` from this folder.
 
 ## Local development
 

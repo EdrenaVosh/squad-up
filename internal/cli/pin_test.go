@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -173,5 +174,33 @@ func TestStatusWithoutAPinSaysNothingAboutIt(t *testing.T) {
 	}
 	if strings.Contains(e.run("status", "--json").stdout, `"pinned"`) {
 		t.Error("json should leave out pinned")
+	}
+}
+
+func TestThePluginOnlyCallsCommandsThatExist(t *testing.T) {
+	data, err := os.ReadFile(filepath.Join("..", "..", "plugin", "skills", "squad", "SKILL.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	used := map[string]bool{}
+	for _, m := range regexp.MustCompile("`squad ([a-z]+)( --?[a-z-]+)?").FindAllStringSubmatch(string(data), -1) {
+		used[m[1]] = true
+	}
+	if !used["status"] || !used["list"] || !used["use"] {
+		t.Fatalf("the skill should use status, list and use, found %v", used)
+	}
+	e := newEnv(t)
+	for name := range used {
+		if r := e.run(name, "--help"); r.code != 0 {
+			t.Errorf("the plugin calls `squad %s`, which does not exist: %s", name, r.stderr)
+		}
+	}
+	for _, flag := range []string{"--json", "--yes"} {
+		if !strings.Contains(string(data), flag) {
+			t.Errorf("the skill no longer mentions %s", flag)
+		}
+	}
+	if r := e.run("status", "--json", "--help"); r.code != 0 {
+		t.Errorf("status --json: %s", r.stderr)
 	}
 }

@@ -1,0 +1,14 @@
+{
+  "name": "squadup",
+  "description": "Switch Claude Code agent teams with one command",
+  "owner": {
+    "name": "EdrenaVosh"
+  },
+  "plugins": [
+    {
+      "name": "squadup",
+      "source": "./plugin",
+      "description": "/squadup:squad shows which agent preset is equipped and switches it. Needs the squad command-line tool."
+    }
+  ]
+}
