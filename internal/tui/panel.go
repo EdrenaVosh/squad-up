@@ -210,7 +210,7 @@ func agentDetail(a workspace.AgentInfo, w, h int) []string {
 		body = append(body, highlightPrompt(strings.TrimRight(l, " \t"), inner)...)
 	}
 	title := "◆ " + a.Name
-	return panel(title+" · PROMPT", body, w, min(h, len(body)+2))
+	return panel(title+" · PROMPT", body, w, h)
 }
 
 func chipList(tools []string) []string {

@@ -19,7 +19,7 @@ Presets of agent teams for [Claude Code](https://code.claude.com): switch them w
 | `squad lint [preset]` | Check agents and presets, and estimate their cost in context (`--strict`, `--json`) |
 | `squad new [name]` | Create a preset: blank, or from `--from <preset\|initial\|current>` or `--template <id>` |
 | `squad clone <preset> <new>` · `squad rename` · `squad rm` | Copy, rename or delete a preset (Initial is never changed) |
-| `squad edit <preset> [agent]` | Edit in the terminal interface (`--raw`: in `$EDITOR`) |
+| `squad edit <preset> [agent]` | Edit in the terminal interface (`--raw`: in `$EDITOR`; `--prompt-file <file.md>`: replace the agent's prompt with the text of a Markdown file) |
 | `squad templates` | The five starter presets that ship with squad |
 | `squad export [preset]` | Write a preset to `<name>.squad.json` (`-o -` for stdout, `--all`, `--gist` for a secret gist via `gh`) |
 | `squad import <file\|https-link\|gist:id\|->` | Add a shared preset after a preview; it is never equipped (`--as`, `--force`, `--allow-hooks`, `--accept-risks`) |

@@ -102,7 +102,7 @@ func (h *home) headerBand(c viewCtx, inner int, tall bool) []string {
 
 // viewSpacious is the main screen on a big terminal: the logo, the presets as
 // cards, and for the selected one its roster, panels and the selected agent.
-func (h *home) viewSpacious(c viewCtx, rows int, label string) string {
+func (h *home) viewSpacious(c viewCtx, rows int) string {
 	inner := c.w - 2
 	tall := c.h >= 44 && c.w >= 120
 	header := h.headerBand(c, inner, tall)
@@ -115,7 +115,7 @@ func (h *home) viewSpacious(c viewCtx, rows int, label string) string {
 	right := h.detail(inner-listW-1, bodyH, len(header), listW, c)
 
 	lines := append(header, panes(left, right, listW, inner)...)
-	return frame("◆ squadup", c.shift(), label, lines, c.w, rows, listW)
+	return frame("◆ squadup", c.shift(), "", lines, c.w, rows, listW)
 }
 
 // cardList is the presets as cards of three lines each, Initial pinned at the
@@ -268,52 +268,55 @@ func (h *home) detail(w, rows, headerRows, listW int, c viewCtx) []string {
 	}
 	head = append(head, "")
 
+	// The layout under the title does not depend on how many agents there are:
+	// the panels sit at a fixed height, and so does the region above them.
+	region := min(max(rows-len(head)-panelH-2, 9), 16)
+	ph := min(max(rows-len(head)-region-2, panelH), 14)
+	showPanels := rows-len(head)-region-1 >= panelH
+
 	opts := rosterOpts{frames: frames, frame: c.frame, selected: h.agent, live: live, spacious: true}
-	roster, rects, used := rosterLines(card.Agents, w-2, rows-len(head), opts)
+	rosterW := w - 2
+	var selected *workspace.AgentInfo
+	if h.agent < len(card.Agents) {
+		selected = &card.Agents[h.agent]
+	}
+	sideW := 0
+	if selected != nil && w-2 >= 100 {
+		sideW = (w - 2) * 38 / 100
+		rosterW = w - 2 - sideW - 2
+	}
+	roster, rects, _ := rosterLines(card.Agents, rosterW, region, opts)
 	for _, r := range rects {
 		h.tiles = append(h.tiles, tileHit{
 			x: c.ox + 1 + listW + 1 + 1 + r.x, y: c.oy + 1 + h.topRows + headerRows + len(head) + r.y, w: r.w, h: r.h, index: r.index,
 		})
 	}
-
-	var selected *workspace.AgentInfo
-	if h.agent < len(card.Agents) {
-		selected = &card.Agents[h.agent]
+	for len(roster) < region {
+		roster = append(roster, "")
 	}
-	sideBySideDetail := false
-	if free := w - 2 - used - 2; selected != nil && len(rects) > 0 && free >= 44 && len(roster) >= 9 {
-		side := agentDetail(*selected, free, len(roster))
-		for i := range roster {
-			roster[i] = pad(roster[i], used)
-		}
-		roster = sideBySide(2, roster, side)
-		sideBySideDetail = true
+	for i := range roster {
+		roster[i] = pad(roster[i], rosterW)
+	}
+	if sideW > 0 {
+		roster = sideBySide(2, roster[:region], fit(agentDetail(*selected, sideW, region), sideW, region))
 	}
 	out := append([]string{}, head...)
 	for _, l := range roster {
 		out = append(out, " "+l)
 	}
 
-	rem := rows - len(out) - 1
-	switch {
-	case rem >= panelH:
-		// Spare height goes to the panels, so that they show more.
-		ph := panelH
-		if sideBySideDetail || selected == nil {
-			ph = min(max(rem, panelH), 14)
-		}
+	if showPanels {
 		out = append(out, "")
 		for _, l := range panelsRow(card, h.activity, h.plan, h.planErr, w-2, ph) {
 			out = append(out, " "+l)
 		}
-		rem -= ph + 1
-		if !sideBySideDetail && selected != nil && rem >= 7 {
+		if sideW == 0 && selected != nil && rows-len(out) >= 8 {
 			out = append(out, "")
-			for _, l := range agentDetail(*selected, w-2, min(rem-1, 26)) {
+			for _, l := range agentDetail(*selected, w-2, min(rows-len(out), 16)) {
 				out = append(out, " "+l)
 			}
 		}
-	default:
+	} else {
 		leftW := min((w-2)*55/100, 30)
 		pair := func(l1, v1, l2, v2 string) string {
 			return " " + pad(sMuted.Render(pad(l1, 15))+v1, leftW) + pad(sMuted.Render(pad(l2, 12))+v2, w-2-leftW)

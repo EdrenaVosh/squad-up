@@ -82,7 +82,7 @@ const (
 	windowH = 36
 	// The main screen stops growing here; more space is margin.
 	homeMaxW = 200
-	homeMaxH = 50
+	homeMaxH = 44
 )
 
 // screen is one page of the interface; the app keeps a stack of them.

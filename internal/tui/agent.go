@@ -63,6 +63,9 @@ type agentEditor struct {
 	preview bool
 	report  lint.Report
 	loadErr string
+
+	scroll    int      // how far the inspector is scrolled
+	modelOpts []option // the models, for the inspector; nil until needed
 }
 
 func newAgentEditor(ws workspace.Workspace, bundle *preset.Bundle, idx int) *agentEditor {
@@ -99,6 +102,7 @@ func (e *agentEditor) persist() tea.Cmd {
 		return flashErr(err.Error())
 	}
 	e.relint()
+	e.modelOpts = nil
 	return nil
 }
 
@@ -106,6 +110,14 @@ func (e *agentEditor) Update(msg tea.Msg) (screen, tea.Cmd) {
 	switch m := msg.(type) {
 	case promptEditedMsg:
 		return e, e.promptEdited(m)
+	case tea.MouseWheelMsg:
+		switch m.Button {
+		case tea.MouseWheelUp:
+			e.scrollBy(-3)
+		case tea.MouseWheelDown:
+			e.scrollBy(3)
+		}
+		return e, nil
 	case tea.KeyPressMsg:
 		return e.key(m)
 	}
@@ -122,13 +134,24 @@ func (e *agentEditor) key(m tea.KeyPressMsg) (screen, tea.Cmd) {
 	if e.agent == nil {
 		return e, nil
 	}
+	if e.handleScroll(m.String()) {
+		return e, nil
+	}
 	switch m.String() {
 	case "up", "k":
-		e.cursor = max(e.cursor-1, 0)
+		e.cursor, e.scroll = max(e.cursor-1, 0), 0
 	case "down", "j":
-		e.cursor = min(e.cursor+1, len(agentFields)-1)
+		e.cursor, e.scroll = min(e.cursor+1, len(agentFields)-1), 0
 	case "p":
-		e.preview = !e.preview
+		e.preview, e.scroll = !e.preview, 0
+	case "o":
+		if agentFields[e.cursor].id == fPrompt {
+			return e, e.editPrompt()
+		}
+	case "f":
+		if agentFields[e.cursor].id == fPrompt {
+			return e, e.promptFromFile()
+		}
 	case "enter", "right", "l":
 		return e, e.edit(agentFields[e.cursor].id)
 	}
@@ -196,7 +219,7 @@ func (e *agentEditor) edit(id fieldID) tea.Cmd {
 		}
 		return push(newChoice("Color", options, indexOfValue(options, e.str("color")), e.setter("color")))
 	case fPrompt:
-		return e.editPrompt()
+		return push(newPromptEditor(e))
 	}
 	return nil
 }
@@ -351,10 +374,13 @@ func (e *agentEditor) promptEdited(m promptEditedMsg) tea.Cmd {
 }
 
 func (e *agentEditor) Hints() []hint {
-	return []hint{{"↑↓", "move"}, {"enter", "edit"}, {"p", "preview"}, {"esc", "back"}, {"?", "help"}}
+	if e.agent != nil && agentFields[e.cursor].id == fPrompt {
+		return []hint{{"↑↓", "field"}, {"enter", "write"}, {"o", "$EDITOR"}, {"f", "from file"}, {"pgup/dn", "scroll"}, {"p", "file"}, {"esc", "back"}, {"?", "help"}}
+	}
+	return []hint{{"↑↓", "move"}, {"enter", "edit"}, {"p", "file preview"}, {"esc", "back"}, {"?", "help"}}
 }
 
-func (e *agentEditor) View(c viewCtx) string {
+func (e *agentEditor) viewNarrow(c viewCtx) string {
 	name := e.bundle.Agents[e.idx].Name
 	inner := c.w - 2
 	title := "Agent " + name
@@ -372,18 +398,6 @@ func (e *agentEditor) View(c viewCtx) string {
 	checks := e.checkLines(inner)
 	right := e.bundle.Preset.Name + " · " + fmt.Sprintf("slot %d", e.idx+1)
 
-	if c.w >= 100 {
-		formW := 50
-		left := append(form, "")
-		left = append(left, checks...)
-		side := []string{" " + sMuted.Render("AS IT APPEARS IN YOUR SQUAD")}
-		for _, l := range agentTile(e.info(), e.idx+1, tileOpts{w: 28, stage: 2, tall: true}) {
-			side = append(side, " "+l)
-		}
-		side = append(side, "")
-		side = append(side, e.previewLines(inner-formW-1)...)
-		return c.box(title, right, panes(left, side, formW, inner), formW)
-	}
 	if e.preview {
 		return c.box(title+" · preview", right, e.previewLines(inner), 0)
 	}
@@ -396,7 +410,7 @@ func (e *agentEditor) View(c viewCtx) string {
 func (e *agentEditor) info() workspace.AgentInfo {
 	return workspace.AgentInfo{
 		Name: e.agent.Name(), Model: e.str("model"), Effort: e.str("effort"), PermissionMode: e.str("permissionMode"),
-		Color: e.str("color"), Tools: len(e.toolList("tools")),
+		Color: e.str("color"), Tools: len(e.toolList("tools")), Role: e.agent.Role(),
 	}
 }
 
@@ -449,7 +463,7 @@ func (e *agentEditor) valueOf(id fieldID) string {
 		if lines == 1 {
 			word = "line"
 		}
-		return fmt.Sprintf("%d %s %s", lines, word, sMuted.Render("· enter opens your editor"))
+		return fmt.Sprintf("%d %s %s", lines, word, sMuted.Render("· enter"))
 	}
 	return ""
 }

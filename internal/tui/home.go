@@ -372,7 +372,7 @@ func (h *home) View(c viewCtx) string {
 	}
 
 	if c.w >= spaciousW && c.h >= spaciousH {
-		return banner + h.viewSpacious(c, rows, label)
+		return banner + h.viewSpacious(c, rows)
 	}
 	h.listW, h.ox, h.oy = listWidth, c.ox, c.oy
 	if c.w < 2*listWidth+10 {

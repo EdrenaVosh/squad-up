@@ -126,18 +126,17 @@ func (c viewCtx) shift() int {
 	return c.frame
 }
 
-// frame is box with a flowing gradient: shift moves the colors of the edges
-// and of the title along (see flowColor).
+// frame is box with a flowing gradient: the colors run around the whole frame
+// (along the top, down the right side, back along the bottom and up the left
+// side) and move with shift. The title flows with them.
 func frame(title string, shift int, right string, lines []string, w, h, dividerAt int) string {
 	inner := w - 2
-	edge := func(from int, text string) string {
-		var b strings.Builder
-		for i, r := range []rune(text) {
-			b.WriteString(fg(flowColor(from+i, w, shift)).Render(string(r)))
-		}
-		return b.String()
-	}
-	side := fg(cDim).Render("│")
+	perimeter := 2*(w+h) - 4
+	ring := func(pos int) lipgloss.Style { return fg(flowColor(pos, perimeter, shift)) }
+	top := func(x int, r rune) string { return ring(x).Render(string(r)) }
+	bottom := func(x int, r rune) string { return ring((w - 1) + (h - 1) + (w - 1 - x)).Render(string(r)) }
+	rightSide := func(row int) string { return ring((w - 1) + row).Render("│") }
+	leftSide := func(row int) string { return ring(2*(w-1) + (h - 1) + (h - 1 - row)).Render("│") }
 
 	label := ""
 	if right != "" {
@@ -155,23 +154,37 @@ func frame(title string, shift int, right string, lines []string, w, h, dividerA
 		titleText = " " + truncate(title, max(w-6, 1)) + " "
 		fill = max(room-ansi.StringWidth(titleText), 0)
 	}
-	top := edge(0, "╭─") + gradientText(titleText, shift) + edge(2+ansi.StringWidth(titleText), strings.Repeat("─", fill)) + label +
-		edge(w-2, "─╮")
-	rows := []string{top}
+	var topRow strings.Builder
+	topRow.WriteString(top(0, '╭') + top(1, '─') + gradientText(titleText, shift))
+	x := 2 + ansi.StringWidth(titleText)
+	for i := 0; i < fill; i++ {
+		topRow.WriteString(top(x+i, '─'))
+	}
+	topRow.WriteString(label + top(w-2, '─') + top(w-1, '╮'))
+	rows := []string{topRow.String()}
 
 	for i, l := range fit(lines, inner, h-2) {
 		// The divider runs the full height, also below where the panes end.
 		if dividerAt > 0 && dividerAt < inner && i >= len(lines) {
 			l = strings.Repeat(" ", dividerAt) + fg(cDim).Render("│") + strings.Repeat(" ", inner-dividerAt-1)
 		}
-		rows = append(rows, side+l+side)
+		rows = append(rows, leftSide(i+1)+l+rightSide(i+1))
 	}
 
-	bottom := "╰" + strings.Repeat("─", inner) + "╯"
-	if dividerAt > 0 && dividerAt < inner {
-		bottom = "╰" + strings.Repeat("─", dividerAt) + "┴" + strings.Repeat("─", inner-dividerAt-1) + "╯"
+	var bottomRow strings.Builder
+	for x := 0; x < w; x++ {
+		r := '─'
+		switch {
+		case x == 0:
+			r = '╰'
+		case x == w-1:
+			r = '╯'
+		case dividerAt > 0 && dividerAt < inner && x == dividerAt+1:
+			r = '┴'
+		}
+		bottomRow.WriteString(bottom(x, r))
 	}
-	return strings.Join(append(rows, edge(0, bottom)), "\n")
+	return strings.Join(append(rows, bottomRow.String()), "\n")
 }
 
 // lipglossWidth is the width of a string in terminal cells, ignoring styling.

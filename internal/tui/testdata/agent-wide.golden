@@ -1,0 +1,36 @@
+╭─ Agent planner ──────────────────────────────────────────────────────────────────────────────────────────────────── solo-indie · slot 1 ─╮
+│ FIELDS                                          │ Name                                                                    enter · rename │
+│                                                 │ ────────────────────────────────────────────────────────────────────────────────────── │
+│ ▌ Name              planner                     │                                                                                        │
+│   Description       Breaks a task into steps. U…│ planner                                                                                │
+│   Model              opus                       │                                                                                        │
+│   Effort            ▂▃▅·· high                  │ The name Claude sees, and the name of the file. Lowercase letters, digits and dashes,  │
+│   Permission mode   ■□□□□ plan                  │ up to 64 characters; it must be unique in the preset.                                  │
+│   Tools             ‹Read› ‹Grep› ‹Glob›        │                                                                                        │
+│   Disallowed tools  —                           │                                                                                        │
+│   Max turns         —                           │                                                                                        │
+│   Color             ■ cyan                      │                                                                                        │
+│   Prompt            1 line · enter              │                                                                                        │
+│                                                 │                                                                                        │
+│  ╭─ 1 ───────────────────────────────────────╮  │                                                                                        │
+│  │ ■ planner                                 │  │                                                                                        │
+│  │  opus                                     │  │                                                                                        │
+│  │ ▂▃▅·· high                                │  │                                                                                        │
+│  │ ■□□□□ plan                                │  │                                                                                        │
+│  │ 3 tools                                   │  │                                                                                        │
+│  │ Breaks a task into steps.                 │  │                                                                                        │
+│  │                                           │  │                                                                                        │
+│  ╰───────────────────────────────────────────╯  │                                                                                        │
+│                                                 │                                                                                        │
+│ CHECKS                                          │                                                                                        │
+│   ✓ nothing to fix                              │                                                                                        │
+│                                                 │                                                                                        │
+│                                                 │                                                                                        │
+│                                                 │                                                                                        │
+│                                                 │                                                                                        │
+│                                                 │                                                                                        │
+│                                                 │                                                                                        │
+│                                                 │                                                                                        │
+│                                                 │                                                                                        │
+╰─────────────────────────────────────────────────┴────────────────────────────────────────────────────────────────────────────────────────╯
+  ↑↓  move   enter  edit   p  file preview   esc  back   ?  help

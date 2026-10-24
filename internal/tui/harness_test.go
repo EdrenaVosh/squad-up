@@ -195,6 +195,12 @@ func keyMsg(k string) tea.KeyPressMsg {
 		return tea.KeyPressMsg{Code: 'c', Mod: tea.ModCtrl}
 	case "ctrl+s":
 		return tea.KeyPressMsg{Code: 's', Mod: tea.ModCtrl}
+	case "ctrl+l":
+		return tea.KeyPressMsg{Code: 'l', Mod: tea.ModCtrl}
+	case "pgdown":
+		return tea.KeyPressMsg{Code: tea.KeyPgDown}
+	case "pgup":
+		return tea.KeyPressMsg{Code: tea.KeyPgUp}
 	}
 	r := []rune(k)
 	if len(r) != 1 {
@@ -280,7 +286,9 @@ func (h *harness) goTo(name string) {
 	h.t.Helper()
 	for i := 0; i < 12; i++ {
 		v := h.view()
-		if selectedRow.MatchString(v) && strings.Contains(selectedRow.FindString(v), " "+name) {
+		// The wide layout shows the title ("Solo Indie"), the narrow one the name.
+		line := strings.ReplaceAll(strings.ToLower(selectedRow.FindString(v)), " ", "-")
+		if selectedRow.MatchString(v) && strings.Contains(line, "-"+name) {
 			return
 		}
 		h.press("down")

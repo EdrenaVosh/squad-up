@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -232,6 +233,7 @@ func (a *app) newRm() *cobra.Command {
 
 func (a *app) newEdit() *cobra.Command {
 	var raw bool
+	var promptFile string
 	cmd := &cobra.Command{
 		Use:   "edit <preset> [agent]",
 		Short: "Edit a preset or one of its agents",
@@ -254,6 +256,9 @@ func (a *app) newEdit() *cobra.Command {
 				}
 			}
 
+			if promptFile != "" {
+				return a.setPromptFromFile(name, args[1:], promptFile)
+			}
 			if !raw {
 				return a.editInterface(name, args[1:])
 			}
@@ -272,6 +277,7 @@ func (a *app) newEdit() *cobra.Command {
 		},
 	}
 	cmd.Flags().BoolVar(&raw, "raw", false, "open the file in $EDITOR instead of the terminal interface")
+	cmd.Flags().StringVar(&promptFile, "prompt-file", "", "replace the agent's prompt with the text of this Markdown file")
 	return cmd
 }
 
@@ -308,5 +314,24 @@ func (a *app) runEditor(path string) error {
 	if err := cmd.Run(); err != nil {
 		return &ExitError{Code: 1, Err: fmt.Errorf("the editor %q failed: %w", cmd.Args[0], err), Fix: "set $EDITOR to an editor that works in this terminal"}
 	}
+	return nil
+}
+
+// setPromptFromFile replaces the prompt of an agent with the text of a file.
+func (a *app) setPromptFromFile(preset string, agent []string, path string) error {
+	if len(agent) != 1 {
+		return &ExitError{Code: 2, Err: errors.New("--prompt-file needs the agent whose prompt it replaces"), Fix: "use `squad edit <preset> <agent> --prompt-file <file>`"}
+	}
+	text, err := workspace.ReadPromptFile(path)
+	if err != nil {
+		return &ExitError{Code: 1, Err: err, Fix: "give the path of a Markdown file with the prompt in it"}
+	}
+	if err := a.workspace().SetPrompt(preset, agent[0], text); err != nil {
+		if errors.Is(err, workspace.ErrNoAgent) {
+			return &ExitError{Code: 1, Err: err, Fix: "`squad lint " + preset + "` shows the agents of the preset"}
+		}
+		return libraryError(err, cloneInitialFix)
+	}
+	printf(a.io.Out, "The prompt of %s is now the text of %s (%s).\n", agent[0], filepath.Base(path), plural(strings.Count(text, "\n"), "line"))
 	return nil
 }

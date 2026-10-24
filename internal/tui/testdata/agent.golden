@@ -8,7 +8,7 @@
 │   Disallowed tools  —                                                        │
 │   Max turns         —                                                        │
 │   Color             ■ cyan                                                   │
-│   Prompt            1 line · enter opens your editor                         │
+│   Prompt            1 line · enter                                           │
 │                                                                              │
 │ CHECKS                                                                       │
 │   ✓ nothing to fix                                                           │
@@ -21,4 +21,4 @@
 │                                                                              │
 │                                                                              │
 ╰──────────────────────────────────────────────────────────────────────────────╯
-  ↑↓  move   enter  edit   p  preview   esc  back   ?  help
+  ↑↓  move   enter  edit   p  file preview   esc  back   ?  help
