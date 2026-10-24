@@ -33,7 +33,7 @@ func (e *agentEditor) viewWide(c viewCtx) string {
 	left := []string{" " + sMuted.Render("FIELDS"), ""}
 	left = append(left, e.formLines(leftW, c)...)
 	left = append(left, "")
-	for _, l := range agentTile(e.info(), e.idx+1, tileOpts{w: leftW - 4, stage: 2, tall: true}) {
+	for _, l := range agentTile(e.info(), e.idx+1, tileOpts{big: true, w: min(leftW-4, bigTileW+8), stage: 2}) {
 		left = append(left, "  "+l)
 	}
 	left = append(left, "")

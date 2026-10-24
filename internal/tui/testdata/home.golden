@@ -2,13 +2,13 @@
 │ PRESETS              │ ● Bug Hunt                                            │
 │                      │ A debugger and a tester for tracking down a failure   │
 │ ▌ ○ bug-hunt         │                                                       │
-│   ○ refactor-day     │ ┏━ 1 ━━━━━━━━━━━━━━━━━━━━┓ ╭─ 2 ────────────────────╮ │
-│   ● solo-indie       │ ┃ ■ debugger             ┃ │ ■ tester               │ │
-│                      │ ┃ [inherit]              ┃ │ [inherit]              │ │
-│                      │ ┃ ····· —                ┃ │ ····· —                │ │
-│                      │ ┃ ■■□□□ default          ┃ │ ■■□□□ default          │ │
-│                      │ ┃ 2 tools                ┃ │ 2 tools                │ │
-│                      │ ┗━━━━━━━━━━━━━━━━━━━━━━━━┛ ╰────────────────────────╯ │
+│   ○ refactor-day     │ ┏━ 1 ━━━━━━━━━━━┓ ╭─ 2 ───────────╮                   │
+│   ● solo-indie       │ ┃ ■ debugger    ┃ │ ■ tester      │                   │
+│                      │ ┃ [inherit]     ┃ │ [inherit]     │                   │
+│                      │ ┃ ····· —       ┃ │ ····· —       │                   │
+│                      │ ┃ ■■□□□ default ┃ │ ■■□□□ default │                   │
+│                      │ ┃ 2 tools       ┃ │ 2 tools       │                   │
+│                      │ ┗━━━━━━━━━━━━━━━┛ ╰───────────────╯                   │
 │                      │                                                       │
 │                      │ Default model   haiku        Main agent  debugger     │
 │                      │ Permissions    —             Mode        replace      │

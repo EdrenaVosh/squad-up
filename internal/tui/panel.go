@@ -187,40 +187,6 @@ func panelsRow(c workspace.Card, activity []apply.JournalEntry, plan *apply.Plan
 	return sideBySide(1, blocks...)
 }
 
-// agentDetail shows the selected agent in full: what it is for, its tools and
-// the start of its prompt, as much as fits in h lines.
-func agentDetail(a workspace.AgentInfo, w, h int) []string {
-	if h < 3 {
-		return nil
-	}
-	inner := w - 4
-	var body []string
-	if a.Description != "" {
-		body = append(body, wrapText(a.Description, inner)...)
-	}
-	chips := "all tools"
-	if len(a.ToolNames) > 0 {
-		chips = toolChips(a.ToolNames, "all tools")
-		if len(a.ToolNames) > 4 {
-			chips = strings.Join(chipList(a.ToolNames), " ")
-		}
-	}
-	body = append(body, sMuted.Render("Tools  ")+chips, "")
-	for _, l := range strings.Split(a.Prompt, "\n") {
-		body = append(body, highlightPrompt(strings.TrimRight(l, " \t"), inner)...)
-	}
-	title := "◆ " + a.Name
-	return panel(title+" · PROMPT", body, w, h)
-}
-
-func chipList(tools []string) []string {
-	out := make([]string, len(tools))
-	for i, t := range tools {
-		out[i] = fg(cAccent).Render("‹") + t + fg(cAccent).Render("›")
-	}
-	return out
-}
-
 // highlightPrompt colors a line of a prompt: headings, list marks and
 // `**labels:**` stand out. Long lines wrap.
 func highlightPrompt(line string, w int) []string {

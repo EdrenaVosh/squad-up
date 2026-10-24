@@ -268,7 +268,8 @@ func TestHomeOnABigTerminalUsesTheSpace(t *testing.T) {
 	h := newHarness(t)
 	h.resize(200, 52)
 
-	h.contains("PRESETS", "██", "IF YOU EQUIP IT", "SETTINGS", "CONTEXT COST", "HEALTH", "PROMPT", "claude 2.1.309", "3 presets · 6 agents")
+	h.lacks("PROMPT")
+	h.contains("PRESETS", "██", "IF YOU EQUIP IT", "SETTINGS", "CONTEXT COST", "HEALTH", "claude 2.1.309", "3 presets · 6 agents")
 	h.goldenAt("home-wide", 200, 52)
 }
 
@@ -286,7 +287,8 @@ func TestTheArrowKeysPickAnAgentAndAOpensItsEditor(t *testing.T) {
 	h.contains("┏━ 1 ")
 
 	h.press("right")
-	h.contains("┏━ 2 ", "tester · PROMPT")
+	h.contains("┏━ 2 ", "model", "access")
+	h.lacks("PROMPT")
 	h.press("left", "left") // wraps around
 	h.contains("┏━ 2 ")
 	h.press("a")

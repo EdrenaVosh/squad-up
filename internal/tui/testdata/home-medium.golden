@@ -8,25 +8,25 @@
 │ ▌ ○ Bug Hunt                 │                                                                             │
 │ ▌   ■ ■ 2 agents             │ ┏━ 1 ━━━━━━━━━━━━━━━━━━━━━━━━┓ ╭─ 2 ────────────────────────╮               │
 │ ▌   A debugger and a tester… │ ┃ ■ debugger                 ┃ │ ■ tester                   │               │
-│                              │ ┃ [inherit]                  ┃ │ [inherit]                  │               │
-│   ○ Refactor Day             │ ┃ ····· —                    ┃ │ ····· —                    │               │
-│     ■ 1 agent                │ ┃ ■■□□□ default              ┃ │ ■■□□□ default              │               │
-│     Keeps your agents and a… │ ┃ 2 tools                    ┃ │ 2 tools                    │               │
-│                              │ ┃ Finds the root cause of a  ┃ │ Writes a failing test for  │               │
-│   ● Solo Indie               │ ┃ failure.                   ┃ │ a bug.                     │               │
-│     ■ ■ ■ 3 agents           │ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ╰────────────────────────────╯               │
-│     Planner, reviewer and t… │                                                                             │
-│                              │                                                                             │
-│                              │                                                                             │
+│                              │ ┃                            ┃ │                            │               │
+│   ○ Refactor Day             │ ┃ ────────────────────────── ┃ │ ────────────────────────── │               │
+│     ■ 1 agent                │ ┃ Finds the root cause of a  ┃ │ Writes a failing test for  │               │
+│     Keeps your agents and a… │ ┃ failure.                   ┃ │ a bug.                     │               │
+│                              │ ┃                            ┃ │                            │               │
+│   ● Solo Indie               │ ┃ model   [inherit]          ┃ │ model   [inherit]          │               │
+│     ■ ■ ■ 3 agents           │ ┃ effort  ····· —            ┃ │ effort  ····· —            │               │
+│     Planner, reviewer and t… │ ┃ access  ■■□□□ default      ┃ │ access  ■■□□□ default      │               │
+│                              │ ┃ tools   ‹Read› ‹Bash›      ┃ │ tools   ‹Read› ‹Bash›      │               │
+│                              │ ┃                            ┃ │                            │               │
+│                              │ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ╰────────────────────────────╯               │
 │                              │                                                                             │
 │                              │ ╭─ SETTINGS ────────────────────────╮ ╭─ CONTEXT COST · TOKENS/CALL ──────╮ │
 │                              │ │ Model        haiku                │ │ debugger    ████████████░░░░    3 │ │
 │                              │ │ Effort      ····· —               │ │ tester      ████████████████    4 │ │
 │                              │ │ Permissions —                     │ │                                   │ │
-│                              │ │ Main agent  debugger              │ │ ~34 tokens per session            │ │
-│ ──────────────────────────── │ │ Mode        replace               │ │                                   │ │
-│   ● initial         ● ACTIVE │ │ Rules                             │ │                                   │ │
-│     ■ ■ ■ 3 agents           │ ╰───────────────────────────────────╯ ╰───────────────────────────────────╯ │
-│     your original setup      │                                                                             │
+│ ──────────────────────────── │ │ Main agent  debugger              │ │ ~34 tokens per session            │ │
+│   ● initial         ● ACTIVE │ │ Mode        replace               │ │                                   │ │
+│     ■ ■ ■ 3 agents           │ │ Rules                             │ │                                   │ │
+│     your original setup      │ ╰───────────────────────────────────╯ ╰───────────────────────────────────╯ │
 ╰──────────────────────────────┴─────────────────────────────────────────────────────────────────────────────╯
   ↑↓  preset   ←→  agent   enter  open   a  edit agent   e  equip   t  try   n  new   ?  help   q  quit

@@ -9,11 +9,11 @@ import (
 	"github.com/EdrenaVosh/squadup/internal/workspace"
 )
 
+// Agent tiles come in two sizes, and every tile of a screen has the same one,
+// whatever the number of agents.
 const (
-	tileW     = 17 // the narrowest agent tile
-	maxTileW  = 30 // and the widest
-	tileH     = 7  // its height
-	tileHTall = 9  // and with the role of the agent under the facts
+	smallTileW, smallTileH = 17, 7  // for the compact layout
+	bigTileW, bigTileH     = 30, 13 // for the spacious one, which widens with the room
 )
 
 // dealDelay is how many frames pass between one tile and the next appearing.
@@ -29,12 +29,12 @@ func tileColor(a workspace.AgentInfo) color.Color {
 
 // tileOpts say how a tile is drawn.
 type tileOpts struct {
-	w        int  // outer width
+	big      bool // the large tile, with the role and labels
+	w        int  // outer width; 0 is the size of the kind of tile
 	stage    int  // how far it has appeared: 0 an outline, 1 the name, 2 everything
 	selected bool // the agent the cursor is on
 	live     bool // the preset is equipped: the tile shows a heartbeat
 	frame    int  // the animation frame
-	tall     bool // with the role of the agent
 }
 
 // equalizer is four bars that move: the agents of an equipped preset are alive.
@@ -49,12 +49,21 @@ func equalizer(frame, slot int) string {
 	return b.String()
 }
 
+// tileSize is the outer size of a tile.
+func tileSize(big bool) (w, h int) {
+	if big {
+		return bigTileW, bigTileH
+	}
+	return smallTileW, smallTileH
+}
+
 // agentTile draws one agent as a framed tile.
 func agentTile(a workspace.AgentInfo, slot int, o tileOpts) []string {
-	if o.w == 0 {
-		o.w = tileW
+	w, height := tileSize(o.big)
+	if o.w > 0 {
+		w = o.w
 	}
-	inner := o.w - 2
+	inner := w - 2
 	col := tileColor(a)
 	if o.stage == 0 {
 		col = cDim
@@ -78,17 +87,12 @@ func agentTile(a workspace.AgentInfo, slot int, o tileOpts) []string {
 			tail = " " + fg(brandStops[0]).Render("●") + " "
 		}
 	}
-	fill := inner - len([]rune(head)) - ansiWidth(tail)
+	fill := inner - len([]rune(head)) - lipglossWidth(tail)
 	top := border.Render(corners[0]+head) + border.Render(strings.Repeat(corners[4], max(fill, 0))) + tail + border.Render(corners[1])
 	bottom := border.Render(corners[2] + strings.Repeat(corners[4], inner) + corners[3])
 
-	height := tileH
-	if o.tall {
-		height = tileHTall
-	}
 	blank := row("")
-	lines := make([]string, 0, height)
-	lines = append(lines, top)
+	lines := []string{top}
 	if o.stage == 0 {
 		for i := 1; i < height-1; i++ {
 			if i == height/2 {
@@ -106,23 +110,14 @@ func agentTile(a workspace.AgentInfo, slot int, o tileOpts) []string {
 	}
 	lines = append(lines, row(swatch(a.Color)+" "+name))
 	if o.stage >= 2 {
-		lines = append(lines,
-			row(modelOrDashW(a.Model, inner-2)),
-			row(effortBars(a.Effort)),
-			row(permissionStrength(a.PermissionMode)),
-			row(sMuted.Render(toolsText(a.Tools))))
-		if o.tall {
-			role := wrapText(a.Role, inner-2)
-			for i := 0; i < 2; i++ {
-				text := ""
-				if i < len(role) {
-					text = role[i]
-					if i == 1 && len(role) > 2 {
-						text = truncate(text+"…", inner-2)
-					}
-				}
-				lines = append(lines, row(sMuted.Render(text)))
-			}
+		if o.big {
+			lines = append(lines, bigTileBody(a, inner, row)...)
+		} else {
+			lines = append(lines,
+				row(modelOrDashW(a.Model, inner-2)),
+				row(effortBars(a.Effort)),
+				row(permissionStrength(a.PermissionMode)),
+				row(sMuted.Render(toolsText(a.Tools))))
 		}
 	}
 	for len(lines) < height-1 {
@@ -131,7 +126,52 @@ func agentTile(a workspace.AgentInfo, slot int, o tileOpts) []string {
 	return append(lines, bottom)
 }
 
-func ansiWidth(s string) int { return lipglossWidth(s) }
+// bigTileBody is what the large tile shows under the name: what the agent is
+// for, then its model, effort, access and tools, each with a label.
+func bigTileBody(a workspace.AgentInfo, inner int, row func(string) string) []string {
+	out := []string{row(""), row(fg(cDim).Render(strings.Repeat("─", inner-2)))}
+	role := wrapText(orDash(a.Role, "No description yet."), inner-2)
+	for i := 0; i < 2; i++ {
+		text := ""
+		if i < len(role) {
+			text = role[i]
+			if i == 1 && len(role) > 2 {
+				text = truncate(text+"…", inner-2)
+			}
+		}
+		out = append(out, row(sMuted.Render(text)))
+	}
+	labeled := func(label, value string) string { return row(sMuted.Render(pad(label, 8)) + value) }
+	return append(out, row(""),
+		labeled("model", modelOrDashW(a.Model, inner-10)),
+		labeled("effort", effortBars(a.Effort)),
+		labeled("access", permissionStrength(a.PermissionMode)),
+		labeled("tools", toolsLine(a, inner-10)))
+}
+
+// toolsLine fits as many tool chips as there are room for, then a count.
+func toolsLine(a workspace.AgentInfo, w int) string {
+	if len(a.ToolNames) == 0 {
+		return sMuted.Render("all tools")
+	}
+	var parts []string
+	used := 0
+	for i, t := range a.ToolNames {
+		rest := len(a.ToolNames) - i
+		chip := fg(cAccent).Render("‹") + t + fg(cAccent).Render("›")
+		reserve := 0
+		if rest > 1 {
+			reserve = 4 // " +n"
+		}
+		if used+len(t)+2+reserve > w && i > 0 {
+			parts = append(parts, sMuted.Render(fmt.Sprintf("+%d", rest)))
+			break
+		}
+		parts = append(parts, chip)
+		used += len(t) + 3
+	}
+	return strings.Join(parts, " ")
+}
 
 func modelOrDashW(model string, w int) string {
 	if model == "" {
@@ -159,33 +199,26 @@ type rosterOpts struct {
 	frame    int  // the animation frame
 	selected int  // the selected agent, or -1
 	live     bool // the preset is equipped
-	spacious bool // tiles may grow, and show the role
+	big      bool // large tiles
 }
 
-// rosterLines lays the agents out as rows of tiles that fit w cells. Tiles
-// deal in with the frames and stretch to use the width. When even one row of
-// them does not fit in h lines the agents are listed compactly instead.
+// rosterLines lays the agents out as rows of equal tiles that fit w cells.
+// Tiles deal in with the frames. When the rows of them do not fit in h lines
+// the agents are listed compactly instead.
 func rosterLines(agents []workspace.AgentInfo, w, h int, o rosterOpts) ([]string, []tileRect, int) {
 	if len(agents) == 0 {
 		return []string{sMuted.Render("no agents yet — enter opens the preset, then add one")}, nil, w
 	}
-	perRow := max(min((w+1)/(tileW+1), 8, len(agents)), 1)
-	if o.spacious && len(agents) > perRow {
-		perRow = max(min((w+1)/(tileW+1), 8), 1)
+	tw, th := tileSize(o.big)
+	if o.big {
+		// Wider terminals get wider tiles, but every tile of a screen is the same.
+		tw = min(max((w+1)/4-1, bigTileW), 42)
 	}
-	tw := min((w+1)/perRow-1, maxTileW)
-	tall := o.spacious && tw >= 22
-	th := tileH
-	if tall {
-		th = tileHTall
-	}
+	tw = min(tw, w)
+	perRow := max(min((w+1)/(tw+1), 8), 1)
 	tileRows := (len(agents) + perRow - 1) / perRow
 	if tileRows*th+(tileRows-1) > h {
-		if tall && tileRows*tileH+(tileRows-1) <= h {
-			tall, th = false, tileH
-		} else {
-			return compactRoster(agents, w, h, o.selected), nil, w
-		}
+		return compactRoster(agents, w, h, o.selected), nil, w
 	}
 
 	var out []string
@@ -198,7 +231,7 @@ func rosterLines(agents []workspace.AgentInfo, w, h int, o rosterOpts) ([]string
 		for i := r * perRow; i < min((r+1)*perRow, len(agents)); i++ {
 			stage := min(max((o.frames-i*dealDelay+2)/2, 0), 2)
 			tiles = append(tiles, agentTile(agents[i], i+1, tileOpts{
-				w: tw, stage: stage, selected: i == o.selected, live: o.live, frame: o.frame, tall: tall,
+				big: o.big, w: tw, stage: stage, selected: i == o.selected, live: o.live, frame: o.frame,
 			}))
 			rects = append(rects, tileRect{x: (i - r*perRow) * (tw + 1), y: len(out), w: tw, h: th, index: i})
 		}

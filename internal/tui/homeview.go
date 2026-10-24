@@ -269,23 +269,15 @@ func (h *home) detail(w, rows, headerRows, listW int, c viewCtx) []string {
 	head = append(head, "")
 
 	// The layout under the title does not depend on how many agents there are:
-	// the panels sit at a fixed height, and so does the region above them.
-	region := min(max(rows-len(head)-panelH-2, 9), 16)
+	// the roster has room for one or two rows of equal tiles, and the panels
+	// sit at a fixed height under it.
+	rowsOfTiles := min(max((rows-len(head)-panelH-2+1)/(bigTileH+1), 1), 2)
+	region := rowsOfTiles*bigTileH + (rowsOfTiles - 1)
 	ph := min(max(rows-len(head)-region-2, panelH), 14)
 	showPanels := rows-len(head)-region-1 >= panelH
 
-	opts := rosterOpts{frames: frames, frame: c.frame, selected: h.agent, live: live, spacious: true}
-	rosterW := w - 2
-	var selected *workspace.AgentInfo
-	if h.agent < len(card.Agents) {
-		selected = &card.Agents[h.agent]
-	}
-	sideW := 0
-	if selected != nil && w-2 >= 100 {
-		sideW = (w - 2) * 38 / 100
-		rosterW = w - 2 - sideW - 2
-	}
-	roster, rects, _ := rosterLines(card.Agents, rosterW, region, opts)
+	opts := rosterOpts{frames: frames, frame: c.frame, selected: h.agent, live: live, big: true}
+	roster, rects, _ := rosterLines(card.Agents, w-2, region, opts)
 	for _, r := range rects {
 		h.tiles = append(h.tiles, tileHit{
 			x: c.ox + 1 + listW + 1 + 1 + r.x, y: c.oy + 1 + h.topRows + headerRows + len(head) + r.y, w: r.w, h: r.h, index: r.index,
@@ -294,14 +286,8 @@ func (h *home) detail(w, rows, headerRows, listW int, c viewCtx) []string {
 	for len(roster) < region {
 		roster = append(roster, "")
 	}
-	for i := range roster {
-		roster[i] = pad(roster[i], rosterW)
-	}
-	if sideW > 0 {
-		roster = sideBySide(2, roster[:region], fit(agentDetail(*selected, sideW, region), sideW, region))
-	}
 	out := append([]string{}, head...)
-	for _, l := range roster {
+	for _, l := range roster[:region] {
 		out = append(out, " "+l)
 	}
 
@@ -309,12 +295,6 @@ func (h *home) detail(w, rows, headerRows, listW int, c viewCtx) []string {
 		out = append(out, "")
 		for _, l := range panelsRow(card, h.activity, h.plan, h.planErr, w-2, ph) {
 			out = append(out, " "+l)
-		}
-		if sideW == 0 && selected != nil && rows-len(out) >= 8 {
-			out = append(out, "")
-			for _, l := range agentDetail(*selected, w-2, min(rows-len(out), 16)) {
-				out = append(out, " "+l)
-			}
 		}
 	} else {
 		leftW := min((w-2)*55/100, 30)

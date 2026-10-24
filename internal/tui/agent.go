@@ -410,7 +410,7 @@ func (e *agentEditor) viewNarrow(c viewCtx) string {
 func (e *agentEditor) info() workspace.AgentInfo {
 	return workspace.AgentInfo{
 		Name: e.agent.Name(), Model: e.str("model"), Effort: e.str("effort"), PermissionMode: e.str("permissionMode"),
-		Color: e.str("color"), Tools: len(e.toolList("tools")), Role: e.agent.Role(),
+		Color: e.str("color"), Tools: len(e.toolList("tools")), ToolNames: e.toolList("tools"), Role: e.agent.Role(),
 	}
 }
 

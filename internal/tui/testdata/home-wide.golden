@@ -11,22 +11,19 @@
 │ PRESETS 3                                    │ ● Bug Hunt                                                                                                                                            │
 │                                              │ A debugger and a tester for tracking down a failure                                                                                                   │
 │ ▌ ○ Bug Hunt                                 │                                                                                                                                                       │
-│ ▌   ■ ■ 2 agents                             │ ┏━ 1 ━━━━━━━━━━━━━━━━━━━━━━━━┓ ╭─ 2 ────────────────────────╮                                ╭─ ◆ debugger · PROMPT ────────────────────────────────╮ │
-│ ▌   A debugger and a tester for tracking do… │ ┃ ■ debugger                 ┃ │ ■ tester                   │                                │ Finds the root cause of a failure. Use when a test   │ │
-│                                              │ ┃ [inherit]                  ┃ │ [inherit]                  │                                │ or the app fails.                                    │ │
-│   ○ Refactor Day                             │ ┃ ····· —                    ┃ │ ····· —                    │                                │ Tools  ‹Read› ‹Bash›                                 │ │
-│     ■ 1 agent                                │ ┃ ■■□□□ default              ┃ │ ■■□□□ default              │                                │                                                      │ │
-│     Keeps your agents and adds an architect  │ ┃ 2 tools                    ┃ │ 2 tools                    │                                │   Find it.                                           │ │
-│                                              │ ┃ Finds the root cause of a  ┃ │ Writes a failing test for  │                                │                                                      │ │
-│   ● Solo Indie                               │ ┃ failure.                   ┃ │ a bug.                     │                                │                                                      │ │
-│     ■ ■ ■ 3 agents                           │ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ╰────────────────────────────╯                                │                                                      │ │
-│     Planner, reviewer and tester for one-pe… │                                                                                              │                                                      │ │
-│                                              │                                                                                              │                                                      │ │
-│                                              │                                                                                              │                                                      │ │
-│                                              │                                                                                              │                                                      │ │
-│                                              │                                                                                              │                                                      │ │
-│                                              │                                                                                              │                                                      │ │
-│                                              │                                                                                              ╰──────────────────────────────────────────────────────╯ │
+│ ▌   ■ ■ 2 agents                             │ ┏━ 1 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ ╭─ 2 ──────────────────────────────╮                                                                             │
+│ ▌   A debugger and a tester for tracking do… │ ┃ ■ debugger                       ┃ │ ■ tester                         │                                                                             │
+│                                              │ ┃                                  ┃ │                                  │                                                                             │
+│   ○ Refactor Day                             │ ┃ ──────────────────────────────── ┃ │ ──────────────────────────────── │                                                                             │
+│     ■ 1 agent                                │ ┃ Finds the root cause of a        ┃ │ Writes a failing test for a bug. │                                                                             │
+│     Keeps your agents and adds an architect  │ ┃ failure.                         ┃ │                                  │                                                                             │
+│                                              │ ┃                                  ┃ │                                  │                                                                             │
+│   ● Solo Indie                               │ ┃ model   [inherit]                ┃ │ model   [inherit]                │                                                                             │
+│     ■ ■ ■ 3 agents                           │ ┃ effort  ····· —                  ┃ │ effort  ····· —                  │                                                                             │
+│     Planner, reviewer and tester for one-pe… │ ┃ access  ■■□□□ default            ┃ │ access  ■■□□□ default            │                                                                             │
+│                                              │ ┃ tools   ‹Read› ‹Bash›            ┃ │ tools   ‹Read› ‹Bash›            │                                                                             │
+│                                              │ ┃                                  ┃ │                                  │                                                                             │
+│                                              │ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ╰──────────────────────────────────╯                                                                             │
 │                                              │                                                                                                                                                       │
 │                                              │ ╭─ SETTINGS ───────────────────────╮ ╭─ CONTEXT COST · TOKENS/CALL ─────╮ ╭─ IF YOU EQUIP IT · e ────────────╮ ╭─ HEALTH ───────────────────────────╮ │
 │                                              │ │ Model        haiku               │ │ debugger   ████████████░░░░    3 │ │ + debugger.md                    │ │ ✓ clean                            │ │
@@ -40,8 +37,11 @@
 │                                              │ │                                  │ │                                  │ │                                  │ │                                    │ │
 │                                              │ │                                  │ │                                  │ │                                  │ │                                    │ │
 │                                              │ │                                  │ │                                  │ │                                  │ │                                    │ │
-│ ──────────────────────────────────────────── │ │                                  │ │                                  │ │                                  │ │                                    │ │
-│   ● initial                         ● ACTIVE │ ╰──────────────────────────────────╯ ╰──────────────────────────────────╯ ╰──────────────────────────────────╯ ╰────────────────────────────────────╯ │
+│                                              │ │                                  │ │                                  │ │                                  │ │                                    │ │
+│                                              │ ╰──────────────────────────────────╯ ╰──────────────────────────────────╯ ╰──────────────────────────────────╯ ╰────────────────────────────────────╯ │
+│                                              │                                                                                                                                                       │
+│ ──────────────────────────────────────────── │                                                                                                                                                       │
+│   ● initial                         ● ACTIVE │                                                                                                                                                       │
 │     ■ ■ ■ 3 agents                           │                                                                                                                                                       │
 │     your original setup                      │                                                                                                                                                       │
 ╰──────────────────────────────────────────────┴───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯

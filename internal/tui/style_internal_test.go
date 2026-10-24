@@ -142,7 +142,7 @@ func TestRosterFallsBackToAListWhenTilesDoNotFit(t *testing.T) {
 func TestRosterWrapsTilesIntoRows(t *testing.T) {
 	lines, _, _ := rosterLines(agents(4), 55, 20, rosterOpts{frames: 100, selected: -1})
 	text := ansi.Strip(strings.Join(lines, "\n"))
-	if strings.Count(text, "╭") != 4 || strings.Count(text, "\n") != 2*tileH {
+	if strings.Count(text, "╭") != 4 || strings.Count(text, "\n") != 2*smallTileH {
 		t.Errorf("4 agents at 3 per row should make 2 rows:\n%s", text)
 	}
 }
@@ -198,5 +198,68 @@ func TestTheGradientLoopsWithoutASeam(t *testing.T) {
 	br, bg, bb, _ := b.RGBA()
 	if ar != br || ag != bg || ab != bb {
 		t.Error("a full period should come back to the same color")
+	}
+}
+
+func TestAllTilesOfAScreenHaveTheSameSizeWhateverTheCount(t *testing.T) {
+	for _, big := range []bool{false, true} {
+		var w, h int
+		for n := 1; n <= 7; n++ {
+			lines, rects, _ := rosterLines(agents(n), 160, 40, rosterOpts{frames: 100, selected: -1, big: big})
+			if len(rects) != n {
+				t.Fatalf("big=%v n=%d: %d tiles", big, n, len(rects))
+			}
+			if n == 1 {
+				w, h = rects[0].w, rects[0].h
+			}
+			for _, r := range rects {
+				if r.w != w || r.h != h {
+					t.Errorf("big=%v n=%d: tile %d is %dx%d, the first screen's tiles are %dx%d", big, n, r.index, r.w, r.h, w, h)
+				}
+			}
+			for i, l := range lines {
+				if ansi.StringWidth(l) > 160 {
+					t.Errorf("big=%v n=%d: line %d is too wide", big, n, i)
+				}
+			}
+		}
+		if big && (w < bigTileW || h != bigTileH) {
+			t.Errorf("a big tile is %dx%d, at least %dx%d expected", w, h, bigTileW, bigTileH)
+		}
+	}
+}
+
+func TestABigTileShowsTheRoleAndLabeledFacts(t *testing.T) {
+	a := workspace.AgentInfo{
+		Name: "planner", Color: "blue", Model: "opus", Effort: "high", PermissionMode: "plan",
+		Role: "Breaks a task into steps before any code is written.", ToolNames: []string{"Read", "Grep", "Glob", "Bash"}, Tools: 4,
+	}
+
+	lines := agentTile(a, 2, tileOpts{big: true, stage: 2})
+	text := ansi.Strip(strings.Join(lines, "\n"))
+
+	if len(lines) != bigTileH {
+		t.Errorf("%d lines, want %d", len(lines), bigTileH)
+	}
+	for _, l := range lines {
+		if ansi.StringWidth(l) != bigTileW {
+			t.Errorf("width %d: %q", ansi.StringWidth(l), l)
+		}
+	}
+	for _, want := range []string{"planner", "Breaks a task into steps", "model", "opus", "effort", "access", "tools", "‹Read›", "+"} {
+		if !strings.Contains(text, want) {
+			t.Errorf("the tile should show %q:\n%s", want, text)
+		}
+	}
+}
+
+func TestToolsThatDoNotFitBecomeACount(t *testing.T) {
+	a := workspace.AgentInfo{ToolNames: []string{"Read", "Write", "Edit", "Bash", "Grep", "Glob", "WebFetch"}}
+	got := ansi.Strip(toolsLine(a, 20))
+	if ansi.StringWidth(got) > 20 || !strings.Contains(got, "+") || !strings.HasPrefix(got, "‹Read›") {
+		t.Errorf("toolsLine = %q", got)
+	}
+	if got := ansi.Strip(toolsLine(workspace.AgentInfo{}, 20)); got != "all tools" {
+		t.Errorf("no tools = %q", got)
 	}
 }
