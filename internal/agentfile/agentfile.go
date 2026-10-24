@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/goccy/go-yaml"
 )
@@ -135,6 +136,18 @@ func (a *Agent) Set(key string, value any) {
 	a.fields = append(a.fields, yaml.MapItem{Key: key, Value: value})
 }
 
+// Delete removes a frontmatter field. After it, Marshal emits the canonical
+// form.
+func (a *Agent) Delete(key string) {
+	for i, item := range a.fields {
+		if fmt.Sprint(item.Key) == key {
+			a.fields = append(a.fields[:i], a.fields[i+1:]...)
+			a.dirty = true
+			return
+		}
+	}
+}
+
 // SetBody replaces the prompt. After it, Marshal emits the canonical form.
 func (a *Agent) SetBody(body string) {
 	a.dirty = true
@@ -205,4 +218,16 @@ func isEmpty(v any) bool {
 		return len(x) == 0
 	}
 	return false
+}
+
+// Role is the first sentence of the description: what the agent is for.
+func (a *Agent) Role() string {
+	text := strings.TrimSpace(a.Description())
+	text, _, _ = strings.Cut(text, "\n")
+	for i := 0; i < len(text); i++ {
+		if text[i] == '.' && (i+1 == len(text) || text[i+1] == ' ') {
+			return text[:i+1]
+		}
+	}
+	return text
 }

@@ -1,6 +1,7 @@
 package preset_test
 
 import (
+	"encoding/json"
 	"reflect"
 	"strings"
 	"testing"
@@ -190,5 +191,33 @@ func TestPermissionsSummary(t *testing.T) {
 	var none *preset.Permissions
 	if got := none.Summary(); got != "" {
 		t.Errorf("Summary() of nil = %q, want empty", got)
+	}
+}
+
+func TestSettingsSurviveAJSONRoundTrip(t *testing.T) {
+	in := preset.Settings{
+		Model: "sonnet", EffortLevel: "high",
+		Permissions: &preset.Permissions{DefaultMode: "acceptEdits", Allow: []string{"Bash(npm run *)"}, Ask: []string{"Bash(git push *)"}, Extra: map[string]any{"x": "y"}},
+	}
+
+	data, err := json.Marshal(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out preset.Settings
+	if err := json.Unmarshal(data, &out); err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(in, out) {
+		t.Fatalf("round trip changed the settings\n got: %+v\nwant: %+v", out, in)
+	}
+	for _, key := range []string{`"model"`, `"effortLevel"`, `"permissions"`, `"defaultMode"`, `"allow"`, `"ask"`} {
+		if !strings.Contains(string(data), key) {
+			t.Errorf("JSON lacks %s: %s", key, data)
+		}
+	}
+	if strings.Contains(string(data), `"deny"`) {
+		t.Errorf("empty lists must be left out: %s", data)
 	}
 }

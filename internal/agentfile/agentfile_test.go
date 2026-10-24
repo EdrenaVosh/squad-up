@@ -201,3 +201,45 @@ func TestSetBodyReplacesThePromptAndKeepsTheFrontmatter(t *testing.T) {
 		t.Errorf("Prompt() = %q", a.Prompt())
 	}
 }
+
+func TestDeleteRemovesAFieldAndSwitchesToTheCanonicalForm(t *testing.T) {
+	a, err := agentfile.Parse([]byte("---\nname: a\ndescription: d\nhooks:\n  Stop: []\nmcpServers: {}\n---\nBody\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	a.Delete("hooks")
+	a.Delete("missing") // harmless
+	got, err := a.Marshal()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := "---\nname: a\ndescription: d\n---\nBody\n"; string(got) != want {
+		t.Fatalf("Marshal() = %q, want %q", got, want)
+	}
+	if _, ok := a.Get("hooks"); ok {
+		t.Error("Get(hooks) still finds the field")
+	}
+}
+
+func TestRoleIsTheFirstSentenceOfTheDescription(t *testing.T) {
+	tests := map[string]string{
+		"Reviews a diff. Use after every change.": "Reviews a diff.",
+		"Plans the work":                    "Plans the work",
+		"Plans the work.":                   "Plans the work.",
+		"Handles v1.2 releases. Use often.": "Handles v1.2 releases.",
+		"First line\nsecond line":           "First line",
+		"":                                  "",
+	}
+	for description, want := range tests {
+		a, err := agentfile.Parse([]byte("---\nname: x\n---\nbody\n"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		a.Set("description", description)
+		if got := a.Role(); got != want {
+			t.Errorf("Role(%q) = %q, want %q", description, got, want)
+		}
+	}
+}

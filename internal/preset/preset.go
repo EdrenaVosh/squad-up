@@ -52,21 +52,21 @@ type Preset struct {
 // Settings are the managed settings.json keys a preset sets. An empty field
 // means "take the value from Initial".
 type Settings struct {
-	Model       string       `yaml:"model,omitempty"`
-	EffortLevel string       `yaml:"effortLevel,omitempty"`
-	Permissions *Permissions `yaml:"permissions,omitempty"`
+	Model       string       `yaml:"model,omitempty" json:"model,omitempty"`
+	EffortLevel string       `yaml:"effortLevel,omitempty" json:"effortLevel,omitempty"`
+	Permissions *Permissions `yaml:"permissions,omitempty" json:"permissions,omitempty"`
 }
 
 // Permissions mirrors the `permissions` object of settings.json. Keys squad
 // does not know are kept under `extra`. (goccy/go-yaml v1.19.2 panics on an
 // inline map combined with Strict decoding, so they are not inlined.)
 type Permissions struct {
-	DefaultMode           string         `yaml:"defaultMode,omitempty"`
-	Allow                 []string       `yaml:"allow,omitempty"`
-	Ask                   []string       `yaml:"ask,omitempty"`
-	Deny                  []string       `yaml:"deny,omitempty"`
-	AdditionalDirectories []string       `yaml:"additionalDirectories,omitempty"`
-	Extra                 map[string]any `yaml:"extra,omitempty"`
+	DefaultMode           string         `yaml:"defaultMode,omitempty" json:"defaultMode,omitempty"`
+	Allow                 []string       `yaml:"allow,omitempty" json:"allow,omitempty"`
+	Ask                   []string       `yaml:"ask,omitempty" json:"ask,omitempty"`
+	Deny                  []string       `yaml:"deny,omitempty" json:"deny,omitempty"`
+	AdditionalDirectories []string       `yaml:"additionalDirectories,omitempty" json:"additionalDirectories,omitempty"`
+	Extra                 map[string]any `yaml:"extra,omitempty" json:"extra,omitempty"`
 }
 
 // Summary renders "acceptEdits · 4 allow · 1 ask · 2 deny", or "" for nil.

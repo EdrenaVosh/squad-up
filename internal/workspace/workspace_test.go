@@ -491,3 +491,91 @@ func TestProbeModelsExplainsWhatIsMissing(t *testing.T) {
 		t.Errorf("logged out: %v", err)
 	}
 }
+
+func importBundle(name string) preset.Bundle {
+	return preset.Bundle{
+		Preset: preset.Preset{Schema: 1, Name: name, Title: name, Mode: preset.ModeReplace, Agents: []string{"scout"}},
+		Agents: []preset.AgentFile{{Name: "scout", Data: []byte(agentMD("scout", "Scout."))}},
+	}
+}
+
+func TestImportStoresAPresetUnderItsOwnName(t *testing.T) {
+	w := setup(t)
+
+	res, err := w.Import(importBundle("fresh"), workspace.ImportOptions{})
+
+	if err != nil || res.Name != "fresh" || res.Renamed || res.Replaced {
+		t.Fatalf("Import = %+v, %v", res, err)
+	}
+	if !w.Store().Exists("fresh") {
+		t.Error("the preset was not stored")
+	}
+	if state, _ := apply.LoadState(w.Paths); state.Active != "" {
+		t.Errorf("import must not equip anything, active = %q", state.Active)
+	}
+}
+
+func TestImportPicksANewNameOnCollision(t *testing.T) {
+	w := setup(t)
+
+	res, err := w.Import(importBundle("solo"), workspace.ImportOptions{})
+	if err != nil || res.Name != "solo-2" || !res.Renamed {
+		t.Fatalf("Import = %+v, %v", res, err)
+	}
+	res, err = w.Import(importBundle("solo"), workspace.ImportOptions{})
+	if err != nil || res.Name != "solo-3" {
+		t.Fatalf("second Import = %+v, %v", res, err)
+	}
+	got, _ := w.Store().LoadPreset("solo-2")
+	if got.Name != "solo-2" {
+		t.Errorf("the stored preset is still called %q", got.Name)
+	}
+	if kept, _ := w.Store().LoadPreset("solo"); kept.Description != "Solo work" {
+		t.Error("the existing preset was touched")
+	}
+}
+
+func TestImportNeverTakesTheReservedName(t *testing.T) {
+	w := setup(t)
+	res, err := w.Import(importBundle("initial"), workspace.ImportOptions{})
+	if err != nil || res.Name != "initial-2" {
+		t.Fatalf("Import = %+v, %v", res, err)
+	}
+}
+
+func TestImportAsGivesTheName(t *testing.T) {
+	w := setup(t)
+
+	res, err := w.Import(importBundle("fresh"), workspace.ImportOptions{As: "mine"})
+	if err != nil || res.Name != "mine" || !res.Renamed {
+		t.Fatalf("Import = %+v, %v", res, err)
+	}
+	if _, err := w.Import(importBundle("fresh"), workspace.ImportOptions{As: "solo"}); !errors.Is(err, preset.ErrExists) {
+		t.Errorf("--as onto an existing preset: %v", err)
+	}
+	if _, err := w.Import(importBundle("fresh"), workspace.ImportOptions{As: "Not Valid"}); !errors.Is(err, workspace.ErrInvalidName) {
+		t.Errorf("--as with a bad name: %v", err)
+	}
+}
+
+func TestImportForceReplacesThePreset(t *testing.T) {
+	w := setup(t)
+
+	res, err := w.Import(importBundle("solo"), workspace.ImportOptions{Force: true})
+
+	if err != nil || res.Name != "solo" || !res.Replaced {
+		t.Fatalf("Import = %+v, %v", res, err)
+	}
+	got, _ := w.Store().Load("solo")
+	if len(got.Agents) != 1 || got.Agents[0].Name != "scout" {
+		t.Errorf("solo was not replaced: %+v", got.Agents)
+	}
+}
+
+func TestImportForceOnANewNameJustStores(t *testing.T) {
+	w := setup(t)
+	res, err := w.Import(importBundle("fresh"), workspace.ImportOptions{Force: true})
+	if err != nil || res.Replaced || res.Name != "fresh" {
+		t.Fatalf("Import = %+v, %v", res, err)
+	}
+}

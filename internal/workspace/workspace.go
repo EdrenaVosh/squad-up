@@ -447,3 +447,58 @@ func (w Workspace) ProbeModels(ctx context.Context) (*models.Cache, error) {
 	}
 	return cache, nil
 }
+
+// ImportOptions say what to do when an imported preset's name is taken.
+type ImportOptions struct {
+	As    string // store it under this name instead
+	Force bool   // replace the preset that has the name
+}
+
+// ImportResult says where an imported preset ended up.
+type ImportResult struct {
+	Name     string
+	Renamed  bool // stored under a name other than its own
+	Replaced bool // an existing preset was overwritten
+}
+
+// Import stores a preset that came from outside. It never equips it. A name
+// that is taken (or reserved) gets a numeric suffix, unless As or Force says
+// otherwise.
+func (w Workspace) Import(b preset.Bundle, opts ImportOptions) (ImportResult, error) {
+	var res ImportResult
+	err := w.locked(func() error {
+		store := w.Store()
+		name := b.Preset.Name
+		if opts.As != "" {
+			name = opts.As
+		}
+		checked := CheckName(name)
+		if checked != nil && (opts.As != "" || !errors.Is(checked, ErrReservedName)) {
+			return checked
+		}
+		taken := func() bool { return CheckName(name) != nil || store.Exists(name) }
+
+		switch {
+		case taken() && opts.Force && checked == nil:
+			res.Replaced = true
+		case taken() && opts.As != "":
+			return fmt.Errorf("%w: %s", preset.ErrExists, name)
+		case taken():
+			base := name
+			for n := 2; taken(); n++ {
+				name = fmt.Sprintf("%s-%d", base, n)
+			}
+		}
+
+		res.Name, res.Renamed = name, name != b.Preset.Name
+		if b.Preset.Title == "" || b.Preset.Title == b.Preset.Name {
+			b.Preset.Title = name
+		}
+		b.Preset.Name = name
+		if res.Replaced {
+			return store.Replace(b)
+		}
+		return store.Save(b)
+	})
+	return res, err
+}

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -43,6 +44,7 @@ type IO struct {
 	Interactive bool             // whether In is a person at a terminal
 	Terminal    bool             // whether Out is a terminal
 	Now         func() time.Time // defaults to time.Now
+	HTTP        *http.Client     // for https imports; nil means a default client
 	// TUI opens the terminal interface; nil means the real one.
 	TUI func(env tui.Env, in io.Reader, out io.Writer) error
 }
@@ -135,7 +137,7 @@ func (a *app) newRoot() *cobra.Command {
 
 	root.AddCommand(newDoctor(), a.newList(), a.newStatus(), a.newCapture(), a.newInitial(),
 		a.newUse(), a.newRestore(), a.newUndo(), a.newLog(), a.newRun(), a.newModels(), a.newLint(),
-		a.newNew(), a.newClone(), a.newRename(), a.newRm(), a.newEdit())
+		a.newNew(), a.newClone(), a.newRename(), a.newRm(), a.newEdit(), a.newExport(), a.newImport())
 	return root
 }
 
