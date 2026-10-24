@@ -128,6 +128,15 @@ func (h *home) Update(msg tea.Msg) (screen, tea.Cmd) {
 	case reloadMsg:
 		h.reload(h.selectedName())
 		return h, nil
+	case importFetchedMsg:
+		if m.err != nil {
+			return h, flashErr(m.err.Error())
+		}
+		next, err := newImportScreen(h.ws, m.source, m.data)
+		if err != nil {
+			return h, flashErr(err.Error())
+		}
+		return h, push(next)
 	case tea.KeyPressMsg:
 		if h.filtering {
 			return h.updateFilter(m)
@@ -188,6 +197,8 @@ func (h *home) updateKeys(m tea.KeyPressMsg) (screen, tea.Cmd) {
 			base = &sel.Name
 		}
 		return h, push(newCreateFlow(h.ws, base))
+	case "i":
+		return h, push(importFlow())
 	}
 	if sel == nil {
 		return h, nil
@@ -214,6 +225,11 @@ func (h *home) updateKeys(m tea.KeyPressMsg) (screen, tea.Cmd) {
 			return h, flashErr(workspace.ErrProtected.Error())
 		}
 		return h, push(removeFlow(h.ws, *sel))
+	case "x":
+		if sel.Initial {
+			return h, flashErr(ExportInitial)
+		}
+		return h, push(exportFlow(h.ws, sel.Name))
 	}
 	return h, nil
 }
@@ -233,7 +249,7 @@ func (h *home) Hints() []hint {
 	}
 	return []hint{
 		{"↑↓", "select"}, {"enter", "open"}, {"e", "equip"}, {"t", "try"}, {"n", "new"},
-		{"c", "clone"}, {"r", "rename"}, {"d", "delete"}, {"/", "filter"}, {"?", "help"}, {"q", "quit"},
+		{"c", "clone"}, {"r", "rename"}, {"d", "delete"}, {"i", "import"}, {"x", "export"}, {"/", "filter"}, {"?", "help"}, {"q", "quit"},
 	}
 }
 
@@ -381,6 +397,7 @@ func (h *help) View(c viewCtx) string {
 		row("e", "equip it (write it into ~/.claude, after a preview)"),
 		row("t", "try it: start claude with it, writing nothing"),
 		row("n c r d", "new, clone, rename, delete"),
+		row("i x", "import a shared preset, export the selected one"),
 		row("/", "filter the list"),
 		"",
 		sBold.Render("Editing"),
@@ -422,8 +439,15 @@ func newCreateFlow(ws workspace.Workspace, base *string) screen {
 			}
 			options = append(options, option{label: label, value: "copy"})
 		}
-		options = append(options, option{label: "My current Claude Code setup", note: "what is in ~/.claude now", value: "current"})
+		options = append(options,
+			option{label: "My current Claude Code setup", note: "what is in ~/.claude now", value: "current"},
+			option{label: StarterTemplate, note: "five ready-made teams", value: "template"})
 		return push(newChoice("Start "+name+" from", options, 0, func(o option) tea.Cmd {
+			if o.value == "template" {
+				return push(newChoice("Template for "+name, templateOptions(), 0, func(t option) tea.Cmd {
+					return createFromTemplate(ws, name, t)
+				}))
+			}
 			return createPreset(ws, name, o.value, base)
 		}))
 	})

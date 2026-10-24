@@ -60,6 +60,9 @@ type Options struct {
 type Imported struct {
 	Bundle   preset.Bundle
 	Findings []Finding
+	// HasHooks is true when an agent of the file carries hooks or mcpServers,
+	// whether they were removed or kept.
+	HasHooks bool
 }
 
 // Dangerous reports whether any finding is a danger.
@@ -232,11 +235,12 @@ func read(e entry, opts Options) (Imported, error) {
 		if got := agent.Name(); got != name {
 			return Imported{}, fmt.Errorf("agent file %q declares the name %q; the name inside must match the file", file.File, got)
 		}
-		data, findings, err := vet(name, agent, opts)
+		data, findings, hooked, err := vet(name, agent, opts)
 		if err != nil {
 			return Imported{}, err
 		}
 		imp.Findings = append(imp.Findings, findings...)
+		imp.HasHooks = imp.HasHooks || hooked
 		p.Agents = append(p.Agents, name)
 		imp.Bundle.Agents = append(imp.Bundle.Agents, preset.AgentFile{Name: name, Data: data})
 	}
@@ -267,6 +271,10 @@ func agentName(file string) (string, error) {
 	return name, nil
 }
 
+// AllowHooksHint ends the warning about removed hooks; screens that keep them
+// another way replace it.
+const AllowHooksHint = " (import with --allow-hooks to keep it)"
+
 var dangerousModes = []string{"bypassPermissions", "dontAsk", "auto"}
 
 var broadRules = []string{"Bash", "Bash(*)", "WebFetch"}
@@ -292,8 +300,7 @@ func vetSettings(s preset.Settings) []Finding {
 
 // vet checks one agent and returns the bytes to store: the file as it came,
 // or without hooks and mcpServers.
-func vet(name string, agent *agentfile.Agent, opts Options) ([]byte, []Finding, error) {
-	var out []Finding
+func vet(name string, agent *agentfile.Agent, opts Options) (data []byte, out []Finding, hooked bool, err error) {
 	if v, ok := agent.Get("permissionMode"); ok {
 		if mode := fmt.Sprint(v); slices.Contains(dangerousModes, mode) {
 			out = append(out, Finding{LevelDanger, fmt.Sprintf(
@@ -305,6 +312,7 @@ func vet(name string, agent *agentfile.Agent, opts Options) ([]byte, []Finding, 
 		if !ok {
 			continue
 		}
+		hooked = true
 		runs := strings.Join(commandsIn(v), "; ")
 		if opts.AllowHooks {
 			out = append(out, Finding{LevelWarn, fmt.Sprintf("agent %s: keeps %s, which will run: %s", name, key, runs)})
@@ -312,13 +320,13 @@ func vet(name string, agent *agentfile.Agent, opts Options) ([]byte, []Finding, 
 		}
 		agent.Delete(key)
 		out = append(out, Finding{LevelWarn, fmt.Sprintf(
-			"agent %s: removed %s, which would run: %s (import with --allow-hooks to keep it)", name, key, runs)})
+			"agent %s: removed %s, which would run: %s%s", name, key, runs, AllowHooksHint)})
 	}
-	data, err := agent.Marshal()
+	data, err = agent.Marshal()
 	if err != nil {
-		return nil, nil, fmt.Errorf("agent file %s.md: %w", name, err)
+		return nil, nil, false, fmt.Errorf("agent file %s.md: %w", name, err)
 	}
-	return data, out, nil
+	return data, out, hooked, nil
 }
 
 // commandsIn lists the commands and URLs found in a hooks or mcpServers

@@ -8,6 +8,7 @@
         │  e        equip it (write it into ~/.claude, after a previe… │        
         │  t        try it: start claude with it, writing nothing      │        
         │  n c r d  new, clone, rename, delete                         │        
+        │  i x      import a shared preset, export the selected one    │        
         │  /        filter the list                                    │        
         │                                                              │        
         │ Editing                                                      │        
@@ -18,7 +19,6 @@
         │ `squad restore` brings it back at any time.                  │        
         │                                                              │        
         ╰──────────────────────────────────────────────────────────────╯        
-                                                                                
                                                                                 
                                                                                 
  any key close

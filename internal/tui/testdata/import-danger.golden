@@ -1,0 +1,24 @@
+╭─ Import preview ───────────────────────────────────── risky-team.squad.json ─╮
+│ risky-team — Shared Team                                                     │
+│ replace mode · 2 agents · main agent —                                       │
+│ settings: model sonnet · effort high · bypassPermissions · 1 allow · 0 ask … │
+│                                                                              │
+│   scout           haiku    Read, Grep, Glob    Finds the files that matter f…│
+│   writer          sonnet   Read, Edit          Writes the change once the pl…│
+│                                                                              │
+│ DANGER  settings: defaultMode bypassPermissions makes Claude skip or         │
+│         auto-answer permission prompts                                       │
+│ warn    settings: the allow rule Bash lets Claude do this without asking     │
+│                                                                              │
+│ It is only stored; nothing is equipped.                                      │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+ enter import  ↑↓ scroll  esc cancel

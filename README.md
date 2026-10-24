@@ -17,6 +17,13 @@ Presets of agent teams for [Claude Code](https://code.claude.com): switch them w
 | `squad run <preset> [-- args]` | Start `claude` with a preset for one session, writing nothing to `~/.claude` (`--dry-run`) |
 | `squad models [--probe]` | Which models you can use: catalogue, your policy, and an optional probe |
 | `squad lint [preset]` | Check agents and presets, and estimate their cost in context (`--strict`, `--json`) |
+| `squad new [name]` | Create a preset: blank, or from `--from <preset\|initial\|current>` or `--template <id>` |
+| `squad clone <preset> <new>` · `squad rename` · `squad rm` | Copy, rename or delete a preset (Initial is never changed) |
+| `squad edit <preset> [agent]` | Edit in the terminal interface (`--raw`: in `$EDITOR`) |
+| `squad templates` | The five starter presets that ship with squad |
+| `squad export [preset]` | Write a preset to `<name>.squad.json` (`-o -` for stdout, `--all`, `--gist` for a secret gist via `gh`) |
+| `squad import <file\|https-link\|gist:id\|->` | Add a shared preset after a preview; it is never equipped (`--as`, `--force`, `--allow-hooks`, `--accept-risks`) |
+| `squad card <agent>` | An agent as a card: role, model, tools, permission strength (`--preset`) |
 | `squad log` | Operations that changed your config, newest first |
 | `squad initial [--recapture]` | Show your original setup, or capture it again |
 | `squad doctor` | Check that Claude Code is installed and logged in |

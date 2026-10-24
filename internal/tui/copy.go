@@ -110,3 +110,21 @@ func AlreadyEquipped(target string) string {
 	}
 	return fmt.Sprintf("%q is already equipped — nothing to change.", target)
 }
+
+// Import, export and template texts.
+const (
+	ImportPromptTitle   = "Import preset"
+	ImportPromptHelp    = "A .squad.json file, an https link or gist:<id>."
+	ImportTitle         = "Import preview"
+	ImportOnlyStored    = "It is only stored; nothing is equipped."
+	ImportAnywayTitle   = "Permissions without prompts"
+	ImportAnywayWarning = "The preset switches permission prompts off or hands them to a classifier."
+	ExportPromptTitle   = "Export preset"
+	ExportPromptHelp    = "File to write. Nothing is uploaded."
+	ExportSecretsTitle  = "These look like secret keys"
+	ExportInitial       = "Initial cannot be exported: clone it first (c), then export the copy"
+	TemplatesTitle      = "Starter templates"
+	TemplateNameTitle   = "Name the new preset"
+	TemplateNameHelp    = "Lowercase letters, digits and dashes."
+	StarterTemplate     = "A starter template"
+)

@@ -41,6 +41,7 @@ func (w *welcomeScreen) finished() bool {
 var welcomeChoices = []struct{ label, note string }{
 	{"Start from my current setup", "an editable copy of what you have now"},
 	{"Create a first preset", "blank, or from your current setup"},
+	{"Browse starter templates", "five ready-made teams"},
 	{"Check which models I can use", "four tiny requests to Claude"},
 	{"Go to the main screen", "look around first"},
 }
@@ -78,6 +79,8 @@ func (w *welcomeScreen) choose() tea.Cmd {
 	case 1:
 		return push(newCreateFlow(w.ws, nil))
 	case 2:
+		return push(browseTemplates(w.ws))
+	case 3:
 		body := []string{"This sends one tiny request for each of fable, opus,", "sonnet and haiku, and uses a few tokens of your plan."}
 		return push(newConfirm("Check your models", body, "Check", false, func() tea.Cmd {
 			w.probing = true

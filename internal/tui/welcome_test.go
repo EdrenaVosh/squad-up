@@ -83,7 +83,7 @@ func TestWelcomeCanCheckTheModelsAfterConsent(t *testing.T) {
 	h := firstRun(t)
 	testutil.FakeClaude(t)
 
-	h.press("down", "down", "enter")
+	h.press("down", "down", "down", "enter")
 	h.contains("Check your models", "one tiny request", "a few tokens")
 	h.press("n")
 	h.contains("Welcome to squadup")
@@ -96,7 +96,7 @@ func TestWelcomeCanCheckTheModelsAfterConsent(t *testing.T) {
 func TestWelcomeSaysWhatIsMissingForTheModelCheck(t *testing.T) {
 	h := firstRun(t) // no claude on PATH
 
-	h.press("down", "down", "enter", "y")
+	h.press("down", "down", "down", "enter", "y")
 
 	h.contains("claude was not found")
 }

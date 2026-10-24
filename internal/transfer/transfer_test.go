@@ -349,6 +349,17 @@ func TestHooksAndMCPServersAreStrippedByDefault(t *testing.T) {
 	}
 }
 
+func TestImportedSaysWhetherAnyAgentHadHooks(t *testing.T) {
+	if parseOne(t, sampleBundle(), Options{}).HasHooks {
+		t.Error("a plain preset has no hooks")
+	}
+	for _, allow := range []bool{false, true} {
+		if !parseOne(t, hookedBundle(), Options{AllowHooks: allow}).HasHooks {
+			t.Errorf("hooks went unnoticed with AllowHooks=%v", allow)
+		}
+	}
+}
+
 func TestAllowHooksKeepsThemAndWarns(t *testing.T) {
 	imp := parseOne(t, hookedBundle(), Options{AllowHooks: true})
 	if got := string(imp.Bundle.Agents[2].Data); got != hookedAgent {
