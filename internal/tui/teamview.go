@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"charm.land/lipgloss/v2"
+
 	"github.com/EdrenaVosh/squadup/internal/workspace"
 )
 
@@ -11,20 +13,21 @@ import (
 // get a bold, colored band; the squad's own settings a quiet dotted one, so
 // the two kinds of card never read as one.
 func sectionBand(label, note string, w, shift int, agents bool) string {
+	right := " " + sBold.Render(note) + " "
 	if agents {
-		left := " " + gradientText("◆ "+label, shift) + " "
-		right := " " + sMuted.Render(note) + " "
+		chip := lipgloss.NewStyle().Foreground(lipgloss.Color("#1A1200")).Background(brandStops[0]).Bold(true).Render(" ◆ " + label + " ")
+		left := " " + chip + " "
 		fill := max(w-lipglossWidth(left)-lipglossWidth(right), 0)
 		rule := make([]string, 0, fill)
 		for i := 0; i < fill; i++ {
-			rule = append(rule, fg(flowColor(i, max(fill, 1), shift)).Render("━"))
+			rule = append(rule, fg(flowColor(i, max(fill, 1), shift)).Bold(true).Render("━"))
 		}
 		return left + strings.Join(rule, "") + right
 	}
-	left := " " + sMuted.Render("▪ "+label) + " "
-	right := " " + sMuted.Render(note) + " "
+	chip := lipgloss.NewStyle().Foreground(lipgloss.Color("#FFFFFF")).Background(brandStops[3]).Bold(true).Render(" ▪ " + label + " ")
+	left := " " + chip + " "
 	fill := max(w-lipglossWidth(left)-lipglossWidth(right), 0)
-	return left + fg(cDim).Render(strings.Repeat("┄", fill)) + right
+	return left + fg(brandStops[3]).Render(strings.Repeat("┄", fill)) + right
 }
 
 // flowStrip is one line that shows how the agents are organised: who leads,

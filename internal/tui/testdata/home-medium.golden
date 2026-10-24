@@ -1,10 +1,10 @@
 ╭─ ◆ squadup ────────────────────────────────────────────────────────────────────────────────────────────────╮
-│  ▄▀▀▀▀ ▄▀▀▀▄ █   █ ▄▀▀▀▄ █▀▀▀▄ █   █ █▀▀▀▄                  ✦ ✦                   claude 2.1.309 ·  opus   │
-│   ▀▀▀▄ █ ▀▄▀ █   █ █▀▀▀█ █   █ █   █ █▀▀▀      ✦                               ✦      ◇ initial is active  │
-│  ▀▀▀▀   ▀▀ ▀  ▀▀▀  ▀   ▀ ▀▀▀▀   ▀▀▀  ▀        ✦                    ✦✦          ✓ in sync with your config  │
+│   ▄▀▀▀▀ ▄▀▀▀▄ █   █ ▄▀▀▀▄ █▀▀▀▄ █   █ █▀▀▀▄                  ✦ ✦                  claude 2.1.309 ·  opus   │
+│    ▀▀▀▄ █ ▀▄▀ █   █ █▀▀▀█ █   █ █   █ █▀▀▀      ✦                               ✦     ◇ initial is active  │
+│   ▀▀▀▀   ▀▀ ▀  ▀▀▀  ▀   ▀ ▀▀▀▀   ▀▀▀  ▀        ✦                    ✦✦         ✓ in sync with your config  │
 │────────────────────────────────────────────────────────────────────────────────────────────────────────────│
 │ PRESETS 3                    │ ● Bug Hunt  A debugger and a tester for tracking down a failure             │
-│                              │ ◆ AGENTS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2 slots · in order   │
+│                              │  ◆ AGENTS  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2 slots · in order   │
 │ ▌ ○ Bug Hunt                 │ separate helpers · set a Team flow to link them                             │
 │ ▌   ■ ■ 2 agents             │ ┏━ 1 ━━━━━━━━━━━━━━━━━━━━━━━━┓ ╭─ 2 ────────────────────────╮               │
 │ ▌   A debugger and a tester… │ ┃ ■ debugger                 ┃ │ ■ tester                   │               │
@@ -19,7 +19,7 @@
 │                              │ ┃ tools   ‹Read› ‹Bash›      ┃ │ tools   ‹Read› ‹Bash›      │               │
 │                              │ ┃ context ⇄ shared           ┃ │ context ⇄ shared           │               │
 │                              │ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ╰────────────────────────────╯               │
-│                              │ ▪ SQUAD ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄ settings, cost and health of the whole preset   │
+│                              │  ▪ SQUAD  ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄ settings, cost and health of the whole preset   │
 │                              │ ┌─ SETTINGS ────────────────────────┐ ┌─ CONTEXT COST · TOKENS/CALL ──────┐ │
 │                              │ │ Model        haiku                │ │ debugger    ████████████░░░░    3 │ │
 │                              │ │ Effort      ····· —               │ │ tester      ████████████████    4 │ │

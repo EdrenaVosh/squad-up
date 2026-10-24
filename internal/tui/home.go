@@ -17,6 +17,7 @@ const listWidth = 22
 
 // home is the main screen: the presets on the left, the selected one on the right.
 type home struct {
+	air       bool // room to breathe: padding around the logo, the agents and the squad's cards
 	ws        workspace.Workspace
 	entries   []workspace.Entry
 	cursor    int // index into visible()

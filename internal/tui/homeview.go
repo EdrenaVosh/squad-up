@@ -13,6 +13,9 @@ const (
 	spaciousH = 30
 )
 
+// airyH is the terminal height from which the main screen adds padding.
+const airyH = 38
+
 // headerLines are the keys of the info cluster in the header.
 func (h *home) headerInfo(c viewCtx) []string {
 	equipped := "◇ " + sBold.Render("initial") + sMuted.Render(" is active")
@@ -90,10 +93,10 @@ func (h *home) headerBand(c viewCtx, inner int, tall bool) []string {
 			text = info[j]
 		}
 		textW := lipglossWidth(text)
-		sky := inner - 9 - logoW - textW
-		out[i] = "  " + l + "  " + twinkle(max(sky, 0), i, c.frame, c.anim) + "   " + text
+		sky := inner - 10 - logoW - textW
+		out[i] = "   " + l + "  " + twinkle(max(sky, 0), i, c.frame, c.anim) + "   " + text
 		if text == "" {
-			out[i] = "  " + l + "  " + twinkle(max(inner-5-logoW, 0), i, c.frame, c.anim)
+			out[i] = "   " + l + "  " + twinkle(max(inner-6-logoW, 0), i, c.frame, c.anim)
 		}
 		out[i] = pad(out[i], inner)
 	}
@@ -105,7 +108,11 @@ func (h *home) headerBand(c viewCtx, inner int, tall bool) []string {
 func (h *home) viewSpacious(c viewCtx, rows int) string {
 	inner := c.w - 2
 	tall := c.h >= 44 && c.w >= 120
+	h.air = c.h >= airyH
 	header := h.headerBand(c, inner, tall)
+	if h.air {
+		header = append([]string{pad("", inner)}, header...) // space between the frame's title and the logo
+	}
 	header = append(header, fg(cDim).Render(strings.Repeat("─", inner)))
 	bodyH := rows - 2 - len(header)
 
@@ -135,6 +142,9 @@ func (h *home) cardList(w, rows, headerRows int, c viewCtx) []string {
 
 	title := " " + sMuted.Render("PRESETS") + " " + fg(cDim).Render(fmt.Sprintf("%d", len(presets)))
 	lines := []string{title, ""}
+	if h.air {
+		lines = append([]string{""}, lines...)
+	}
 	footer := []string{" " + fg(cDim).Render(strings.Repeat("─", max(w-2, 0)))}
 	if initialEntry != nil {
 		footer = append(footer, h.card3(*initialEntry, h.cursor == len(presets), w, c)...)
@@ -258,6 +268,9 @@ func (h *home) detail(w, rows, headerRows, listW int, c viewCtx) []string {
 	}
 	titleW := w - 2 - lipglossWidth(badge) - 1
 	head := []string{}
+	if h.air {
+		head = append(head, "")
+	}
 	switch {
 	case card.Error != "":
 		head = append(head, spread(" "+accentDot(card.Accent)+" "+sBold.Render(title), badge+" ", w))
@@ -269,9 +282,15 @@ func (h *home) detail(w, rows, headerRows, listW int, c viewCtx) []string {
 		desc := typewriter(truncate(card.Description, max(titleW-lipglossWidth(title)-6, 0)), frames)
 		head = append(head, spread(" "+accentDot(card.Accent)+" "+sBold.Render(title)+sMuted.Render("  "+desc), badge+" ", w))
 	}
+	if h.air {
+		head = append(head, "")
+	}
 	head = append(head,
 		sectionBand("AGENTS", plural(len(card.Agents), "slot")+" · in order", w-2, c.shift(), true),
 		flowStrip(card, w-2))
+	if h.air {
+		head = append(head, "")
+	}
 
 	// The layout under the title does not depend on how many agents there are:
 	// the roster has room for one or two rows of equal tiles, and the panels
@@ -302,6 +321,10 @@ func (h *home) detail(w, rows, headerRows, listW int, c viewCtx) []string {
 			ph--
 		}
 		out = append(out, sectionBand("SQUAD", "settings, cost and health of the whole preset", w-2, c.shift(), false))
+		if h.air && ph > panelH {
+			out = append(out, "")
+			ph--
+		}
 		for _, l := range panelsRow(card, h.activity, h.plan, h.planErr, w-2, ph) {
 			out = append(out, " "+l)
 		}
