@@ -516,3 +516,68 @@ func (w Workspace) NewFromTemplate(id, name string) error {
 	b.Preset.Name = name
 	return w.locked(func() error { return w.Store().Save(b) })
 }
+
+// ErrNoAgent means the agent is not in the preset (or in any preset).
+var ErrNoAgent = errors.New("agent not found")
+
+// AmbiguousAgentError means several presets have the agent and none of them
+// is equipped.
+type AmbiguousAgentError struct {
+	Agent   string
+	Presets []string
+}
+
+func (e *AmbiguousAgentError) Error() string {
+	return fmt.Sprintf("agent %q is in several presets: %s", e.Agent, strings.Join(e.Presets, ", "))
+}
+
+// FindAgent returns the file of an agent and the preset it was found in. With
+// a preset name it looks only there; without one it tries the equipped preset,
+// then the other presets, where the agent must be in exactly one.
+func (w Workspace) FindAgent(presetName, agent string) (string, []byte, error) {
+	if !preset.ValidName(agent) {
+		return "", nil, fmt.Errorf("%w: %q is not a valid agent name", ErrNoAgent, agent)
+	}
+	store := w.Store()
+	read := func(name string) ([]byte, error) {
+		p, err := store.LoadPreset(name)
+		if err != nil {
+			return nil, err
+		}
+		if !slices.Contains(p.Agents, agent) {
+			return nil, fmt.Errorf("%w: preset %s has no agent %s", ErrNoAgent, name, agent)
+		}
+		return os.ReadFile(filepath.Join(w.Paths.PresetDir(name), "agents", agent+".md"))
+	}
+
+	if presetName != "" {
+		data, err := read(presetName)
+		return presetName, data, err
+	}
+	if state, err := apply.LoadState(w.Paths); err == nil && state.Active != "" && state.Active != "initial" {
+		if data, err := read(state.Active); err == nil {
+			return state.Active, data, nil
+		}
+	}
+	names, err := store.Names()
+	if err != nil {
+		return "", nil, err
+	}
+	var found []string
+	for _, name := range names {
+		if name == "initial" {
+			continue
+		}
+		if p, err := store.LoadPreset(name); err == nil && slices.Contains(p.Agents, agent) {
+			found = append(found, name)
+		}
+	}
+	switch len(found) {
+	case 0:
+		return "", nil, fmt.Errorf("%w: no preset has an agent called %s", ErrNoAgent, agent)
+	case 1:
+		data, err := read(found[0])
+		return found[0], data, err
+	}
+	return "", nil, &AmbiguousAgentError{Agent: agent, Presets: found}
+}

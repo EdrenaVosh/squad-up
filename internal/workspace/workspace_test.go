@@ -604,3 +604,50 @@ func TestNewFromTemplateStoresACopyUnderTheGivenName(t *testing.T) {
 		t.Error("unknown template accepted")
 	}
 }
+
+func TestFindAgentLooksInTheNamedPresetThenTheEquippedOneThenEverywhere(t *testing.T) {
+	w := setup(t)
+
+	// Named preset.
+	name, data, err := w.FindAgent("solo", "planner")
+	if err != nil || name != "solo" || !strings.Contains(string(data), "Plan it.") {
+		t.Fatalf("named: %q, %v", name, err)
+	}
+	if _, _, err := w.FindAgent("solo", "ghost"); !errors.Is(err, workspace.ErrNoAgent) {
+		t.Errorf("missing agent in a named preset: %v", err)
+	}
+	if _, _, err := w.FindAgent("nope", "planner"); !errors.Is(err, preset.ErrNotFound) {
+		t.Errorf("missing preset: %v", err)
+	}
+
+	// Nothing equipped: a unique match anywhere is fine.
+	if name, _, err := w.FindAgent("", "planner"); err != nil || name != "solo" {
+		t.Errorf("unique: %q, %v", name, err)
+	}
+	if _, _, err := w.FindAgent("", "ghost"); !errors.Is(err, workspace.ErrNoAgent) {
+		t.Errorf("unknown: %v", err)
+	}
+
+	// Two presets have a tester: ambiguous until one is equipped.
+	if _, err := w.Import(importBundle("other"), workspace.ImportOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	other := preset.Bundle{
+		Preset: preset.Preset{Schema: 1, Name: "second", Mode: preset.ModeReplace, Agents: []string{"tester"}},
+		Agents: []preset.AgentFile{{Name: "tester", Data: []byte(agentMD("tester", "Second tester."))}},
+	}
+	if err := w.Store().Save(other); err != nil {
+		t.Fatal(err)
+	}
+	_, _, err = w.FindAgent("", "tester")
+	var amb *workspace.AmbiguousAgentError
+	if !errors.As(err, &amb) || len(amb.Presets) != 2 {
+		t.Fatalf("ambiguous: %v", err)
+	}
+	if err := apply.SaveState(w.Paths, apply.State{Active: "second"}); err != nil {
+		t.Fatal(err)
+	}
+	if name, data, err := w.FindAgent("", "tester"); err != nil || name != "second" || !strings.Contains(string(data), "Second tester.") {
+		t.Errorf("equipped: %q, %v", name, err)
+	}
+}

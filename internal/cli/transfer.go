@@ -11,6 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/EdrenaVosh/squadup/internal/agentfile"
 	"github.com/EdrenaVosh/squadup/internal/fsx"
 	"github.com/EdrenaVosh/squadup/internal/preset"
 	"github.com/EdrenaVosh/squadup/internal/transfer"
@@ -338,4 +339,60 @@ func (a *app) newTemplates() *cobra.Command {
 			return nil
 		},
 	}
+}
+
+// ---- card ----
+
+func (a *app) newCard() *cobra.Command {
+	var presetName string
+	cmd := &cobra.Command{
+		Use:   "card <agent>",
+		Short: "Show an agent as a card: role, model, tools and how freely it may act",
+		Long:  "Looks in --preset, or else in the equipped preset, or else in the one preset that has the agent.",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(_ *cobra.Command, args []string) error {
+			name, data, err := a.workspace().FindAgent(presetName, args[0])
+			var ambiguous *workspace.AmbiguousAgentError
+			switch {
+			case errors.As(err, &ambiguous):
+				return &ExitError{Code: 1, Err: err, Fix: "pick one with --preset"}
+			case errors.Is(err, workspace.ErrNoAgent):
+				return &ExitError{Code: 1, Err: err, Fix: "`squad lint` shows the agents of each preset"}
+			case err != nil:
+				return libraryError(err, "")
+			}
+			agent, err := agentfile.Parse(data)
+			if err != nil {
+				return &ExitError{Code: 1, Err: fmt.Errorf("%s/%s.md: %w", name, args[0], err), Fix: "fix the file with `squad edit " + name + " " + args[0] + " --raw`"}
+			}
+			info := tui.AgentCardInfo{Name: args[0], Preset: name, Role: agent.Role()}
+			for key, dst := range map[string]*string{
+				"color": &info.Color, "model": &info.Model, "effort": &info.Effort, "permissionMode": &info.PermissionMode,
+			} {
+				if v, ok := agent.Get(key); ok && v != nil {
+					*dst = fmt.Sprint(v)
+				}
+			}
+			if v, ok := agent.Get("tools"); ok {
+				info.Tools = listText(v)
+			}
+			printf(a.io.Out, "%s", tui.RenderAgentCard(info, a.useColor()))
+			return nil
+		},
+	}
+	cmd.Flags().StringVar(&presetName, "preset", "", "the preset the agent belongs to")
+	return cmd
+}
+
+// listText renders a frontmatter value that is a string or a list.
+func listText(v any) string {
+	list, ok := v.([]any)
+	if !ok {
+		return fmt.Sprint(v)
+	}
+	parts := make([]string, len(list))
+	for i, item := range list {
+		parts[i] = fmt.Sprint(item)
+	}
+	return strings.Join(parts, ", ")
 }

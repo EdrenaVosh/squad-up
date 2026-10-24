@@ -476,3 +476,41 @@ func TestGistWithoutGHExplainsWhatToDo(t *testing.T) {
 		}
 	}
 }
+
+func TestCardShowsAnAgent(t *testing.T) {
+	e := newEnv(t)
+	e.addPresets()
+
+	r := e.run("card", "planner", "--preset", "solo")
+
+	if r.code != 0 {
+		t.Fatalf("exit %d: %s", r.code, r.stderr)
+	}
+	for _, want := range []string{"planner", "solo", "Model", "Permissions", "╭"} {
+		if !strings.Contains(r.stdout, want) {
+			t.Errorf("card should show %q:\n%s", want, r.stdout)
+		}
+	}
+	if strings.Contains(r.stdout, "\x1b") {
+		t.Errorf("a pipe gets plain text, got escape codes:\n%q", r.stdout)
+	}
+}
+
+func TestCardFindsTheAgentWithoutAPresetWhenItIsUnique(t *testing.T) {
+	e := newEnv(t)
+	e.addPresets()
+
+	if r := e.run("card", "debugger"); r.code != 0 || !strings.Contains(r.stdout, "bug-hunt") {
+		t.Errorf("unique agent: %d %q %q", r.code, r.stdout, r.stderr)
+	}
+	r := e.run("card", "tester")
+	if r.code != 1 || !strings.Contains(r.stderr, "solo") || !strings.Contains(r.stderr, "--preset") {
+		t.Errorf("ambiguous agent: %d %q", r.code, r.stderr)
+	}
+	if r := e.run("card", "ghost"); r.code != 1 || !strings.Contains(r.stderr, "squad lint") {
+		t.Errorf("unknown agent: %d %q", r.code, r.stderr)
+	}
+	if r := e.run("card", "planner", "--preset", "nope"); r.code != 1 || !strings.Contains(r.stderr, "squad list") {
+		t.Errorf("unknown preset: %d %q", r.code, r.stderr)
+	}
+}
