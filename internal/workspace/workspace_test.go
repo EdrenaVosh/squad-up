@@ -579,3 +579,28 @@ func TestImportForceOnANewNameJustStores(t *testing.T) {
 		t.Fatalf("Import = %+v, %v", res, err)
 	}
 }
+
+func TestNewFromTemplateStoresACopyUnderTheGivenName(t *testing.T) {
+	w := setup(t)
+
+	if err := w.NewFromTemplate("bug-hunt", "my-hunt"); err != nil {
+		t.Fatal(err)
+	}
+
+	b, err := w.Store().Load("my-hunt")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b.Preset.Title != "Bug Hunt" || len(b.Agents) != 2 || b.Preset.Name != "my-hunt" {
+		t.Errorf("preset = %+v, %d agents", b.Preset, len(b.Agents))
+	}
+	if err := w.NewFromTemplate("bug-hunt", "my-hunt"); !errors.Is(err, preset.ErrExists) {
+		t.Errorf("second copy: %v", err)
+	}
+	if err := w.NewFromTemplate("bug-hunt", "initial"); !errors.Is(err, workspace.ErrReservedName) {
+		t.Errorf("reserved name: %v", err)
+	}
+	if err := w.NewFromTemplate("nope", "x"); err == nil {
+		t.Error("unknown template accepted")
+	}
+}

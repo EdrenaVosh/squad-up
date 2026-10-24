@@ -1,0 +1,8 @@
+schema: 1
+name: ship-it
+title: Ship It
+description: A release checker and a changelog writer for the day you cut a version
+accent: green
+mode: replace
+main: null
+agents: [release-checker, changelog-writer]

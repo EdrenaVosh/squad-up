@@ -1,0 +1,8 @@
+schema: 1
+name: solo-indie
+title: Solo Indie
+description: A planner, a reviewer and a tester for one person building a product
+accent: blue
+mode: replace
+main: null
+agents: [planner, reviewer, tester]

@@ -23,6 +23,7 @@ import (
 	"github.com/EdrenaVosh/squadup/internal/paths"
 	"github.com/EdrenaVosh/squadup/internal/preset"
 	"github.com/EdrenaVosh/squadup/internal/settings"
+	"github.com/EdrenaVosh/squadup/templates"
 )
 
 var (
@@ -501,4 +502,17 @@ func (w Workspace) Import(b preset.Bundle, opts ImportOptions) (ImportResult, er
 		return store.Save(b)
 	})
 	return res, err
+}
+
+// NewFromTemplate stores a starter template as a new preset called name.
+func (w Workspace) NewFromTemplate(id, name string) error {
+	if err := CheckName(name); err != nil {
+		return err
+	}
+	b, err := templates.Load(id)
+	if err != nil {
+		return err
+	}
+	b.Preset.Name = name
+	return w.locked(func() error { return w.Store().Save(b) })
 }

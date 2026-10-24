@@ -17,6 +17,7 @@ import (
 	"github.com/EdrenaVosh/squadup/internal/tui"
 	"github.com/EdrenaVosh/squadup/internal/version"
 	"github.com/EdrenaVosh/squadup/internal/workspace"
+	"github.com/EdrenaVosh/squadup/templates"
 )
 
 const collectionFile = "squadup-presets.squad.json"
@@ -315,4 +316,26 @@ func (a *app) reportImport(imp transfer.Imported, res workspace.ImportResult) {
 		printf(a.io.Out, "Imported %q (%s). It is not equipped.\n", res.Name, count)
 	}
 	printf(a.io.Out, "Check it with `squad lint %s`, equip it with `squad use %s`.\n", res.Name, res.Name)
+}
+
+// ---- templates ----
+
+func (a *app) newTemplates() *cobra.Command {
+	return &cobra.Command{
+		Use:   "templates",
+		Short: "List the starter presets that come with squad",
+		Args:  cobra.NoArgs,
+		RunE: func(_ *cobra.Command, _ []string) error {
+			list, err := templates.List()
+			if err != nil {
+				return &ExitError{Code: 1, Err: err, Fix: "this is a bug in squad; please report it"}
+			}
+			for _, t := range list {
+				printf(a.io.Out, "%-16s %s\n", t.ID, t.Title)
+				printf(a.io.Out, "%-16s %s · %s\n", "", t.Description, strings.Join(t.Agents, ", "))
+			}
+			printf(a.io.Out, "\nStart from one with `squad new --template <id>`.\n")
+			return nil
+		},
+	}
 }

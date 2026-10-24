@@ -15,6 +15,7 @@ import (
 	"github.com/EdrenaVosh/squadup/internal/preset"
 	"github.com/EdrenaVosh/squadup/internal/tui"
 	"github.com/EdrenaVosh/squadup/internal/workspace"
+	"github.com/EdrenaVosh/squadup/templates"
 )
 
 // libraryError turns a failure of a preset operation into a user error.
@@ -41,12 +42,15 @@ const cloneInitialFix = "make an editable copy with `squad clone initial <name>`
 // ---- new ----
 
 func (a *app) newNew() *cobra.Command {
-	var from, title, description, mode string
+	var from, title, description, mode, template string
 	cmd := &cobra.Command{
 		Use:   "new [name]",
 		Short: "Create a preset: blank, or a copy of another preset, Initial or the current setup",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(_ *cobra.Command, args []string) error {
+			if len(args) == 0 && template != "" {
+				args = []string{template}
+			}
 			if len(args) == 0 {
 				if a.canOpenInterface() {
 					return a.openInterface(tui.Start{Kind: tui.StartNew})
@@ -54,6 +58,9 @@ func (a *app) newNew() *cobra.Command {
 				return &ExitError{Code: 1, Err: errors.New("no preset name given"), Fix: "use `squad new <name>`"}
 			}
 			name := args[0]
+			if template != "" && from != "" {
+				return &ExitError{Code: 2, Err: errors.New("--template and --from cannot be combined"), Fix: "use one of them"}
+			}
 			if mode != "" && mode != preset.ModeReplace && mode != preset.ModeExtend {
 				return &ExitError{Code: 2, Err: fmt.Errorf("mode %q is not valid", mode), Fix: "use replace or extend"}
 			}
@@ -64,6 +71,20 @@ func (a *app) newNew() *cobra.Command {
 			w := a.workspace()
 			switch from {
 			case "":
+				if template != "" {
+					if err := w.NewFromTemplate(template, name); err != nil {
+						if errors.Is(err, templates.ErrUnknown) {
+							return &ExitError{Code: 1, Err: err, Fix: "run `squad templates` to see the starters"}
+						}
+						return libraryError(err, cloneInitialFix)
+					}
+					count := ""
+					if b, err := w.Store().LoadPreset(name); err == nil {
+						count = " (" + tui.AgentCount(len(b.Agents)) + ")"
+					}
+					printf(a.io.Out, "Created preset %q from the template %q%s.\nLook at it with `squad lint %s`, equip it with `squad use %s`.\n", name, template, count, name, name)
+					break
+				}
 				if _, err := w.New(name); err != nil {
 					return libraryError(err, cloneInitialFix)
 				}
@@ -85,6 +106,7 @@ func (a *app) newNew() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&from, "from", "", "copy a preset, `initial`, or the `current` Claude Code setup")
+	cmd.Flags().StringVar(&template, "template", "", "start from a template (see `squad templates`)")
 	cmd.Flags().StringVar(&title, "title", "", "title of the preset")
 	cmd.Flags().StringVar(&description, "description", "", "description of the preset")
 	cmd.Flags().StringVar(&mode, "mode", "", "replace (default): the preset replaces your agents; extend: it keeps them")

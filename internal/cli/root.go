@@ -137,7 +137,7 @@ func (a *app) newRoot() *cobra.Command {
 
 	root.AddCommand(newDoctor(), a.newList(), a.newStatus(), a.newCapture(), a.newInitial(),
 		a.newUse(), a.newRestore(), a.newUndo(), a.newLog(), a.newRun(), a.newModels(), a.newLint(),
-		a.newNew(), a.newClone(), a.newRename(), a.newRm(), a.newEdit(), a.newExport(), a.newImport())
+		a.newNew(), a.newClone(), a.newRename(), a.newRm(), a.newEdit(), a.newExport(), a.newImport(), a.newTemplates())
 	return root
 }
 
