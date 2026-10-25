@@ -559,6 +559,38 @@ func TestSaveEditsStoresManualChangesInTheCurrentPreset(t *testing.T) {
 	}
 }
 
+func TestSavingEditsIntoThePresetThatIsEquippedKeepsThemInTheFile(t *testing.T) {
+	f := newFx(t, nil)
+	f.use("solo", apply.Options{})
+	edited := agentMD("planner", "edited by hand")
+	testutil.WriteFiles(t, f.p.ClaudeDir, map[string]string{"agents/planner.md": edited})
+	changed := strings.Replace(f.tree()["settings.json"], `"model": "sonnet"`, `"model": "opus"`, 1)
+	testutil.WriteFiles(t, f.p.ClaudeDir, map[string]string{"settings.json": changed})
+
+	f.use("solo", apply.Options{Edits: apply.EditsSave})
+
+	if got := f.tree()["agents/planner.md"]; got != edited {
+		t.Errorf("planner.md = %q: saving an edit into the preset must not overwrite it in the file", got)
+	}
+	if got := f.settingsString("model"); got != "opus" {
+		t.Errorf("model = %q, want the hand-edited opus to stay", got)
+	}
+	saved, err := f.store.Load("solo")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if saved.Preset.Settings.Model != "opus" {
+		t.Errorf("the preset's model = %q, want opus", saved.Preset.Settings.Model)
+	}
+	plan, err := f.e.PlanUse("solo", apply.Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(plan.Drift) != 0 {
+		t.Errorf("after saving there is nothing left to drift: %+v", plan.Drift)
+	}
+}
+
 func TestSettingsDriftIsDetectedByValueNotByFormatting(t *testing.T) {
 	f := newFx(t, nil)
 	f.use("solo", apply.Options{})

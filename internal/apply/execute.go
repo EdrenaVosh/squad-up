@@ -48,6 +48,21 @@ func (e Engine) Execute(plan *Plan, opts Options) (*Result, error) {
 		return nil, fmt.Errorf("%w in %s", ErrDrift, driftList(fresh.Drift))
 	}
 
+	if len(fresh.Drift) > 0 && opts.Edits == EditsSave {
+		// The edits go into the preset first, and the plan is made again from
+		// the preset as it is now: a plan made before would write the old
+		// content over the very files the edits were taken from.
+		if err := e.saveEdits(fresh); err != nil {
+			return nil, err
+		}
+		if fresh, err = e.replan(plan, opts); err != nil {
+			return nil, err
+		}
+		if len(fresh.Conflicts) > 0 {
+			return nil, fmt.Errorf("%w:\n  %s", ErrConflicts, strings.Join(fresh.Conflicts, "\n  "))
+		}
+	}
+
 	now := e.now()
 	meta, err := e.createBackup(fresh.Command, fresh.Target, now)
 	if err != nil {
@@ -94,12 +109,6 @@ func (e Engine) abs(rel string) string {
 }
 
 func (e Engine) write(p *Plan, opts Options, meta BackupMeta, now time.Time, done *progress) error {
-	if len(p.Drift) > 0 && opts.Edits == EditsSave {
-		if err := e.saveEdits(p); err != nil {
-			return err
-		}
-	}
-
 	var removed []string
 	for _, op := range p.Files {
 		if op.Kind != OpRemove {
