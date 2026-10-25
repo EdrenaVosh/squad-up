@@ -48,6 +48,9 @@ func Parse(data []byte) (*Agent, error) {
 	if err := yaml.UnmarshalWithOptions(frontmatter, &decoded, yaml.UseOrderedMap()); err != nil {
 		return nil, fmt.Errorf("invalid frontmatter YAML: %w", err)
 	}
+	if !withinBudget(decoded) {
+		return nil, ErrTooComplex
+	}
 	var fields yaml.MapSlice
 	switch v := decoded.(type) {
 	case nil:
@@ -62,6 +65,49 @@ func Parse(data []byte) (*Agent, error) {
 		body:   append([]byte(nil), body...),
 		raw:    append([]byte(nil), data...),
 	}, nil
+}
+
+// maxValues is how many values a frontmatter may expand to. Real files have a
+// few dozen; the limit only stops anchors and aliases that multiply (a few
+// lines can stand for billions of values once something walks them).
+const maxValues = 20000
+
+// ErrTooComplex is returned for a frontmatter that expands to too many values.
+var ErrTooComplex = errors.New("the frontmatter is too complex: it expands to more than 20000 values (YAML anchors and aliases that multiply)")
+
+// withinBudget walks a decoded value, counting every value it reaches, and
+// stops as soon as the count passes maxValues.
+func withinBudget(v any) bool {
+	count := 0
+	var walk func(any) bool
+	walk = func(v any) bool {
+		count++
+		if count > maxValues {
+			return false
+		}
+		switch x := v.(type) {
+		case yaml.MapSlice:
+			for _, item := range x {
+				if !walk(item.Value) {
+					return false
+				}
+			}
+		case []any:
+			for _, item := range x {
+				if !walk(item) {
+					return false
+				}
+			}
+		case map[string]any:
+			for _, item := range x {
+				if !walk(item) {
+					return false
+				}
+			}
+		}
+		return true
+	}
+	return walk(v)
 }
 
 // split returns the bytes between the two `---` lines and everything after

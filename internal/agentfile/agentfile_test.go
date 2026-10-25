@@ -2,8 +2,10 @@ package agentfile_test
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/EdrenaVosh/squad-up/internal/agentfile"
 )
@@ -241,5 +243,33 @@ func TestRoleIsTheFirstSentenceOfTheDescription(t *testing.T) {
 		if got := a.Role(); got != want {
 			t.Errorf("Role(%q) = %q, want %q", description, got, want)
 		}
+	}
+}
+
+// A few lines of nested anchors expand into billions of values when anything
+// walks them; Parse must refuse such a file instead of handing it on.
+func TestAnchorsThatMultiplyAreRefusedQuickly(t *testing.T) {
+	var b strings.Builder
+	b.WriteString("---\nname: bomb\ndescription: x\nhooks:\n  l0: &l0 [a, b, c, d, e, f, g, h, i]\n")
+	for i := 1; i <= 20; i++ {
+		fmt.Fprintf(&b, "  l%d: &l%d [%s]\n", i, i, strings.Repeat(fmt.Sprintf("*l%d, ", i-1), 9))
+	}
+	b.WriteString("---\nBody.\n")
+
+	start := time.Now()
+	_, err := agentfile.Parse([]byte(b.String()))
+
+	if err == nil || !strings.Contains(err.Error(), "too complex") {
+		t.Errorf("err = %v, want the file refused as too complex", err)
+	}
+	if time.Since(start) > 3*time.Second {
+		t.Errorf("took %v: the check must stop early", time.Since(start))
+	}
+}
+
+func TestOrdinaryNestedFrontmatterIsStillFine(t *testing.T) {
+	src := "---\nname: ok\ndescription: x\nhooks:\n  PreToolUse:\n    - matcher: Bash\n      hooks:\n        - type: command\n          command: echo hi\n---\nBody.\n"
+	if _, err := agentfile.Parse([]byte(src)); err != nil {
+		t.Errorf("err = %v", err)
 	}
 }
