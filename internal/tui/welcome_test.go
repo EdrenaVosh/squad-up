@@ -90,7 +90,33 @@ func TestWelcomeCanCheckTheModelsAfterConsent(t *testing.T) {
 
 	h.press("enter", "y")
 
-	h.contains("Models checked")
+	h.contains("Check your models", "Done", "fable", "opus", "sonnet", "haiku", "available", "of 4 available")
+	h.goldenAt("model-check", 80, 24)
+	h.press("x") // any key closes it
+	h.contains("Welcome to squadup")
+}
+
+func TestTheModelCheckShowsEachModelAsItAnswers(t *testing.T) {
+	h := firstRun(t)
+	testutil.FakeClaude(t)
+	h.press("down", "down", "down", "enter", "y")
+
+	// the check has finished by the time the harness returns; every model has an answer
+	for _, alias := range []string{"fable", "opus", "sonnet", "haiku"} {
+		h.contains(alias)
+	}
+	h.lacks("Asking Claude about each model")
+}
+
+func TestTheMainScreenCanCheckTheModelsToo(t *testing.T) {
+	h := newHarness(t)
+	testutil.FakeClaude(t)
+
+	h.press("m")
+	h.contains("Check your models", "a few tokens")
+	h.press("y")
+
+	h.contains("Done", "of 4 available")
 }
 
 func TestWelcomeSaysWhatIsMissingForTheModelCheck(t *testing.T) {
@@ -98,5 +124,5 @@ func TestWelcomeSaysWhatIsMissingForTheModelCheck(t *testing.T) {
 
 	h.press("down", "down", "down", "enter", "y")
 
-	h.contains("claude was not found")
+	h.contains("claude was not found", "Nothing was sent")
 }

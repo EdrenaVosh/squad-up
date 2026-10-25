@@ -275,6 +275,8 @@ func (h *home) updateKeys(m tea.KeyPressMsg) (screen, tea.Cmd) {
 		return h, h.editAgent()
 	case "u":
 		return h, openUsage()
+	case "m":
+		return h, push(checkModelsConfirm(h.ws))
 	case "n":
 		var base *string
 		if sel != nil {
@@ -348,7 +350,7 @@ func (h *home) Hints() []hint {
 		return []hint{{"enter", "keep filter"}, {"esc", "clear"}}
 	}
 	return []hint{
-		{"↑↓", "preset"}, {"←→", "agent"}, {"enter", "open"}, {"a", "edit agent"}, {"e", "equip"}, {"t", "try"}, {"u", "tokens"}, {"n", "new"},
+		{"↑↓", "preset"}, {"←→", "agent"}, {"enter", "open"}, {"a", "edit agent"}, {"e", "equip"}, {"t", "try"}, {"u", "tokens"}, {"m", "models"}, {"n", "new"},
 		{"c", "clone"}, {"r", "rename"}, {"d", "delete"}, {"i", "import"}, {"x", "export"}, {"/", "filter"}, {"?", "help"}, {"q", "quit"},
 	}
 }

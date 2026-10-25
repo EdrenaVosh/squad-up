@@ -73,6 +73,12 @@ func (c *Cache) Valid(claudeVersion, authMethod string, now time.Time) bool {
 
 // Probe tests the aliases in parallel, each with its own timeout.
 func Probe(ctx context.Context, c claude.Client, aliases []string, timeout time.Duration) map[string]ProbeResult {
+	return ProbeEach(ctx, c, aliases, timeout, nil)
+}
+
+// ProbeEach is Probe that also tells each result as soon as it is known, from
+// the goroutine that found it, so that a screen can show the progress.
+func ProbeEach(ctx context.Context, c claude.Client, aliases []string, timeout time.Duration, each func(alias string, res ProbeResult)) map[string]ProbeResult {
 	results := make(map[string]ProbeResult, len(aliases))
 	var mu sync.Mutex
 	var wg sync.WaitGroup
@@ -90,6 +96,9 @@ func Probe(ctx context.Context, c claude.Client, aliases []string, timeout time.
 			mu.Lock()
 			results[alias] = res
 			mu.Unlock()
+			if each != nil {
+				each(alias, res)
+			}
 		}()
 	}
 	wg.Wait()

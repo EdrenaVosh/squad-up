@@ -1,11 +1,9 @@
 package tui
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	tea "charm.land/bubbletea/v2"
 
@@ -13,18 +11,13 @@ import (
 	"github.com/EdrenaVosh/squadup/internal/workspace"
 )
 
-// probeDoneMsg carries the outcome of the model check started from the welcome
-// screen.
-type probeDoneMsg struct{ err error }
-
 // welcomeScreen is the first thing a new user sees: what was found and saved as
 // Initial, and what to do next.
 type welcomeScreen struct {
-	ws      workspace.Workspace
-	meta    *initial.Meta
-	cursor  int
-	probing bool
-	appear  reveal // the logo drawing itself
+	ws     workspace.Workspace
+	meta   *initial.Meta
+	cursor int
+	appear reveal // the logo drawing itself
 }
 
 func newWelcome(ws workspace.Workspace, meta *initial.Meta) *welcomeScreen {
@@ -49,16 +42,7 @@ var welcomeChoices = []struct{ label, note string }{
 
 func (w *welcomeScreen) Update(msg tea.Msg) (screen, tea.Cmd) {
 	switch m := msg.(type) {
-	case probeDoneMsg:
-		w.probing = false
-		if m.err != nil {
-			return w, flashErr(probeError(m.err))
-		}
-		return w, flash("Models checked: `squad models` shows the details")
 	case tea.KeyPressMsg:
-		if w.probing {
-			return w, nil
-		}
 		switch m.String() {
 		case "up", "k":
 			w.cursor = max(w.cursor-1, 0)
@@ -82,11 +66,7 @@ func (w *welcomeScreen) choose() tea.Cmd {
 	case 2:
 		return push(browseTemplates(w.ws))
 	case 3:
-		body := []string{"This sends one tiny request for each of fable, opus,", "sonnet and haiku, and uses a few tokens of your plan."}
-		return push(newConfirm("Check your models", body, "Check", false, func() tea.Cmd {
-			w.probing = true
-			return w.probe
-		}))
+		return push(checkModelsConfirm(w.ws))
 	}
 	return pop()
 }
@@ -105,11 +85,13 @@ func (w *welcomeScreen) cloneInitial() screen {
 	})
 }
 
-func (w *welcomeScreen) probe() tea.Msg {
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
-	defer cancel()
-	_, err := w.ws.ProbeModels(ctx)
-	return probeDoneMsg{err: err}
+// checkModelsConfirm asks before the check, which spends a few tokens, and
+// then shows it running.
+func checkModelsConfirm(ws workspace.Workspace) screen {
+	body := []string{"This sends one tiny request for each of fable, opus,", "sonnet and haiku, and uses a few tokens of your plan."}
+	return newConfirm("Check your models", body, "Check", false, func() tea.Cmd {
+		return push(newModelCheck(ws))
+	})
 }
 
 func probeError(err error) string {
@@ -166,9 +148,6 @@ func (w *welcomeScreen) View(c viewCtx) string {
 			mark, label = selBar()+" ", sBold.Render(ch.label)
 		}
 		add(truncate(" "+mark+pad(label, 32)+sMuted.Render(ch.note), inner))
-	}
-	if w.probing {
-		add("", " "+spinner(c.frame)+" "+sAccent.Render("Checking models…"))
 	}
 	return c.box("Welcome to squadup", "", lines, 0)
 }

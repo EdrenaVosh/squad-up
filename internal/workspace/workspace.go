@@ -424,6 +424,12 @@ const probeTimeout = 30 * time.Second
 // ProbeModels sends one tiny request per model alias, stores the answers in
 // the cache and returns them. It needs claude to be installed and signed in.
 func (w Workspace) ProbeModels(ctx context.Context) (*models.Cache, error) {
+	return w.ProbeModelsEach(ctx, nil)
+}
+
+// ProbeModelsEach is ProbeModels that tells each model's result as soon as it
+// is known.
+func (w Workspace) ProbeModelsEach(ctx context.Context, each func(alias string, res models.ProbeResult)) (*models.Cache, error) {
 	bin, err := claude.Find()
 	if err != nil {
 		return nil, ErrNoClaude
@@ -444,7 +450,7 @@ func (w Workspace) ProbeModels(ctx context.Context) (*models.Cache, error) {
 		ClaudeVersion: version,
 		AuthMethod:    auth.AuthMethod,
 		ProbedAt:      w.now().UTC(),
-		Results:       models.Probe(ctx, client, models.ProbeAliases, probeTimeout),
+		Results:       models.ProbeEach(ctx, client, models.ProbeAliases, probeTimeout, each),
 	}
 	if err := models.SaveCache(w.Paths, cache); err != nil {
 		return nil, fmt.Errorf("save the probe: %w", err)
