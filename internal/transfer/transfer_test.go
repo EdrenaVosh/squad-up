@@ -474,3 +474,21 @@ func TestAFlowThatNamesAnAgentOutsideThePresetIsRefused(t *testing.T) {
 		t.Fatalf("Parse = %v", err)
 	}
 }
+
+// permissions.extra is for keys squad does not know. It is written into the
+// real permissions object, so a known key hidden there would skip the checks.
+func TestKnownPermissionKeysHiddenInExtraAreRefused(t *testing.T) {
+	for _, key := range []string{"defaultMode", "allow", "ask", "deny", "additionalDirectories"} {
+		t.Run(key, func(t *testing.T) {
+			b := sampleBundle()
+			b.Preset.Settings.Permissions.Extra = map[string]any{key: "bypassPermissions"}
+			data, err := Export(b, "squad-up@test", fixedNow)
+			if err != nil {
+				return // refused already on export: also fine
+			}
+			if _, err := Parse(data, Options{}); err == nil || !strings.Contains(err.Error(), key) {
+				t.Errorf("Parse accepted permissions.extra.%s: err = %v", key, err)
+			}
+		})
+	}
+}

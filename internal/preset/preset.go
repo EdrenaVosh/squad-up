@@ -171,6 +171,15 @@ func (p Preset) Validate() error {
 	if perms := p.Settings.Permissions; perms != nil && perms.DefaultMode != "" && !slices.Contains(PermissionModes, perms.DefaultMode) {
 		add("defaultMode: %q must be one of %v", perms.DefaultMode, PermissionModes)
 	}
+	if perms := p.Settings.Permissions; perms != nil {
+		// extra is written into the real permissions object next to these keys:
+		// one hidden there would escape every check made on the field itself.
+		for _, key := range []string{"defaultMode", "allow", "ask", "deny", "additionalDirectories"} {
+			if _, hidden := perms.Extra[key]; hidden {
+				add("permissions.extra: %q is a key of its own and cannot be hidden in extra", key)
+			}
+		}
+	}
 	seen := map[string]bool{}
 	for _, name := range p.Agents {
 		switch {
