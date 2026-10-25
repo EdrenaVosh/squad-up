@@ -125,6 +125,6 @@ const (
 	ExportInitial       = "Initial cannot be exported: clone it first (c), then export the copy"
 	TemplatesTitle      = "Starter templates"
 	TemplateNameTitle   = "Name the new preset"
-	TemplateNameHelp    = "Lowercase letters, digits and dashes."
+	TemplateNameHelp    = "Any name you like: capitals, spaces, symbols. A short id for commands is made from it."
 	StarterTemplate     = "Use a template"
 )

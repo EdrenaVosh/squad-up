@@ -34,7 +34,7 @@ The first release.
 - **Linter** for agents and presets (`squad lint`).
 - **Share presets:** `squad export` and `squad import` (file, https, secret
   gist), with a security preview and `squad card`.
-- **Two starter templates**, *Bug Hunters* (debugger, fixer, an independent
+- **Two starter templates**, *Bug Hunter* (debugger, fixer, an independent
   reviewer, tester) and *Feature Creator* (planner, executor, an independent
   reviewer), each with a review loop; starting from one is the first option of
   the *New preset* dialog.

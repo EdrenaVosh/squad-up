@@ -13,7 +13,7 @@ import (
 
 // what each template is made of: its agents, in order, with their models.
 var want = map[string][]struct{ name, model string }{
-	"bug-hunters":     {{"debugger", "opus"}, {"fixer", "sonnet"}, {"reviewer", "sonnet"}, {"tester", "sonnet"}},
+	"bug-hunter":      {{"debugger", "opus"}, {"fixer", "sonnet"}, {"reviewer", "sonnet"}, {"tester", "sonnet"}},
 	"feature-creator": {{"planner", "opus"}, {"executor", "sonnet"}, {"reviewer", "sonnet"}},
 }
 
@@ -55,7 +55,7 @@ func TestThereAreExactlyTwoStarterTemplates(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(list) != 2 || list[0].ID != "bug-hunters" || list[1].ID != "feature-creator" {
+	if len(list) != 2 || list[0].ID != "bug-hunter" || list[1].ID != "feature-creator" {
 		t.Fatalf("templates = %+v", list)
 	}
 	for _, tpl := range list {
@@ -70,7 +70,7 @@ func TestThereAreExactlyTwoStarterTemplates(t *testing.T) {
 			t.Errorf("%s needs a title and a description: %+v", tpl.ID, tpl)
 		}
 	}
-	if list[0].Title != "Bug Hunters" || list[1].Title != "Feature Creator" {
+	if list[0].Title != "Bug Hunter" || list[1].Title != "Feature Creator" {
 		t.Errorf("titles = %q, %q", list[0].Title, list[1].Title)
 	}
 }
@@ -160,7 +160,7 @@ func TestOnlyTheReviewersAreIndependentAndTheyCannotEdit(t *testing.T) {
 }
 
 func TestTheFlowsAreReviewLoopsThatSendDefectsToTheWorker(t *testing.T) {
-	for id, fix := range map[string]string{"bug-hunters": "fixer", "feature-creator": "executor"} {
+	for id, fix := range map[string]string{"bug-hunter": "fixer", "feature-creator": "executor"} {
 		b, err := templates.Load(id)
 		if err != nil {
 			t.Fatal(err)
@@ -173,7 +173,7 @@ func TestTheFlowsAreReviewLoopsThatSendDefectsToTheWorker(t *testing.T) {
 }
 
 func TestTheFixerNeverTouchesTests(t *testing.T) {
-	prompt := load(t, "bug-hunters")["fixer"].Prompt()
+	prompt := load(t, "bug-hunter")["fixer"].Prompt()
 	for _, want := range []string{"Never create, edit, delete or skip a test", "*_test.*", "tester"} {
 		if !strings.Contains(prompt, want) {
 			t.Errorf("the fixer's prompt lacks %q", want)
@@ -182,15 +182,15 @@ func TestTheFixerNeverTouchesTests(t *testing.T) {
 }
 
 func TestLoadRejectsAnUnknownTemplate(t *testing.T) {
-	if _, err := templates.Load("nope"); err == nil || !strings.Contains(err.Error(), "bug-hunters") {
+	if _, err := templates.Load("nope"); err == nil || !strings.Contains(err.Error(), "bug-hunter") {
 		t.Errorf("err = %v, want it to list the templates", err)
 	}
 }
 
 func TestTemplatesAreAlwaysFreshCopies(t *testing.T) {
-	a, _ := templates.Load("bug-hunters")
+	a, _ := templates.Load("bug-hunter")
 	a.Agents[0].Data[0] = 'X'
-	b, _ := templates.Load("bug-hunters")
+	b, _ := templates.Load("bug-hunter")
 	if b.Agents[0].Data[0] == 'X' {
 		t.Error("Load shares memory between calls")
 	}

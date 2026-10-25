@@ -47,6 +47,7 @@ type promptScreen struct {
 	validate func(string) error
 	done     func(string) tea.Cmd
 	err      string
+	preview  func(string) string // a line under the input about what the text will become
 }
 
 func newPrompt(title, help, value string, validate func(string) error, done func(string) tea.Cmd) *promptScreen {
@@ -56,6 +57,12 @@ func newPrompt(title, help, value string, validate func(string) error, done func
 	in.SetValue(value)
 	in.CursorEnd()
 	return &promptScreen{title: title, help: help, input: in, validate: validate, done: done}
+}
+
+// withPreview shows a muted line under the input, made from what is typed.
+func (p *promptScreen) withPreview(f func(string) string) *promptScreen {
+	p.preview = f
+	return p
 }
 
 func (p *promptScreen) Init() tea.Cmd { return p.input.Focus() }
@@ -92,6 +99,11 @@ func (p *promptScreen) View(c viewCtx) string {
 		lines = append(lines, "")
 	}
 	lines = append(lines, "› "+p.input.View())
+	if p.preview != nil && p.err == "" {
+		if text := p.preview(strings.TrimSpace(p.input.Value())); text != "" {
+			lines = append(lines, sMuted.Render("  "+text))
+		}
+	}
 	if p.err != "" {
 		lines = append(lines, "")
 		lines = append(lines, wrapStyled(p.err, sErr, modalWidth(c)-4)...)

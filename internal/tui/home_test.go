@@ -150,15 +150,49 @@ func TestNewPresetNameIsValidatedInTheDialog(t *testing.T) {
 	h := newHarness(t)
 
 	h.press("n")
-	h.typeText("Bad Name")
 	h.press("enter")
-	h.contains("New preset", "preset names use lowercase")
-	h.clear(8)
+	h.contains("New preset", "enter a name")
 	h.typeText("solo-indie")
 	h.press("enter")
 	h.contains("already exists")
 	h.press("esc")
 	h.contains("PRESETS")
+}
+
+func TestANameMayHaveCapitalsSpacesAndSymbolsAndShowsItsID(t *testing.T) {
+	h := newHarness(t)
+
+	h.press("n")
+	h.typeText("Cube Creator: v2 ★")
+	h.contains("id: cube-creator-v2")
+	h.press("enter", "down", "enter") // not the template: the blank preset
+
+	b := h.stored("cube-creator-v2")
+	if b.Preset.Title != "Cube Creator: v2 ★" {
+		t.Errorf("title = %q", b.Preset.Title)
+	}
+	h.contains("Cube Creator: v2 ★")
+
+	h.resize(150, 44)
+	h.press("esc") // back to the main screen, where a wide window lists the preset by its title
+	h.contains("Cube Creator: v2 ★")
+}
+
+func TestRenameTakesATitleToo(t *testing.T) {
+	h := newHarness(t)
+	h.goTo("bug-hunt")
+
+	h.press("r")
+	h.contains("Rename preset", "Bug Hunt") // the current title is the suggestion
+	h.clear(len("Bug Hunt"))
+	h.typeText("Hunters' Club")
+	h.contains("id: hunters-club")
+	h.press("enter")
+
+	b := h.stored("hunters-club")
+	if b.Preset.Title != "Hunters' Club" || h.ws.Store().Exists("bug-hunt") {
+		t.Errorf("preset = %+v", b.Preset)
+	}
 }
 
 func TestCloneFlow(t *testing.T) {

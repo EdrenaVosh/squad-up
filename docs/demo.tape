@@ -1,5 +1,5 @@
 # Records docs/assets/demo.gif with vhs (https://github.com/charmbracelet/vhs):
-# a new preset from the Bug Hunters template, then equipped, then given back.
+# a new preset from the Bug Hunter template, then equipped, then given back.
 #
 #   brew install vhs
 #   make build && make sandbox-reset      # an empty sandbox: no presets yet
@@ -31,14 +31,14 @@ Sleep 3s
 # 2. New preset: the first option is a template
 Type "n"
 Sleep 1s
-Type "bugs"
+Type "Cube Bug Hunter!"
 Sleep 600ms
 Enter
 Sleep 1800ms
 Enter
 Sleep 2s
 
-# 3. Bug Hunters: four agents with their roles
+# 3. Bug Hunter: four agents with their roles
 Enter
 Sleep 3s
 

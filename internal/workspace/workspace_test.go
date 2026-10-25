@@ -582,7 +582,7 @@ func TestImportForceOnANewNameJustStores(t *testing.T) {
 func TestNewFromTemplateStoresACopyUnderTheGivenName(t *testing.T) {
 	w := setup(t)
 
-	if err := w.NewFromTemplate("bug-hunters", "my-hunt"); err != nil {
+	if err := w.NewFromTemplate("bug-hunter", "my-hunt"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -590,13 +590,13 @@ func TestNewFromTemplateStoresACopyUnderTheGivenName(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if b.Preset.Title != "Bug Hunters" || len(b.Agents) != 4 || b.Preset.Name != "my-hunt" || b.Preset.Flow == nil {
+	if b.Preset.Title != "Bug Hunter" || len(b.Agents) != 4 || b.Preset.Name != "my-hunt" || b.Preset.Flow == nil {
 		t.Errorf("preset = %+v, %d agents", b.Preset, len(b.Agents))
 	}
-	if err := w.NewFromTemplate("bug-hunters", "my-hunt"); !errors.Is(err, preset.ErrExists) {
+	if err := w.NewFromTemplate("bug-hunter", "my-hunt"); !errors.Is(err, preset.ErrExists) {
 		t.Errorf("second copy: %v", err)
 	}
-	if err := w.NewFromTemplate("bug-hunters", "initial"); !errors.Is(err, workspace.ErrReservedName) {
+	if err := w.NewFromTemplate("bug-hunter", "initial"); !errors.Is(err, workspace.ErrReservedName) {
 		t.Errorf("reserved name: %v", err)
 	}
 	if err := w.NewFromTemplate("nope", "x"); err == nil {

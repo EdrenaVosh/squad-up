@@ -343,15 +343,19 @@ func templateOptions() []option {
 // browseTemplates lists the starters, then asks for the name of the new preset.
 func browseTemplates(ws workspace.Workspace) screen {
 	return newChoice(TemplatesTitle, templateOptions(), 0, func(t option) tea.Cmd {
-		return push(newPrompt(TemplateNameTitle, TemplateNameHelp, t.value, presetNameCheck(ws), func(name string) tea.Cmd {
-			return createFromTemplate(ws, name, t)
+		return push(newNamePrompt(ws, TemplateNameTitle, TemplateNameHelp, t.label, func(id, name string) tea.Cmd {
+			return createFromTemplate(ws, id, name, t)
 		}))
 	})
 }
 
-func createFromTemplate(ws workspace.Workspace, name string, t option) tea.Cmd {
-	if err := ws.NewFromTemplate(t.value, name); err != nil {
+func createFromTemplate(ws workspace.Workspace, id, name string, t option) tea.Cmd {
+	err := ws.NewFromTemplate(t.value, id)
+	if err == nil && name != t.label {
+		err = ws.SetTitle(id, name) // the name a person typed, not the template's own
+	}
+	if err != nil {
 		return flashErr(err.Error())
 	}
-	return tea.Batch(reload(), push(newPresetScreen(ws, name)), flash(fmt.Sprintf("Created %q from %s", name, t.label)))
+	return tea.Batch(reload(), push(newPresetScreen(ws, id)), flash(fmt.Sprintf("Created %q from %s", name, t.label)))
 }

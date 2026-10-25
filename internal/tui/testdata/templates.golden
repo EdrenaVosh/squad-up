@@ -6,7 +6,7 @@
                                                                                 
    ╭─ Starter templates ────────────────────────────────────────────────────╮   
    │                                                                        │   
-   │ ▌ Bug Hunters      Four agents that find a bug's root cause, fix it,   │   
+   │ ▌ Bug Hunter       Four agents that find a bug's root cause, fix it,   │   
    │                    review the fix independently and test it (debugger  │   
    │                    → fixer → reviewer → tester)                        │   
    │   Feature Creator  Three agents that plan a feature, build it with     │   

@@ -42,7 +42,7 @@ func TestNewCreatesABlankPreset(t *testing.T) {
 func TestNewNameProblems(t *testing.T) {
 	e := ready(t)
 
-	for _, name := range []string{"Bad Name", "initial"} {
+	for _, name := range []string{"initial", "   ", strings.Repeat("я", 81)} {
 		if r := e.run("new", name); r.code != 2 || !strings.Contains(r.stderr, "Fix:") {
 			t.Errorf("new %q: exit code = %d\n%s", name, r.code, r.stderr)
 		}
@@ -170,7 +170,6 @@ func TestRenameProblems(t *testing.T) {
 		"nope x":        1,
 		"solo bug-hunt": 1,
 		"solo initial":  2,
-		"solo Bad_Name": 2,
 	} {
 		if r := e.run(append([]string{"rename"}, strings.Fields(args)...)...); r.code != want || !strings.Contains(r.stderr, "Fix:") {
 			t.Errorf("rename %s: exit code = %d, want %d\n%s", args, r.code, want, r.stderr)
@@ -305,5 +304,36 @@ func TestStatusNotesAnEquippedPresetThatWasRemoved(t *testing.T) {
 
 	if !strings.Contains(r.stdout, "Active preset  solo (preset removed)") {
 		t.Errorf("status:\n%s", r.stdout)
+	}
+}
+
+func TestNamesMayHaveCapitalsSpacesAndSymbols(t *testing.T) {
+	e := ready(t)
+
+	r := e.run("new", "Cube creator: v2 ★")
+	if r.code != 0 || !strings.Contains(r.stdout, `"Cube creator: v2 ★" (id: cube-creator-v2)`) {
+		t.Fatalf("new: %d %q %q", r.code, r.stdout, r.stderr)
+	}
+	b := loadPreset(t, e, "cube-creator-v2")
+	if b.Preset.Title != "Cube creator: v2 ★" || b.Preset.Name != "cube-creator-v2" {
+		t.Errorf("preset = %+v", b.Preset)
+	}
+	if list := e.run("list").stdout; !strings.Contains(list, "cube-creator-v2") {
+		t.Errorf("list:\n%s", list)
+	}
+
+	// the same title again gets the next free id instead of failing
+	if r := e.run("new", "Cube creator: v2 ★"); r.code != 0 || !strings.Contains(r.stdout, "cube-creator-v2-2") {
+		t.Errorf("second: %d %q %q", r.code, r.stdout, r.stderr)
+	}
+
+	if r := e.run("clone", "cube-creator-v2", "Куб — копия"); r.code != 0 || !strings.Contains(r.stdout, "kub-kopiya") {
+		t.Errorf("clone: %d %q %q", r.code, r.stdout, r.stderr)
+	}
+	if r := e.run("rename", "kub-kopiya", "Another Name!"); r.code != 0 || !strings.Contains(r.stdout, `"Another Name!" (id: another-name)`) {
+		t.Errorf("rename: %d %q %q", r.code, r.stdout, r.stderr)
+	}
+	if b := loadPreset(t, e, "another-name"); b.Preset.Title != "Another Name!" {
+		t.Errorf("renamed = %+v", b.Preset)
 	}
 }

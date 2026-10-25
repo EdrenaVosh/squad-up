@@ -159,17 +159,6 @@ func TestTheChecksOfAnAgentWrapInsteadOfBeingCutOff(t *testing.T) {
 	h.lacks("without ask…")
 }
 
-func TestALongErrorInADialogIsWrappedNotCutOff(t *testing.T) {
-	h := newHarness(t)
-
-	h.press("n")
-	h.typeText("Cube creator")
-	h.press("enter")
-
-	h.contains("preset names use lowercase letters", "and have up to 64 characters")
-	h.lacks("…")
-}
-
 func TestThePanelsOfTheSquadWrapTheirText(t *testing.T) {
 	h := newHarness(t)
 	h.resize(160, 44)
@@ -202,22 +191,22 @@ func TestTheKeysOfTheDemoDoWhatTheScriptExpects(t *testing.T) {
 	h.resize(156, 48)
 
 	h.press("n")
-	h.typeText("bugs")
+	h.typeText("Cube Bug Hunter!")
 	h.press("enter") // the name
 	h.contains("Use a template")
 	h.press("enter") // the first option
-	h.contains("Bug Hunters", "Feature Creator")
-	h.press("enter") // Bug Hunters, the first
-	h.contains("bugs", "AGENTS", "debugger", "fixer", "reviewer", "tester")
+	h.contains("Bug Hunter", "Feature Creator")
+	h.press("enter") // Bug Hunter, the first
+	h.contains("Cube Bug Hunter!", "AGENTS", "debugger", "fixer", "reviewer", "tester")
 
 	h.press("down", "down", "down", "down", "esc")
-	h.contains("PRESETS", "Bug Hunters")
-	h.goTo("bug-hunters") // in the sandbox of the demo it is the only preset, so it is already selected
+	h.contains("PRESETS", "Cube Bug Hunter!")
+	h.goTo("cube-bug-hunter") // in the sandbox of the demo it is the only preset, so it is already selected
 	h.press("right", "right", "right")
 	h.contains("╔═ ▶ 4 ") // the fourth agent is selected
 
 	h.press("e")
-	h.contains("Equip bugs")
+	h.contains("Equip cube-bug-hunter")
 	h.press("enter")
 	h.contains("Squad ready", "▐▛███▜▌")
 	h.press("esc")

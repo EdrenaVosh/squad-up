@@ -9,6 +9,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 
 	"github.com/EdrenaVosh/squadup/internal/apply"
+	"github.com/EdrenaVosh/squadup/internal/preset"
 	"github.com/EdrenaVosh/squadup/internal/workspace"
 )
 
@@ -537,25 +538,54 @@ func (h *help) Hints() []hint { return []hint{{"any key", "close"}} }
 
 // ---- flows shared by the screens ----
 
-// presetNameCheck validates the name of a new preset.
-func presetNameCheck(ws workspace.Workspace) func(string) error {
-	return func(name string) error {
-		if err := workspace.CheckName(name); err != nil {
+// newNamePrompt asks for the name of a preset. A name is free text: capitals,
+// spaces, symbols, any alphabet. The short id that commands and folders use is
+// made from it, and shown under the input as it will be.
+func newNamePrompt(ws workspace.Workspace, title, help, initial string, done func(id, name string) tea.Cmd) *promptScreen {
+	check := func(text string) error {
+		text = strings.TrimSpace(text)
+		if err := workspace.CheckTitle(text); err != nil {
 			return err
 		}
-		if ws.Store().Exists(name) {
-			return fmt.Errorf("a preset named %q already exists", name)
+		if text == "initial" {
+			return workspace.ErrReservedName
+		}
+		if preset.ValidName(text) && ws.Store().Exists(text) {
+			return fmt.Errorf("a preset named %q already exists", text)
 		}
 		return nil
 	}
+	preview := func(text string) string {
+		if text == "" || workspace.CheckTitle(text) != nil {
+			return ""
+		}
+		if id, name := ws.IDFor(text); id != name {
+			return "id: " + id
+		}
+		return ""
+	}
+	return newPrompt(title, help, initial, check, func(text string) tea.Cmd {
+		id, name := ws.IDFor(text)
+		return done(id, name)
+	}).withPreview(preview)
 }
+
+// withTitle gives a preset created under an id the name a person typed.
+func withTitle(ws workspace.Workspace, id, name string) error {
+	if name == id {
+		return nil
+	}
+	return ws.SetTitle(id, name)
+}
+
+const nameHelp = "Any name you like: capitals, spaces, symbols. A short id for commands is made from it."
 
 // newCreateFlow asks for a name, then for what to start from. base is the
 // preset selected when the flow began, offered as a template.
 func newCreateFlow(ws workspace.Workspace, base *string) screen {
-	return newPrompt("New preset", "Lowercase letters, digits and dashes.", "", presetNameCheck(ws), func(name string) tea.Cmd {
+	return newNamePrompt(ws, "New preset", nameHelp, "", func(id, name string) tea.Cmd {
 		options := []option{
-			{label: StarterTemplate, note: "Bug Hunters or Feature Creator: a whole team, ready to use", value: "template"},
+			{label: StarterTemplate, note: "Bug Hunter or Feature Creator: a whole team, ready to use", value: "template"},
 			{label: "Blank preset", note: "no agents yet", value: "blank"},
 		}
 		if base != nil {
@@ -570,41 +600,49 @@ func newCreateFlow(ws workspace.Workspace, base *string) screen {
 		return push(newChoice("Start "+name+" from", options, 0, func(o option) tea.Cmd {
 			if o.value == "template" {
 				return push(newChoice("Template for "+name, templateOptions(), 0, func(t option) tea.Cmd {
-					return createFromTemplate(ws, name, t)
+					return createFromTemplate(ws, id, name, t)
 				}))
 			}
-			return createPreset(ws, name, o.value, base)
+			return createPreset(ws, id, name, o.value, base)
 		}))
 	})
 }
 
-func createPreset(ws workspace.Workspace, name, from string, base *string) tea.Cmd {
+func createPreset(ws workspace.Workspace, id, name, from string, base *string) tea.Cmd {
 	var err error
 	switch from {
 	case "copy":
-		_, err = ws.Clone(*base, name)
+		_, err = ws.Clone(*base, id)
 	case "current":
-		_, err = ws.Capture(name)
+		_, err = ws.Capture(id)
 	default:
-		_, err = ws.New(name)
+		_, err = ws.New(id)
+	}
+	if err == nil {
+		err = withTitle(ws, id, name)
 	}
 	if err != nil {
 		return flashErr(err.Error())
 	}
-	return tea.Batch(reload(), push(newPresetScreen(ws, name)), flash(fmt.Sprintf("Created %q", name)))
+	return tea.Batch(reload(), push(newPresetScreen(ws, id)), flash(fmt.Sprintf("Created %q", name)))
 }
 
 func cloneFlow(ws workspace.Workspace, from string) screen {
 	suggestion := from + "-copy"
 	if from == "initial" {
 		suggestion = "my-setup"
+	} else if p, err := ws.Store().LoadPreset(from); err == nil && p.Title != "" {
+		suggestion = p.Title + " copy"
 	}
-	help := fmt.Sprintf("Copy of %q.", from)
+	help := fmt.Sprintf("Copy of %q. %s", from, nameHelp)
 	if from == "initial" {
-		help = "An editable copy of your original setup; Initial itself stays as it is."
+		help = "An editable copy of your original setup; Initial itself stays as it is. " + nameHelp
 	}
-	return newPrompt("Clone preset", help, suggestion, presetNameCheck(ws), func(name string) tea.Cmd {
-		skipped, err := ws.Clone(from, name)
+	return newNamePrompt(ws, "Clone preset", help, suggestion, func(id, name string) tea.Cmd {
+		skipped, err := ws.Clone(from, id)
+		if err == nil {
+			err = withTitle(ws, id, name)
+		}
 		if err != nil {
 			return flashErr(err.Error())
 		}
@@ -617,11 +655,12 @@ func cloneFlow(ws workspace.Workspace, from string) screen {
 }
 
 func renameFlow(ws workspace.Workspace, old string) screen {
-	return newPrompt("Rename preset", fmt.Sprintf("New name for %q.", old), old, presetNameCheck(ws), func(name string) tea.Cmd {
-		if name == old {
-			return nil
-		}
-		if err := ws.Rename(old, name); err != nil {
+	current := old
+	if p, err := ws.Store().LoadPreset(old); err == nil && p.Title != "" {
+		current = p.Title
+	}
+	return newNamePrompt(ws, "Rename preset", fmt.Sprintf("New name for %q. %s", old, nameHelp), current, func(_, name string) tea.Cmd {
+		if _, err := ws.RenameTo(old, name); err != nil {
 			return flashErr(err.Error())
 		}
 		return tea.Batch(reload(), flash(fmt.Sprintf("Renamed %q to %q", old, name)))

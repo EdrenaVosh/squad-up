@@ -1,6 +1,6 @@
 schema: 1
-name: bug-hunters
-title: Bug Hunters
+name: bug-hunter
+title: Bug Hunter
 description: Four agents that find a bug's root cause, fix it, review the fix independently and test it
 accent: red
 mode: replace

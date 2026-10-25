@@ -303,13 +303,20 @@ func trimPrefix(s, prefix string) string {
 }
 
 // wrapText breaks s into lines of at most w cells. A word that is longer than
-// a line, such as a path, keeps its end, which is the part that says what it is.
+// a line, such as a path, is broken across lines rather than cut off, so that
+// all of it can be read.
 func wrapText(s string, w int) []string {
 	var out []string
 	line := ""
 	for _, word := range splitWords(s) {
-		if lipglossWidth(word) > w {
-			word = ansi.TruncateLeft(word, lipglossWidth(word)-(w-1), "…")
+		for lipglossWidth(word) > w {
+			if line != "" {
+				out = append(out, line)
+				line = ""
+			}
+			head := ansi.Truncate(word, w, "")
+			out = append(out, head)
+			word = ansi.TruncateLeft(word, lipglossWidth(head), "")
 		}
 		switch {
 		case line == "":

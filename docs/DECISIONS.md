@@ -218,3 +218,9 @@ The five starters of the first design (solo-indie, bug-hunt, refactor-day, ship-
 - **Not verified in a live session:** how well Claude follows these prompts and the loop. They were written to be unambiguous and linted, not exercised.
 
 - **Tiles are 26 to 42 cells wide, not 30 to 42**, so that four fit in a row on a terminal of about 150 columns: Bug Hunters has four agents, and at 156×48 the 30-cell tiles needed two rows that did not fit, so the interface fell back to a list for the very preset it ships with. The width still depends only on the terminal, never on the number of agents.
+
+### Bug Hunter, and names with capitals and symbols
+
+- The first template is called **Bug Hunter** (id `bug-hunter`), singular, as the author asked; the earlier sections of this file say "Bug Hunters".
+- **A preset has two names.** The *title* is for people and is free text: capitals, spaces, symbols, any alphabet (up to 80 characters, no control characters). The *id* is what commands, folders and the state use; it stays a small file-safe slug and is **made from the title**: lowercase letters and digits with single dashes, Russian letters written in Latin (`Куб Креатор` → `kub-kreator`), anything with no plain form left out, `preset` when nothing is left, and `-2`, `-3`… when the id is taken or reserved. The dialogs for a new preset, a clone and a rename take the title and show the id under the input (`id: cube-creator`); renaming changes the title and, when the words change, the id. `squad new "Cube creator"`, `squad clone` and `squad rename` accept a title in the same way. Text that is already a valid id is used as it is.
+- **Agent names are unchanged**: an agent's name is its identifier for Claude Code and the name of its file, so it stays a slug.

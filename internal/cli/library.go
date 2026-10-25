@@ -47,6 +47,8 @@ func (a *app) newNew() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "new [name]",
 		Short: "Create a preset: blank, or a copy of another preset, Initial or the current setup",
+		Long: "The name is free text: capitals, spaces and symbols are fine, as in `squad new \"Cube creator\"`.\n" +
+			"The short id that other commands use is made from it (cube-creator).",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(_ *cobra.Command, args []string) error {
 			if len(args) == 0 && template != "" {
@@ -65,11 +67,18 @@ func (a *app) newNew() *cobra.Command {
 			if mode != "" && mode != preset.ModeReplace && mode != preset.ModeExtend {
 				return &ExitError{Code: 2, Err: fmt.Errorf("mode %q is not valid", mode), Fix: "use replace or extend"}
 			}
-			if err := workspace.CheckName(name); err != nil {
+			if name == "initial" {
+				return nameError(workspace.ErrReservedName)
+			}
+			if err := workspace.CheckTitle(name); err != nil {
 				return nameError(err)
 			}
 
 			w := a.workspace()
+			name, typed := w.IDFor(name) // a title with capitals or symbols gets an id made from it
+			if title == "" && typed != name {
+				title = typed
+			}
 			switch from {
 			case "":
 				if template != "" {
@@ -83,13 +92,13 @@ func (a *app) newNew() *cobra.Command {
 					if b, err := w.Store().LoadPreset(name); err == nil {
 						count = " (" + tui.AgentCount(len(b.Agents)) + ")"
 					}
-					printf(a.io.Out, "Created preset %q from the template %q%s.\nLook at it with `squad lint %s`, equip it with `squad use %s`.\n", name, template, count, name, name)
+					printf(a.io.Out, "Created preset %s from the template %q%s.\nLook at it with `squad lint %s`, equip it with `squad use %s`.\n", shownName(name, typed), template, count, name, name)
 					break
 				}
 				if _, err := w.New(name); err != nil {
 					return libraryError(err, cloneInitialFix)
 				}
-				printf(a.io.Out, "Created preset %q with no agents.\nAdd some with `squad edit %s`, or start from your setup with `squad new <name> --from current`.\n", name, name)
+				printf(a.io.Out, "Created preset %s with no agents.\nAdd some with `squad edit %s`, or start from your setup with `squad new <name> --from current`.\n", shownName(name, typed), name)
 			case "current":
 				if err := a.capturePreset(name); err != nil {
 					return err
@@ -100,7 +109,7 @@ func (a *app) newNew() *cobra.Command {
 					return libraryError(err, cloneInitialFix)
 				}
 				a.reportSkipped(skipped)
-				printf(a.io.Out, "Created preset %q as a copy of %q.\n", name, from)
+				printf(a.io.Out, "Created preset %s as a copy of %q.\n", shownName(name, typed), from)
 			}
 
 			return a.tweakPreset(name, title, description, mode)
@@ -152,16 +161,24 @@ func (a *app) newClone() *cobra.Command {
 		Short: "Copy a preset (or Initial) under a new name",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(_ *cobra.Command, args []string) error {
-			skipped, err := a.workspace().Clone(args[0], args[1])
+			if err := workspace.CheckTitle(args[1]); err != nil {
+				return nameError(err)
+			}
+			w := a.workspace()
+			id, typed := w.IDFor(args[1])
+			skipped, err := w.Clone(args[0], id)
+			if err == nil && typed != id {
+				err = w.SetTitle(id, typed)
+			}
 			if err != nil {
 				return libraryError(err, cloneInitialFix)
 			}
 			a.reportSkipped(skipped)
 			count := ""
-			if b, err := a.workspace().Store().LoadPreset(args[1]); err == nil {
+			if b, err := w.Store().LoadPreset(id); err == nil {
 				count = " (" + tui.AgentCount(len(b.Agents)) + ")"
 			}
-			printf(a.io.Out, "Copied %q to %q%s.\n", args[0], args[1], count)
+			printf(a.io.Out, "Copied %q to %s%s.\n", args[0], shownName(id, typed), count)
 			return nil
 		},
 	}
@@ -175,12 +192,13 @@ func (a *app) newRename() *cobra.Command {
 		Short: "Rename a preset",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(_ *cobra.Command, args []string) error {
-			old, name := args[0], args[1]
+			old, typed := args[0], args[1]
 			state, _ := apply.LoadState(a.paths)
-			if err := a.workspace().Rename(old, name); err != nil {
+			id, err := a.workspace().RenameTo(old, typed)
+			if err != nil {
 				return libraryError(err, cloneInitialFix)
 			}
-			printf(a.io.Out, "Renamed %q to %q.\n", old, name)
+			printf(a.io.Out, "Renamed %q to %s.\n", old, shownName(id, typed))
 			if state.Active == old {
 				printf(a.io.Out, "It stays equipped.\n")
 			}
@@ -357,4 +375,13 @@ func (a *app) setIndependent(preset string, agent []string, independent bool) er
 		printf(a.io.Out, "%s is an ordinary agent again.\n", agent[0])
 	}
 	return nil
+}
+
+// shownName says a preset the way the person typed it, with its id when that
+// is something else.
+func shownName(id, typed string) string {
+	if strings.TrimSpace(typed) == id {
+		return fmt.Sprintf("%q", id)
+	}
+	return fmt.Sprintf("%q (id: %s)", strings.TrimSpace(typed), id)
 }

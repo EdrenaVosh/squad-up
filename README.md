@@ -38,7 +38,7 @@ squadup is a small command-line tool and terminal interface that fixes those thi
 
 | | |
 | --- | --- |
-| **Switch teams in a second** | `squad use bug-hunters`, work, `squad use feature-creator`. Or try a preset for a single session without writing anything. |
+| **Switch teams in a second** | `squad use bug-hunter`, work, `squad use feature-creator`. Or try a preset for a single session without writing anything. |
 | **Never lose your setup** | The first run saves your current config as *Initial*. Every change is backed up, manual edits are detected and never overwritten without asking, and `squad restore` returns the original. |
 | **Teams that work as a team** | A main agent can hand work down the agents in order and run a **review loop**: the reviewer finds defects, the builder fixes them, until it is clean or the rounds run out. |
 | **Impartial agents** | Mark an agent **independent** and it is told to work from its task alone, and whoever calls it is told to give it nothing from other agents' reasoning. |
@@ -90,7 +90,7 @@ Update later with `squad update`, which tells you the right command for the way 
 <details>
 <summary><b>Optional: the Claude Code plugin</b></summary>
 
-A small plugin adds `/squadup:squad` inside a Claude Code session: show the equipped preset, or switch with `/squadup:squad bug-hunters`. It only calls the `squad` tool, so squad must be installed.
+A small plugin adds `/squadup:squad` inside a Claude Code session: show the equipped preset, or switch with `/squadup:squad bug-hunter`. It only calls the `squad` tool, so squad must be installed.
 
 ```sh
 claude plugin marketplace add EdrenaVosh/squadup
@@ -111,7 +111,7 @@ Or do it from the command line:
 
 ```sh
 squad templates                            # the two ready-made teams
-squad new bugs --template bug-hunters      # a copy you can edit
+squad new bugs --template bug-hunter      # a copy you can edit
 squad lint bugs                            # check it for mistakes
 squad use bugs                             # equip it (shows what changes, backs up first)
 claude                                     # work as usual, with the team
@@ -165,7 +165,7 @@ flowchart LR
 
 ### Presets and agents
 
-A preset holds the agents of a team and what goes with them: a default model, effort, a permission profile (from "asks a lot" to "asks nothing", shown as a bar from green to red), and `mode: replace` (your own agents are put aside while it is equipped) or `extend` (they stay next to it).
+**Name a preset anything you like**: capitals, spaces, symbols, any alphabet (`Cube creator: v2 ★`). A short id for commands and folders is made from it and shown as you type (`cube-creator-v2`); `squad new "Cube creator"` works the same way. A preset holds the agents of a team and what goes with them: a default model, effort, a permission profile (from "asks a lot" to "asks nothing", shown as a bar from green to red), and `mode: replace` (your own agents are put aside while it is equipped) or `extend` (they stay next to it).
 
 The agent editor shows every field of an agent file with a plain explanation of its values: name, description (with hints on how to make Claude call it), model, effort, permission mode, tools and disallowed tools as checkboxes, max turns, color, and the prompt. A prompt can be **written in the interface, edited in `$EDITOR`, or loaded from a Markdown file** (drop the file on the terminal, or type its path). Every change is saved at once, and `p` previews the file exactly as it will be written.
 
@@ -229,14 +229,14 @@ Import shows a **preview** first: the agents, the settings it would set, and war
 
 Both are review loops with an independent reviewer, with prompts written to be unambiguous for Claude: what each agent receives, how it works, its rules, and the exact sections of its report.
 
-| | **Bug Hunters** | **Feature Creator** |
+| | **Bug Hunter** | **Feature Creator** |
 | --- | --- | --- |
 | For | Finding and fixing a bug | Building a feature |
 | Agents, in order | **debugger** (Opus) finds the root cause and describes it, changes nothing → **fixer** (Sonnet) decides the fix and makes it, never touches tests → **reviewer** (Sonnet, ◈ independent) checks the fix for logic and architecture and sends critical defects back to the fixer → **tester** (Sonnet) runs the unit and integration tests, repairs tests the fix made outdated and adds a regression test | **planner** (Opus) studies the code and writes an ordered plan, no code → **executor** (Sonnet) implements the plan and covers it with tests → **reviewer** (Sonnet, ◈ independent) checks the code and sends critical defects back to the executor |
 | Review loop | reviewer ⇄ fixer, up to 3 rounds, then on to the tester | reviewer ⇄ executor, up to 3 rounds |
 
 ```sh
-squad new bugs --template bug-hunters
+squad new bugs --template bug-hunter
 squad new feature --template feature-creator
 squad run bugs        # or squad use bugs, and then claude
 ```

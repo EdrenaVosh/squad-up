@@ -277,15 +277,15 @@ func TestTheTemplateIsTheFirstOptionOfTheCreateFlow(t *testing.T) {
 	h.press("n")
 	h.typeText("my-bugs")
 	h.press("enter")
-	h.contains("Use a template", "Bug Hunters or Feature Creator", "Blank preset")
+	h.contains("Use a template", "Bug Hunter or Feature Creator", "Blank preset")
 	h.press("enter") // the first option, already selected
-	h.contains("Bug Hunters", "Feature Creator", "debugger →", "→ tester", "planner →", "→ reviewer")
+	h.contains("Bug Hunter", "Feature Creator", "debugger →", "→ tester", "planner →", "→ reviewer")
 	h.lacks("Solo Indie", "Ship It")
-	h.choose("Bug Hunters")
+	h.choose("Bug Hunter")
 
 	h.contains("my-bugs", "AGENTS", "SLOT 1", "SLOT 4", "debugger", "fixer", "reviewer", "tester")
 	b := h.stored("my-bugs")
-	if len(b.Agents) != 4 || b.Preset.Title != "Bug Hunters" || b.Preset.Flow == nil || !b.Preset.Flow.Loops() {
+	if len(b.Agents) != 4 || b.Preset.Title != "my-bugs" || b.Preset.Flow == nil || !b.Preset.Flow.Loops() { // the name typed, not the template's own
 		t.Errorf("my-bugs = %+v", b.Preset)
 	}
 }
@@ -293,9 +293,9 @@ func TestTheTemplateIsTheFirstOptionOfTheCreateFlow(t *testing.T) {
 func TestWelcomeBrowsesTemplates(t *testing.T) {
 	h := firstRun(t)
 
-	h.contains("Browse starter templates", "Bug Hunters and Feature Creator")
+	h.contains("Browse starter templates", "Bug Hunter and Feature Creator")
 	h.press("down", "down", "enter")
-	h.contains("Bug Hunters", "Feature Creator", "Four agents that find a bug's root cause", "Three agents that plan a feature")
+	h.contains("Bug Hunter", "Feature Creator", "Four agents that find a bug's root cause", "Three agents that plan a feature")
 	h.golden("templates")
 	h.choose("Feature Creator")
 	h.contains("Name the new preset", "feature-creator")

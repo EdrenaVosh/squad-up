@@ -36,7 +36,7 @@ func (w *welcomeScreen) finished() bool {
 var welcomeChoices = []struct{ label, note string }{
 	{"Start from my current setup", "an editable copy of what you have now"},
 	{"Create a first preset", "blank, or from your current setup"},
-	{"Browse starter templates", "Bug Hunters and Feature Creator"},
+	{"Browse starter templates", "Bug Hunter and Feature Creator"},
 	{"Check which models I can use", "four tiny requests to Claude"},
 	{"Go to the main screen", "look around first"},
 }
@@ -73,8 +73,11 @@ func (w *welcomeScreen) choose() tea.Cmd {
 }
 
 func (w *welcomeScreen) cloneInitial() screen {
-	return newPrompt("Start from my current setup", "An editable copy; your original setup is never changed.", "my-setup", presetNameCheck(w.ws), func(name string) tea.Cmd {
-		skipped, err := w.ws.Clone("initial", name)
+	return newNamePrompt(w.ws, "Start from my current setup", "An editable copy; your original setup is never changed. "+nameHelp, "my-setup", func(id, name string) tea.Cmd {
+		skipped, err := w.ws.Clone("initial", id)
+		if err == nil {
+			err = withTitle(w.ws, id, name)
+		}
 		if err != nil {
 			return flashErr(err.Error())
 		}
@@ -82,7 +85,7 @@ func (w *welcomeScreen) cloneInitial() screen {
 		if len(skipped) > 0 {
 			text += fmt.Sprintf(" (%d agent files could not be copied)", len(skipped))
 		}
-		return tea.Batch(push(newPresetScreen(w.ws, name)), flash(text))
+		return tea.Batch(push(newPresetScreen(w.ws, id)), flash(text))
 	})
 }
 
