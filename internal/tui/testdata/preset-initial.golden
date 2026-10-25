@@ -1,12 +1,12 @@
 ╭─ Initial ──────────────────────────────────────────────── initial · replace ─╮
 │ Your original Claude Code setup                                              │
-│ your original setup, kept in /var/folders/dv/j2x09c7s6ml91zftpg6wps9c0000gn… │
+│ your original setup, kept in ~/squadup/presets/initial and never changed     │
 │                                                                              │
 │ AGENTS                                                                       │
-│   SLOT    AGENT           MODEL     EFFORT       ACCESS                      │
-│   SLOT 1  ■ docs-writer   [inherit] ····· —      ■■□□□ default               │
-│   SLOT 2  ■ reviewer      [inherit] ····· —      ■■□□□ default               │
-│   SLOT 3  ■ tester        [inherit] ····· —      ■■□□□ default               │
+│   SLOT    AGENT         MODEL        EFFORT       ACCESS                     │
+│   SLOT 1  ■ docs-writer [inherit]    ····· —      ■■□□□ default              │
+│   SLOT 2  ■ reviewer    [inherit]    ····· —      ■■□□□ default              │
+│   SLOT 3  ■ tester      [inherit]    ····· —      ■■□□□ default              │
 │                                                                              │
 │ SETTINGS                                                                     │
 │   Default model    opus                                                      │

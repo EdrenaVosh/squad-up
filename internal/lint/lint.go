@@ -218,7 +218,7 @@ func agentRules(f loaded, inPreset bool, add adder) {
 	}
 
 	for _, key := range a.Keys() {
-		if !slices.Contains(agentfile.KnownKeys, key) && key != team.IndependentKey {
+		if !slices.Contains(agentfile.KnownKeys, key) && key != team.IndependentKey && key != team.LegacyShareKey {
 			msg := fmt.Sprintf("unknown field %q: Claude Code ignores it", key)
 			if s := suggest(key); s != "" {
 				msg += fmt.Sprintf("; did you mean %q?", s)

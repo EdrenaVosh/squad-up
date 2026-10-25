@@ -188,3 +188,14 @@ func mustParse(t *testing.T, data string) *agentfile.Agent {
 	}
 	return a
 }
+
+func TestTheOldShareFieldIsNeverSentToClaudeCode(t *testing.T) {
+	got := compile(t, bundle(nil, "", file("dev", "squadShare: false\n"), file("tester", "")))
+
+	if strings.Contains(got["dev"], "squadShare") {
+		t.Errorf("dev:\n%s", got["dev"])
+	}
+	if team.Independent(mustParse(t, string(file("dev", "squadShare: false\n").Data))) {
+		t.Error("the old field must not make an agent independent")
+	}
+}

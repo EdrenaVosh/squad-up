@@ -1,12 +1,12 @@
 ╭─ Solo Indie ────────────────────────────────────────── solo-indie · replace ─╮
 │ Planner, reviewer and tester for one-person apps                             │
-│ saved in /var/folders/dv/j2x09c7s6ml91zftpg6wps9c0000gn/T/TestPresetScreenA… │
+│ saved in ~/squadup/presets/solo-indie · every change is written at once      │
 │                                                                              │
 │ AGENTS                                                                       │
-│   SLOT    AGENT           MODEL     EFFORT       ACCESS        STANCE       …│
-│ ▌ SLOT 1  ■ planner        opus     ▂▃▅·· high   ■□□□□ plan    normal       …│
-│   SLOT 2  ■ reviewer       sonnet   ▂▃▅·· high   ■■□□□ default normal       …│
-│   SLOT 3  ■ tester         haiku    ▂▃··· medium ■■■□□ edits   normal       …│
+│   SLOT    AGENT         MODEL        EFFORT       ACCESS        STANCE       │
+│ ▌ SLOT 1  ■ planner      opus        ▂▃▅·· high   ■□□□□ plan    normal       │
+│   SLOT 2  ■ reviewer     sonnet      ▂▃▅·· high   ■■□□□ default normal       │
+│   SLOT 3  ■ tester       haiku       ▂▃··· medium ■■■□□ edits   normal       │
 │   + add agent                                                                │
 │                                                                              │
 │ SETTINGS                                                                     │

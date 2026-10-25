@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/EdrenaVosh/squadup/internal/preset"
+	"github.com/EdrenaVosh/squadup/internal/testutil"
 )
 
 func TestTheIndependentSwitch(t *testing.T) {
@@ -107,14 +108,15 @@ func TestOrderOnlyFlowWarnsWhenNoMainAgentCarriesIt(t *testing.T) {
 	h.contains("in order", "No main agent")
 }
 
-func TestTheAgentsTableHasAHeaderAndRoomForTheRole(t *testing.T) {
+func TestTheAgentsTableHasAHeaderAndNoRoleColumn(t *testing.T) {
 	h := newHarness(t)
 	h.open("solo-indie")
 	h.contains("SLOT", "AGENT", "MODEL", "EFFORT", "ACCESS", "STANCE")
-	h.lacks("ROLE") // no room at 80 columns
+	h.fits(80, 24)
 
 	h.resize(140, 40)
-	h.contains("ROLE", "Breaks a task into steps.", "ABOUT  planner", "Breaks a task into steps. Use before starting any large change.")
+	h.lacks("ROLE")
+	h.contains("ABOUT  planner", "Breaks a task into steps. Use before starting any large change.")
 	h.press("down", "down", "down", "down", "down", "down", "down", "down") // Team flow
 	h.contains("ABOUT  Team flow", "How the agents work as a team")
 }
@@ -174,4 +176,21 @@ func TestThePanelsOfTheSquadWrapTheirText(t *testing.T) {
 
 	h.contains("TOKENS · LIVE", "no session in this folder yet", "start `squad run` here and every", "agent's tokens show up as it works")
 	h.lacks("ever…", "and…")
+}
+
+func TestAnAgentThatStillHasTheOldShareFieldIsNotWarnedAboutAndLosesItOnSave(t *testing.T) {
+	h := newHarness(t)
+	testutil.WriteFiles(t, h.paths.PresetDir("solo-indie"), map[string]string{
+		"agents/tester.md": agentFile("tester", "Writes and runs tests. Use when a change needs coverage.", "tools: Read, Bash\nsquadShare: false\n", "Test it."),
+	})
+
+	h.open("solo-indie")
+	h.lacks("unknown field", "squadShare")
+
+	h.press("down", "down", "enter") // the tester
+	h.field(fIndependent)
+	h.press("enter") // any change saves the agent
+	if got := string(h.stored("solo-indie").Agents[2].Data); strings.Contains(got, "squadShare") {
+		t.Errorf("the old field stayed:\n%s", got)
+	}
 }

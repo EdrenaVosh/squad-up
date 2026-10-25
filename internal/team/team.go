@@ -24,6 +24,9 @@ const (
 	// IndependentKey is the frontmatter field that makes an agent independent.
 	// Claude Code would ignore it; Compile removes it from what Claude Code gets.
 	IndependentKey = "squadIndependent"
+	// LegacyShareKey belonged to the shared notes, which are gone. It is read as
+	// nothing, never sent to Claude Code, and removed when an agent is saved.
+	LegacyShareKey = "squadShare"
 
 	charterOpen, charterClose = "<!-- squad:independent -->", "<!-- /squad:independent -->"
 	leadOpen, leadClose       = "<!-- squad:lead -->", "<!-- /squad:lead -->"
@@ -84,6 +87,7 @@ func Compile(b preset.Bundle) ([]preset.AgentFile, error) {
 		}
 		independent := Independent(a)
 		a.Delete(IndependentKey)
+		a.Delete(LegacyShareKey)
 
 		desc := strings.TrimSuffix(a.Description(), descriptionNote)
 		if independent {

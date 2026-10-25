@@ -85,6 +85,7 @@ func newAgentEditor(ws workspace.Workspace, bundle *preset.Bundle, idx int) *age
 func (e *agentEditor) Init() tea.Cmd { return nil }
 
 func (e *agentEditor) data() []byte {
+	e.agent.Delete(team.LegacyShareKey) // left over from the shared notes
 	data, err := e.agent.Marshal()
 	if err != nil {
 		return e.bundle.Agents[e.idx].Data
