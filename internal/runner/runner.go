@@ -217,9 +217,13 @@ func Prepare(bin string, spec Spec, extra []string) (*exec.Cmd, func(), error) {
 	return cmd, cleanup, nil
 }
 
-// Run starts claude with the preset and waits for it. Interrupt and
-// termination signals are passed on to claude. It returns claude's exit code,
-// or 128 plus the signal number when claude was killed by a signal.
+// Run starts claude with the preset and waits for it. SIGTERM and SIGHUP are
+// passed on to claude, so that closing the terminal or stopping squad stops
+// claude and the temporary settings file is removed. Ctrl-C is not passed on:
+// the terminal sends it to the whole foreground group, claude included, and a
+// second one would make claude think it was interrupted twice. It returns
+// claude's exit code, or 128 plus the signal number when claude was killed by
+// a signal.
 func Run(bin string, spec Spec, extra []string, s Streams) (int, error) {
 	cmd, cleanup, err := Prepare(bin, spec, extra)
 	if err != nil {
@@ -229,7 +233,8 @@ func Run(bin string, spec Spec, extra []string, s Streams) (int, error) {
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = s.In, s.Out, s.Err
 
 	signals := make(chan os.Signal, 4)
-	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
+	// os.Interrupt is caught only so that squad outlives claude and cleans up.
+	signal.Notify(signals, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
 	defer signal.Stop(signals)
 
 	if err := cmd.Start(); err != nil {
@@ -240,7 +245,9 @@ func Run(bin string, spec Spec, extra []string, s Streams) (int, error) {
 		for {
 			select {
 			case sig := <-signals:
-				_ = cmd.Process.Signal(sig)
+				if sig != os.Interrupt {
+					_ = cmd.Process.Signal(sig)
+				}
 			case <-done:
 				return
 			}
