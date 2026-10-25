@@ -303,3 +303,5 @@ The first run of CI on GitHub failed on all three systems. None of it was a bug 
 - The welcome screen still spelled `S Q U A D U P` after the rename; it is `S Q U A D - U P`.
 
 macOS was not read (its log was not available); Windows is fixed by reading the log, not by running it.
+
+The second CI run was green on Linux and macOS; on Windows two golden screens were left, which show `~\squad-up\presets\…` (the real, correct path of that system) where the golden has `~/squad-up/…`. The comparison now turns the backslashes of paths under `~` into slashes before comparing (`slashed` in `harness_test.go`, with a test of its own); the program still shows the native path.

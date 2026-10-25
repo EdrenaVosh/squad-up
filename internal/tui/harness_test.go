@@ -276,10 +276,20 @@ func (h *harness) goldenAt(name string, w, ht int) {
 	if err != nil {
 		h.t.Fatalf("no golden screen %s (run the tests with -screens): %v", path, err)
 	}
-	// a Git checkout on Windows may turn the file's line ends into CRLF
-	if got != strings.ReplaceAll(string(want), "\r\n", "\n") {
+	// a Git checkout on Windows may turn the file's line ends into CRLF, and
+	// a path under the home folder is shown with the separator of the system
+	if slashed(got) != strings.ReplaceAll(string(want), "\r\n", "\n") {
 		h.t.Errorf("the screen differs from %s (run the tests with -screens to accept)\n--- got ---\n%s\n--- want ---\n%s", path, got, want)
 	}
+}
+
+// homePath matches a path shown under the home folder: ~/… or ~\… on Windows.
+var homePath = regexp.MustCompile(`~[^\s│]*`)
+
+// slashed turns the backslashes of the paths under ~ into slashes, so that one
+// golden screen serves every system.
+func slashed(screen string) string {
+	return homePath.ReplaceAllStringFunc(screen, func(p string) string { return strings.ReplaceAll(p, `\`, "/") })
 }
 
 // selectedRow matches the highlighted line of the preset list.
