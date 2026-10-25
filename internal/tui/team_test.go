@@ -194,3 +194,32 @@ func TestAnAgentThatStillHasTheOldShareFieldIsNotWarnedAboutAndLosesItOnSave(t *
 		t.Errorf("the old field stayed:\n%s", got)
 	}
 }
+
+// The keys of docs/demo.tape, which cannot be recorded in a test: a new preset
+// from the first template, equipped, and shown with its agents at work.
+func TestTheKeysOfTheDemoDoWhatTheScriptExpects(t *testing.T) {
+	h := newHarness(t)
+	h.resize(156, 48)
+
+	h.press("n")
+	h.typeText("bugs")
+	h.press("enter") // the name
+	h.contains("Use a template")
+	h.press("enter") // the first option
+	h.contains("Bug Hunters", "Feature Creator")
+	h.press("enter") // Bug Hunters, the first
+	h.contains("bugs", "AGENTS", "debugger", "fixer", "reviewer", "tester")
+
+	h.press("down", "down", "down", "down", "esc")
+	h.contains("PRESETS", "Bug Hunters")
+	h.goTo("bug-hunters") // in the sandbox of the demo it is the only preset, so it is already selected
+	h.press("right", "right", "right")
+	h.contains("╔═ ▶ 4 ") // the fourth agent is selected
+
+	h.press("e")
+	h.contains("Equip bugs")
+	h.press("enter")
+	h.contains("Squad ready", "▐▛███▜▌")
+	h.press("esc")
+	h.contains("EQUIPPED")
+}

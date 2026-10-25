@@ -246,7 +246,7 @@ func TestABigTileShowsTheRoleAndLabeledFacts(t *testing.T) {
 			t.Errorf("width %d: %q", ansi.StringWidth(l), l)
 		}
 	}
-	for _, want := range []string{"planner", "Breaks a task into steps", "model", "opus", "effort", "access", "tools", "‹Read›", "+"} {
+	for _, want := range []string{"planner", "Breaks a task", "steps", "model", "opus", "effort", "access", "tools", "‹Read›", "+"} {
 		if !strings.Contains(text, want) {
 			t.Errorf("the tile should show %q:\n%s", want, text)
 		}

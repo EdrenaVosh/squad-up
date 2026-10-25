@@ -14,7 +14,7 @@ import (
 // whatever the number of agents.
 const (
 	smallTileW, smallTileH = 17, 7  // for the compact layout
-	bigTileW, bigTileH     = 30, 13 // for the spacious one, which widens with the room
+	bigTileW, bigTileH     = 26, 13 // for the spacious one, which widens with the room
 )
 
 // dealDelay is how many frames pass between one tile and the next appearing.

@@ -13,19 +13,19 @@
 │   Color             ■ cyan                      │                                                                                        │
 │   Prompt            1 line · enter              │                                                                                        │
 │                                                 │                                                                                        │
-│  ╭─ 1 ────────────────────────────────╮         │                                                                                        │
-│  │ ■ planner                          │         │                                                                                        │
-│  │                                    │         │                                                                                        │
-│  │ ────────────────────────────────── │         │                                                                                        │
-│  │ Breaks a task into steps.          │         │                                                                                        │
-│  │                                    │         │                                                                                        │
-│  │                                    │         │                                                                                        │
-│  │ model    opus                      │         │                                                                                        │
-│  │ effort  ▂▃▅·· high                 │         │                                                                                        │
-│  │ access  ■□□□□ plan                 │         │                                                                                        │
-│  │ tools   ‹Read› ‹Grep› ‹Glob›       │         │                                                                                        │
-│  │ stance  normal                     │         │                                                                                        │
-│  ╰────────────────────────────────────╯         │                                                                                        │
+│  ╭─ 1 ────────────────────────────╮             │                                                                                        │
+│  │ ■ planner                      │             │                                                                                        │
+│  │                                │             │                                                                                        │
+│  │ ────────────────────────────── │             │                                                                                        │
+│  │ Breaks a task into steps.      │             │                                                                                        │
+│  │                                │             │                                                                                        │
+│  │                                │             │                                                                                        │
+│  │ model    opus                  │             │                                                                                        │
+│  │ effort  ▂▃▅·· high             │             │                                                                                        │
+│  │ access  ■□□□□ plan             │             │                                                                                        │
+│  │ tools   ‹Read› ‹Grep› ‹Glob›   │             │                                                                                        │
+│  │ stance  normal                 │             │                                                                                        │
+│  ╰────────────────────────────────╯             │                                                                                        │
 │                                                 │                                                                                        │
 │ CHECKS                                          │                                                                                        │
 │   ✓ nothing to fix                              │                                                                                        │
