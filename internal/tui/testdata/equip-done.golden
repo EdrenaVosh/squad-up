@@ -5,6 +5,10 @@
 │                                                                              │
 │                               ✦ Squad ready ✦                                │
 │                                                                              │
+│                       ▐▛███▜▌     ▐▛███▜▌     ▐▛███▜▌                        │
+│                      ▝▜█████▛▘   ▝▜█████▛▘   ▝▜█████▛▘                       │
+│                        ▘▘ ▝▝       ▘▘ ▝▝       ▘▘ ▝▝                         │
+│                                                                              │
 │                                 ✓ ■ planner                                  │
 │                                 ✓ ■ reviewer                                 │
 │                                  ✓ ■ tester                                  │
@@ -16,9 +20,5 @@
 │ `squad undo` goes back, `squad restore` returns your original setup.         │
 │                                                                              │
 │ ! Model and main-agent changes apply to new sessions only.                   │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
 ╰──────────────────────────────────────────────────────────────────────────────╯
   any key  close

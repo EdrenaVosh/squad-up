@@ -3,19 +3,19 @@
                                                                                 
                                                                                 
                                                                                 
-        ╭─ Default model ──────────────────────────────────────────────╮        
-        │                                                              │        
-        │   Not set  use my original setting                           │        
-        │   fable                                                      │        
-        │   opus                                                       │        
-        │ ▌ sonnet                                                     │        
-        │   haiku                                                      │        
-        │   best                                                       │        
-        │   opus[1m]                                                   │        
-        │   sonnet[1m]                                                 │        
-        │   opusplan                                                   │        
-        │                                                              │        
-        ╰──────────────────────────────────────────────────────────────╯        
+   ╭─ Default model ────────────────────────────────────────────────────────╮   
+   │                                                                        │   
+   │   Not set     use my original setting                                  │   
+   │   fable                                                                │   
+   │   opus                                                                 │   
+   │ ▌ sonnet                                                               │   
+   │   haiku                                                                │   
+   │   best                                                                 │   
+   │   opus[1m]                                                             │   
+   │   sonnet[1m]                                                           │   
+   │   opusplan                                                             │   
+   │                                                                        │   
+   ╰────────────────────────────────────────────────────────────────────────╯   
                                                                                 
                                                                                 
                                                                                 

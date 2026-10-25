@@ -16,7 +16,14 @@ func modalWidth(c viewCtx) int { return max(min(64, c.w-6), 30) }
 // modal draws a dialog box with the title and lines in the middle of the area.
 // A dialog that is taller than the area loses its last lines.
 func modal(c viewCtx, title string, lines []string) string {
-	w := modalWidth(c)
+	return modalSized(c, title, lines, modalWidth(c))
+}
+
+// choiceWidth is the width of a list of choices, which has room for notes.
+func choiceWidth(c viewCtx) int { return max(min(100, c.w-6), 30) }
+
+// modalSized is modal with a width of its own.
+func modalSized(c viewCtx, title string, lines []string, w int) string {
 	if room := c.h - 4; len(lines) > room {
 		lines = append(lines[:max(room-1, 0)], sMuted.Render("…"))
 	}
@@ -220,15 +227,26 @@ func (s *choiceScreen) Update(msg tea.Msg) (screen, tea.Cmd) {
 }
 
 func (s *choiceScreen) View(c viewCtx) string {
-	w := modalWidth(c) - 4
-	visible := max(min(len(s.options), c.h-9), 1)
-	start := 0
-	if s.cursor >= visible {
-		start = s.cursor - visible + 1
+	w := choiceWidth(c) - 4
+	labelW, notes := 0, false
+	for _, o := range s.options {
+		labelW = max(labelW, lipgloss.Width(o.label))
+		notes = notes || o.note != "" || o.reason != ""
 	}
-	lines := make([]string, 0, visible+3)
-	for i := start; i < start+visible && i < len(s.options); i++ {
-		o := s.options[i]
+	if notes {
+		labelW = min(labelW, w/2) // the notes get the rest and wrap
+	} else {
+		labelW = min(labelW, w-8)
+	}
+	prefixW := 2 + labelW + 2
+	if s.multi {
+		prefixW += 4
+	}
+
+	// Every option is a block of lines: its label and the first line of its
+	// note, then the rest of the note under it. Nothing is cut off.
+	blocks := make([][]string, len(s.options))
+	for i, o := range s.options {
 		mark := "  "
 		if i == s.cursor {
 			mark = selBar() + " "
@@ -240,28 +258,58 @@ func (s *choiceScreen) View(c viewCtx) string {
 				box = sAccent.Render("[x]") + " "
 			}
 		}
-		label := o.label
-		if o.disabled {
+		label := truncate(o.label, labelW)
+		switch {
+		case o.disabled:
 			label = sMuted.Render(label)
-		} else if i == s.cursor {
+		case i == s.cursor:
 			label = sBold.Render(label)
 		}
-		line := mark + box + label
-		if o.note != "" {
-			line += "  " + sMuted.Render(o.note)
-		}
+		note := o.note
 		if o.disabled && o.reason != "" {
-			line += "  " + sMuted.Render(truncate(o.reason, max(w-lipgloss.Width(line)-2, 8)))
+			note = strings.TrimSpace(note + "  " + o.reason)
 		}
-		lines = append(lines, line)
+		text := wrapText(note, max(w-prefixW, 10))
+		if len(text) == 0 {
+			text = []string{""}
+		}
+		for k, t := range text {
+			if k == 0 {
+				blocks[i] = append(blocks[i], mark+box+pad(label, labelW+2)+sMuted.Render(t))
+			} else {
+				blocks[i] = append(blocks[i], strings.Repeat(" ", prefixW)+sMuted.Render(t))
+			}
+		}
 	}
-	if len(s.options) > visible {
+
+	room := max(c.h-9, 3)
+	start := 0
+	for used := 0; ; start++ {
+		used = 0
+		for i := start; i <= s.cursor && i < len(blocks); i++ {
+			used += len(blocks[i])
+		}
+		if used <= room || start >= s.cursor {
+			break
+		}
+	}
+	var lines []string
+	end := start
+	for end < len(blocks) && len(lines)+len(blocks[end]) <= room {
+		lines = append(lines, blocks[end]...)
+		end++
+	}
+	if end <= s.cursor && end < len(blocks) { // a block taller than the room still shows its start
+		lines = append(lines, blocks[end][:min(len(blocks[end]), max(room-len(lines), 1))]...)
+		end++
+	}
+	if end-start < len(s.options) {
 		lines = append(lines, sMuted.Render(fmt.Sprintf("  %d of %d", s.cursor+1, len(s.options))))
 	}
 	if s.err != "" {
 		lines = append(lines, "", sErr.Render(truncate(s.err, w)))
 	}
-	return modal(c, s.title, lines)
+	return modalSized(c, s.title, lines, choiceWidth(c))
 }
 
 func (s *choiceScreen) Hints() []hint {

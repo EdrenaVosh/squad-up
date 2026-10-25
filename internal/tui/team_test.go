@@ -112,3 +112,41 @@ func TestOrderOnlyFlowWarnsWhenNoMainAgentCarriesIt(t *testing.T) {
 	}
 	h.contains("in order", "No main agent")
 }
+
+func TestTheAgentsTableHasAHeaderAndRoomForTheRole(t *testing.T) {
+	h := newHarness(t)
+	h.open("solo-indie")
+	h.contains("SLOT", "AGENT", "MODEL", "EFFORT", "ACCESS", "CONTEXT")
+	h.lacks("ROLE") // no room at 80 columns
+
+	h.resize(140, 40)
+	h.contains("ROLE", "Breaks a task into steps.", "ABOUT  planner", "Breaks a task into steps. Use before starting any large change.")
+	h.press("down", "down", "down", "down", "down", "down", "down", "down") // Team flow
+	h.contains("ABOUT  Team flow", "How the agents work as a team")
+}
+
+func TestTheNotesOfAChoiceWrapInsteadOfBeingCutOff(t *testing.T) {
+	h := newHarness(t)
+	h.open("solo-indie")
+	h.press("down", "down", "down", "down", "down", "down", "down", "down", "enter") // Team flow
+
+	h.contains("Off", "In order", "Review loop", "separate helpers: Claude calls them as it sees fit", "the last check sends defects back to the one who fixes", "them")
+	h.lacks("…")
+}
+
+func TestTheEquippedPresetShowsItsMascotsAtWork(t *testing.T) {
+	h := equipped(t, "solo-indie")
+	h.resize(160, 44)
+
+	h.contains("▐▛███▜▌", "▝▜█████▛▘") // a big tile of a live preset has the mascot in its corner
+	h.goTo("bug-hunt")
+	h.lacks("▐▛███▜▌") // a preset that is not equipped has none
+}
+
+func TestTheMascotsComeToTheEquipCelebration(t *testing.T) {
+	h := newHarness(t)
+	h.open("bug-hunt")
+	h.press("e", "enter")
+
+	h.contains("Squad ready", "▐▛███▜▌")
+}

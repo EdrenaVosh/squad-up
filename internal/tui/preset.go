@@ -301,6 +301,12 @@ func (p *presetScreen) View(c viewCtx) string {
 	add(" " + sMuted.Render(truncate(p.card.Description, inner-2)))
 	add("")
 	add(" " + sMuted.Render("AGENTS"))
+	if len(p.card.Agents) > 0 {
+		add(p.agentHeader(inner))
+		if c.h >= 30 {
+			add("   " + fg(cDim).Render(strings.Repeat("─", max(inner-6, 0))))
+		}
+	}
 	for i, a := range p.card.Agents {
 		add(p.slotLine(i, a, inner))
 	}
@@ -326,6 +332,13 @@ func (p *presetScreen) View(c viewCtx) string {
 	} {
 		add(p.line(row{kind: s.kind}, sMuted.Render(pad(s.label, 16))+s.value, inner))
 	}
+	if c.h >= 32 && !p.readOnly {
+		add("")
+		add(" " + sMuted.Render("ABOUT  ") + sBold.Render(p.aboutTitle()))
+		for _, l := range wrapText(p.about(), inner-6) {
+			add("   " + sMuted.Render(l))
+		}
+	}
 	add("")
 	add(" " + sMuted.Render("LINT  ") + lintWord(p.card) + sMuted.Render(fmt.Sprintf("  ·  ~%d tokens/session for names and descriptions", p.card.SessionTokens)))
 	shown := 0
@@ -339,15 +352,100 @@ func (p *presetScreen) View(c viewCtx) string {
 	return c.box(title, right, lines, 0)
 }
 
+// The columns of the agents table.
+const (
+	colSlot, colAgent, colModel, colEffort, colAccess, colContext = 8, 16, 10, 13, 14, 11
+	roleMin                                                       = 24 // the least width worth a Role column
+)
+
+// roleRoom is how much room is left for the Role column, when the table has
+// the Context column or not.
+func (p *presetScreen) roleRoom(inner int) int {
+	used := 3 + colSlot + colAgent + colModel + colEffort + colAccess
+	if p.card.Sharing {
+		used += colContext
+	}
+	return inner - used - 1
+}
+
+// agentHeader names the columns of the agents table.
+func (p *presetScreen) agentHeader(inner int) string {
+	head := pad("SLOT", colSlot) + pad("AGENT", colAgent) + pad("MODEL", colModel) + pad("EFFORT", colEffort) + pad("ACCESS", colAccess)
+	if p.card.Sharing {
+		head += pad("CONTEXT", colContext)
+	}
+	if p.roleRoom(inner) >= roleMin {
+		head += "ROLE"
+	}
+	return truncate("   "+sMuted.Render(head), inner)
+}
+
 // slotLine draws one agent row, with the cursor if it is the current one.
 func (p *presetScreen) slotLine(i int, a workspace.AgentInfo, inner int) string {
-	text := fmt.Sprintf("%s  %s %s %s %s %s",
-		sMuted.Render(fmt.Sprintf("SLOT %d", i+1)), swatch(a.Color),
-		pad(sBold.Render(truncate(a.Name, 14)), 14), pad(modelPill(a.Model), 10), pad(effortBars(a.Effort), 14), pad(permissionStrength(a.PermissionMode), 22))
+	text := pad(sMuted.Render(fmt.Sprintf("SLOT %d", i+1)), colSlot) +
+		pad(swatch(a.Color)+" "+sBold.Render(truncate(a.Name, colAgent-2)), colAgent) +
+		pad(modelPill(a.Model), colModel) + pad(effortBars(a.Effort), colEffort) + pad(permissionStrength(a.PermissionMode), colAccess)
 	if p.card.Sharing {
-		text += shareChip(a.Shared)
+		text += pad(shareChip(a.Shared), colContext)
+	}
+	if room := p.roleRoom(inner); room >= roleMin {
+		text += sMuted.Render(truncate(a.Role, room))
 	}
 	return p.line(row{kind: rowAgent, agent: i}, text, inner)
+}
+
+// aboutTitle and about explain the row under the cursor.
+func (p *presetScreen) aboutTitle() string {
+	r, ok := p.current()
+	if !ok {
+		return ""
+	}
+	switch r.kind {
+	case rowAgent:
+		return p.card.Agents[r.agent].Name
+	case rowAdd:
+		return "Add agent"
+	case rowModel:
+		return "Default model"
+	case rowEffort:
+		return "Effort"
+	case rowPerms:
+		return "Permissions"
+	case rowMain:
+		return "Main agent"
+	case rowFlow:
+		return "Team flow"
+	case rowMode:
+		return "Mode"
+	}
+	return ""
+}
+
+func (p *presetScreen) about() string {
+	r, ok := p.current()
+	if !ok {
+		return ""
+	}
+	switch r.kind {
+	case rowAgent:
+		a := p.card.Agents[r.agent]
+		return orDash(a.Description, "This agent has no description yet: Claude cannot tell when to call it.")
+	case rowAdd:
+		return "Adds a new agent to the preset and opens its editor. Reorder the slots with K and J."
+	case rowModel:
+		return "The model every agent uses unless it names its own. Not set keeps the one from your original setup."
+	case rowEffort:
+		return "How hard the model thinks by default: low is quick and cheap, xhigh is slow and deep. An agent can set its own."
+	case rowPerms:
+		return "What Claude may do without asking: the permission mode and the allow, ask and deny rules."
+	case rowMain:
+		return "The agent that becomes the session itself: its prompt replaces Claude Code's own system prompt, and it leads the squad's flow. None keeps Claude Code's."
+	case rowFlow:
+		return "How the agents work as a team: separate helpers, in slot order, or in order with a review loop that sends defects back to whoever fixes them."
+	case rowMode:
+		return "Replace removes your own agents while the preset is equipped; extend keeps them next to the preset's."
+	}
+	return ""
 }
 
 // line prefixes a row with the cursor when the row is the current one.

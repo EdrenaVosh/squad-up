@@ -3,7 +3,6 @@ package tui
 import (
 	"fmt"
 	"image/color"
-	"math"
 	"strings"
 
 	"github.com/EdrenaVosh/squadup/internal/workspace"
@@ -33,21 +32,9 @@ type tileOpts struct {
 	w        int  // outer width; 0 is the size of the kind of tile
 	stage    int  // how far it has appeared: 0 an outline, 1 the name, 2 everything
 	selected bool // the agent the cursor is on
-	live     bool // the preset is equipped: the tile shows a heartbeat
+	live     bool // the preset is equipped: the tile shows its working mascot
 	frame    int  // the animation frame
 	team     bool // the agents work as a squad, so the tile says if it shares the notes
-}
-
-// equalizer is four bars that move: the agents of an equipped preset are alive.
-func equalizer(frame, slot int) string {
-	const levels = "▁▂▃▄▅▆▇█"
-	runes := []rune(levels)
-	var b strings.Builder
-	for k := 0; k < 4; k++ {
-		phase := float64(frame)/3 + float64(slot)*1.7 + float64(k)*1.1
-		b.WriteRune(runes[int((math.Sin(phase)+1)/2*7.99)])
-	}
-	return b.String()
 }
 
 // tileSize is the outer size of a tile.
@@ -81,12 +68,8 @@ func agentTile(a workspace.AgentInfo, slot int, o tileOpts) []string {
 
 	head := fmt.Sprintf("%s %d ", corners[4], slot)
 	tail := ""
-	if o.live && o.stage == 2 {
-		if o.frame > 0 {
-			tail = " " + fg(brandStops[0]).Render(equalizer(o.frame, slot)) + " "
-		} else {
-			tail = " " + fg(brandStops[0]).Render("●") + " "
-		}
+	if o.live && o.stage == 2 && !o.big {
+		tail = " " + miniMascot(o.frame, slot) + " "
 	}
 	fill := inner - len([]rune(head)) - lipglossWidth(tail)
 	top := border.Render(corners[0]+head) + border.Render(strings.Repeat(corners[4], max(fill, 0))) + tail + border.Render(corners[1])
@@ -121,10 +104,18 @@ func agentTile(a workspace.AgentInfo, slot int, o tileOpts) []string {
 		}
 		nameRow = pad(nameRow, inner-3) + mark
 	}
+	var m []string // the working mascot, in the corner of a big tile of an equipped preset
+	if o.big && o.live && o.stage == 2 {
+		m = mascot(o.frame, slot)
+		nameRow = pad(swatch(a.Color)+" "+truncate(sBold.Render(a.Name), inner-4-mascotW-2), inner-2-mascotW) + m[0] + " "
+		if o.selected {
+			nameRow = pad(swatch(a.Color)+" "+truncate(sAccent.Render(a.Name), inner-4-mascotW-2), inner-2-mascotW) + m[0] + " "
+		}
+	}
 	lines = append(lines, row(nameRow))
 	if o.stage >= 2 {
 		if o.big {
-			lines = append(lines, bigTileBody(a, inner, row, o.team)...)
+			lines = append(lines, bigTileBody(a, inner, row, o.team, m)...)
 		} else {
 			lines = append(lines,
 				row(modelOrDashW(a.Model, inner-2)),
@@ -141,8 +132,12 @@ func agentTile(a workspace.AgentInfo, slot int, o tileOpts) []string {
 
 // bigTileBody is what the large tile shows under the name: what the agent is
 // for, then its model, effort, access and tools, each with a label.
-func bigTileBody(a workspace.AgentInfo, inner int, row func(string) string, team bool) []string {
+func bigTileBody(a workspace.AgentInfo, inner int, row func(string) string, team bool, m []string) []string {
 	out := []string{row(""), row(fg(cDim).Render(strings.Repeat("─", inner-2)))}
+	if m != nil { // the mascot stands to the right of the rule's first cells
+		out[0] = row(pad("", inner-2-mascotW) + m[1] + " ")
+		out[1] = row(pad(fg(cDim).Render(strings.Repeat("─", inner-3-mascotW)), inner-2-mascotW) + m[2] + " ")
+	}
 	role := wrapText(orDash(a.Role, "No description yet."), inner-2)
 	for i := 0; i < 2; i++ {
 		text := ""

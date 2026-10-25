@@ -93,6 +93,16 @@ func (e *equipScreen) doneLines(c viewCtx) []string {
 			colors = append(colors, a.Color)
 		}
 	}
+	if n := min(len(names), 8); n > 0 {
+		mf := f
+		if !c.anim {
+			mf = 0
+		}
+		for _, l := range mascotRow(n, mf, 3) {
+			lines = append(lines, center(l, inner))
+		}
+		lines = append(lines, "")
+	}
 	for i, name := range names {
 		arrived := f >= 4+3*i
 		mark := spinner(f)
