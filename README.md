@@ -108,13 +108,16 @@ squad export        share a team as one file (and `squad import` to take one)
 squad usage --watch see how many tokens each agent spends, live
 ```
 
+> [!IMPORTANT]
+> **Your current settings are saved, and you can always get them back.** The first time you run `squad`, it saves your Claude Code setup (your agents in `~/.claude/agents` and the settings it manages) as the preset **Initial**. Nothing is lost whatever you try afterwards: `squad restore` returns your setup exactly as it was, `squad undo` goes back one step, and every change is backed up first. Manual edits you made to files squad wrote are never overwritten without asking.
+
 ### 1. Open the interface
 
 ```sh
 squad
 ```
 
-On the first run squad-up saves your current setup (the agents and a few settings from `~/.claude`) as **Initial**, a read-only preset you can always return to, and says so. Nothing is changed. Then the main screen opens: presets on the left, the agents of the selected one on the right.
+On the first run squad-up **saves your current setup** (the agents and a few settings from `~/.claude`) as **Initial**, a read-only preset you can always return to with `squad restore`, and says so. Nothing is changed. Then the main screen opens: presets on the left, the agents of the selected one on the right.
 
 - Press `n` to create a preset. The first option is **a starter template** ([Bug Hunter or Feature Creator](#starter-templates)); the others are a blank preset or a copy of a preset (or of your original setup). The name is free text.
 - Press `enter` to open a preset and `a` to edit the selected agent: model, effort, tools, permissions, the description that tells Claude when to call it, and its prompt.
