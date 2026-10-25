@@ -1,6 +1,6 @@
 # Records docs/assets/demo.gif with vhs (https://github.com/charmbracelet/vhs):
 # a new preset from the Bug Hunter template, then, in the shell, the preset
-# used for a session with `squad run`, with a check that its agents are there.
+# used for a session with `squad run`.
 #
 #   brew install vhs
 #   make build && make sandbox-reset      # an empty sandbox: no presets yet
@@ -9,11 +9,10 @@
 # Everything runs on the sandbox, and HOME points into it, so the prompt is a
 # bare "$" and nothing in the recording names your account or folders.
 #
-# The last command asks the real Claude Code (haiku, one short question, a few
-# cents) whether the agents of the preset are available. Claude keeps its login
-# in your real home, so that command gets your real HOME back (saved in
-# REAL_HOME before it is pointed into the sandbox); squad run writes nothing to
-# any Claude config. Be logged in to claude before recording.
+# The last command starts the real Claude Code with the preset. Claude keeps
+# its login in your real home, so that command gets your real HOME back (saved
+# in REAL_HOME before it is pointed into the sandbox); squad run writes nothing
+# to any Claude config. Be logged in to claude before recording.
 Output docs/assets/demo.gif
 
 Set Shell "bash"
@@ -58,8 +57,8 @@ Sleep 1500ms
 Type "q"
 Sleep 1s
 
-# 5. Use the preset for this session with squad run, and ask Claude whether its agents are there
-Type@6ms `env -u CLAUDE_CONFIG_DIR HOME=$REAL_HOME squad run bug-hunter -- -p "Are these subagents available to you: debugger, fixer, reviewer, tester? Answer with one line per name, like: name - yes or name - no. Nothing else." --model haiku --no-session-persistence`
+# 5. Use the preset for this session with squad run
+Type "env -u CLAUDE_CONFIG_DIR HOME=$REAL_HOME squad run bug-hunter"
 Sleep 1500ms
 Enter
-Sleep 25s
+Sleep 8s

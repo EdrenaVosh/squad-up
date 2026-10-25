@@ -260,3 +260,5 @@ Renamed everywhere before anything was published, so nothing outside this machin
 - **An existing library is not found under the new name.** Whoever ran an earlier build moves it once: `mv ~/.squadup ~/.squad-up`. No fallback to the old folder was written, because nobody else has one.
 - **Files exported before the rename** (`"format":"squadup-preset"`) are not accepted by `squad import`, for the same reason.
 - The folder of this checkout on disk is still called `squadup`; that is not part of the product.
+
+**The demo ends with a plain `squad run bug-hunter`.** The question to Claude about the four agents was dropped from the script (and with it the cost of a request while recording): the script creates the preset from the template, leaves the interface and starts Claude Code with it. It still runs with the real `HOME` and without `CLAUDE_CONFIG_DIR`, because that is where Claude's login is. Where the interface part ends with `squad run`, the answer "all four agents are there" from the earlier paragraph was seen once, by hand, and is covered by `TestTheBugHunterTemplateRunsWithItsFourAgents`.
