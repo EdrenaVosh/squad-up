@@ -1,6 +1,7 @@
 # Records docs/assets/demo.gif with vhs (https://github.com/charmbracelet/vhs):
 # a new preset from the Bug Hunter template, then, in the shell, the preset
-# used for a session with `squad run`.
+# used for a Claude Code session with `squad run`, a hello, and the token
+# report that squad run prints when the session ends.
 #
 #   brew install vhs
 #   make build && make sandbox-reset      # an empty sandbox: no presets yet
@@ -9,13 +10,14 @@
 # Everything runs on the sandbox, and HOME points into it, so the prompt is a
 # bare "$" and nothing in the recording names your account or folders.
 #
-# The last command starts the real Claude Code with the preset. Claude keeps
-# its login in your real home, so while hidden the script defines a small
-# `squad` function that gives `squad run` your real HOME back (saved in
-# REAL_HOME before it is pointed into the sandbox); every other command stays in
-# the sandbox, and squad run writes nothing to any Claude config. What is typed
-# on screen is just `squad run bug-hunter`. Be logged in to claude before
-# recording.
+# The last steps start the real Claude Code with the preset, say hello to it
+# (one short message, a few cents, kept in your Claude session history) and end
+# the session. Claude keeps its login in your real home, so while hidden the
+# script defines a small `squad` function that gives `squad run` your real HOME
+# back (saved in REAL_HOME before it is pointed into the sandbox); every other
+# command stays in the sandbox, and squad run writes nothing to any Claude
+# config. What is typed on screen is just `squad run bug-hunter`. Be logged in
+# to claude before recording.
 Output docs/assets/demo.gif
 
 Set Shell "bash"
@@ -67,3 +69,15 @@ Type "squad run bug-hunter"
 Sleep 1500ms
 Enter
 Sleep 8s
+
+# 6. Say hello to Claude, wait for the answer
+Type "Hello Claude! Squad is here!"
+Sleep 800ms
+Enter
+Sleep 15s
+
+# 7. End the session: squad run then prints the usage report of the squad
+Type "/exit"
+Sleep 800ms
+Enter
+Sleep 5s
