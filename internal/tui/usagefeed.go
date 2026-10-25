@@ -2,6 +2,7 @@ package tui
 
 import (
 	"image/color"
+	"path/filepath"
 	"time"
 
 	"github.com/EdrenaVosh/squadup/internal/usage"
@@ -11,18 +12,33 @@ import (
 // usageInterval is how often the token report is read again.
 const usageInterval = time.Second
 
-// usageFeed is the live report of the latest Claude Code session of the folder
-// the interface was started in. The app refreshes it on a one-second clock; the
+// maxSessions is how many sessions of a folder the feed follows.
+const maxSessions = 15
+
+// activeWindow is how recently a session must have been written to for the
+// main screen to call it running.
+const activeWindow = 2 * time.Minute
+
+// sessionView is one session of the folder as the feed follows it.
+type sessionView struct {
+	id      string
+	last    time.Time
+	head    usage.Head
+	watcher *usage.Watcher
+	report  usage.Report
+	base    map[string]usage.Tokens // the counts when z was pressed
+}
+
+// usageFeed follows the newest sessions of the folder the interface was started
+// in. Sessions come and go: a new one appears in the list within a second, a
+// deleted one is dropped. The app refreshes the feed on a one-second clock; the
 // screens only read it.
 type usageFeed struct {
 	claudeDir, cwd string
 	now            func() time.Time
 
-	watcher *usage.Watcher
-	session string
-	report  usage.Report
-	base    map[string]usage.Tokens
-	colors  map[string]string // agent name → Claude Code color
+	sessions []*sessionView    // newest first
+	colors   map[string]string // agent name → Claude Code color
 }
 
 func newUsageFeed(claudeDir, cwd string, now func() time.Time) *usageFeed {
@@ -31,38 +47,85 @@ func newUsageFeed(claudeDir, cwd string, now func() time.Time) *usageFeed {
 	return f
 }
 
-// refresh reads what the session wrote since the last time. When a newer
-// session has started in the folder, the feed follows it.
+// refresh lists the sessions again and reads what each wrote since the last
+// time. A session that is not on the disk any more is dropped; one that is new
+// gets a watcher, and its head (when it started, what it was first asked) is
+// read until there is something to show.
 func (f *usageFeed) refresh() {
-	session, ok := usage.LatestSession(f.claudeDir, f.cwd)
-	if !ok {
-		f.report = usage.Report{}
-		return
+	listed := usage.ListSessions(f.claudeDir, f.cwd, maxSessions)
+	known := map[string]*sessionView{}
+	for _, v := range f.sessions {
+		known[v.id] = v
 	}
-	if session != f.session || f.watcher == nil {
-		f.session = session
-		f.watcher = usage.NewWatcher(usage.ProjectDir(f.claudeDir, f.cwd), session)
-		f.watcher.Now = f.now
-		f.base = nil
+	dir := usage.ProjectDir(f.claudeDir, f.cwd)
+	next := make([]*sessionView, 0, len(listed))
+	for _, s := range listed {
+		v := known[s.ID]
+		if v == nil {
+			v = &sessionView{id: s.ID, watcher: usage.NewWatcher(dir, s.ID)}
+			v.watcher.Now = f.now
+		}
+		v.last = s.Last
+		if v.head.Prompt == "" || v.head.Started.IsZero() {
+			v.head = usage.ReadHead(filepath.Join(dir, s.ID+".jsonl"))
+		}
+		if report, err := v.watcher.Refresh(); err == nil {
+			v.report = report
+		}
+		next = append(next, v)
 	}
-	report, err := f.watcher.Refresh()
-	if err != nil {
-		return
+	f.sessions = next
+}
+
+// find is the session with the id, or nil.
+func (f *usageFeed) find(id string) *sessionView {
+	for _, v := range f.sessions {
+		if v.id == id {
+			return v
+		}
 	}
-	f.report = report
+	return nil
+}
+
+// latest is the newest session, or nil when the folder has none.
+func (f *usageFeed) latest() *sessionView {
+	if len(f.sessions) == 0 {
+		return nil
+	}
+	return f.sessions[0]
+}
+
+// running counts the sessions that were written to in the last two minutes.
+func (f *usageFeed) running() int {
+	n := 0
+	for _, v := range f.sessions {
+		if f.now().Sub(v.last) < activeWindow {
+			n++
+		}
+	}
+	return n
+}
+
+// working counts the subagents of the session that are running now.
+func (v *sessionView) working() int {
+	n := 0
+	for _, a := range v.report.Agents {
+		n += a.Running
+	}
+	return n
 }
 
 // shown is the report with the baseline taken off, when one is set.
-func (f *usageFeed) shown() usage.Report {
-	r := f.report
-	if f.base == nil {
+func (v *sessionView) shown() usage.Report {
+	r := v.report
+	if v.base == nil {
 		return r
 	}
 	agents := make([]usage.Agent, len(r.Agents))
 	copy(agents, r.Agents)
 	r.Total = usage.Tokens{}
 	for i, a := range agents {
-		b := f.base[a.Name]
+		b := v.base[a.Name]
 		a.Tokens = usage.Tokens{
 			Input: max(a.Tokens.Input-b.Input, 0), CacheWrite: max(a.Tokens.CacheWrite-b.CacheWrite, 0),
 			CacheRead: max(a.Tokens.CacheRead-b.CacheRead, 0), Output: max(a.Tokens.Output-b.Output, 0), Calls: max(a.Tokens.Calls-b.Calls, 0),
@@ -78,15 +141,15 @@ func (f *usageFeed) shown() usage.Report {
 	return r
 }
 
-// zero starts counting from now, or goes back to counting the whole session.
-func (f *usageFeed) zero() (started bool) {
-	if f.base != nil {
-		f.base = nil
+// zero starts counting this session from now, or goes back to counting all of it.
+func (v *sessionView) zero() (started bool) {
+	if v.base != nil {
+		v.base = nil
 		return false
 	}
-	f.base = map[string]usage.Tokens{}
-	for _, a := range f.report.Agents {
-		f.base[a.Name] = a.Tokens
+	v.base = map[string]usage.Tokens{}
+	for _, a := range v.report.Agents {
+		v.base[a.Name] = a.Tokens
 	}
 	return true
 }

@@ -64,19 +64,29 @@ Sleep 900ms
 Right
 Sleep 1200ms
 
-# 6. Equip it: what would change is shown first
+# 6. Equip it: the screen shows exactly what would change, then y equips
 Type "e"
-Sleep 2500ms
-Enter
-Sleep 4500ms
+Sleep 4s
+Type "y"
+Sleep 5s
 Escape
 Sleep 3500ms
 
-# 7. The agents are at work (the orange mascots), then back to how it was
+# 7. The team is equipped: the agents are at work (the orange mascots)
+Right
+Sleep 1500ms
+Right
+Sleep 2500ms
+
+# 8. Proof in the shell: its agents are now in the Claude config, and restore puts yours back
 Type "q"
 Sleep 600ms
-Type "squad restore"
+Type "ls $CLAUDE_CONFIG_DIR/agents"
 Enter
-Sleep 600ms
-Type "y"
+Sleep 3s
+Type "squad restore --yes"
+Enter
+Sleep 3s
+Type "ls $CLAUDE_CONFIG_DIR/agents"
+Enter
 Sleep 3s

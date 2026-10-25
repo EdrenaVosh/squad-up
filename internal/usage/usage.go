@@ -270,7 +270,8 @@ func (w *Watcher) read(path string) (*transcript, error) {
 // so a message counts once; a later record of the same message replaces the
 // earlier one, because the output grows as it streams.
 func (t *transcript) take(line []byte) {
-	if len(line) == 0 || !gjson.ValidBytes(line) {
+	// Most lines of a transcript carry no usage; skip them without parsing.
+	if len(line) == 0 || !bytes.Contains(line, []byte(`"usage"`)) || !gjson.ValidBytes(line) {
 		return
 	}
 	rec := gjson.ParseBytes(line)
@@ -314,4 +315,109 @@ func tenth(n, unit int) string {
 		return strconv.Itoa(whole)
 	}
 	return strconv.Itoa(whole) + "." + strconv.Itoa(frac)
+}
+
+// Session is a session of a folder, as listed.
+type Session struct {
+	ID   string
+	Last time.Time // when its transcript was last written to
+}
+
+// ListSessions lists the newest sessions of the project in cwd, at most limit,
+// newest first. A folder with no sessions gives nil.
+func ListSessions(claudeDir, cwd string, limit int) []Session {
+	entries, err := os.ReadDir(ProjectDir(claudeDir, cwd))
+	if err != nil {
+		return nil
+	}
+	var out []Session
+	for _, e := range entries {
+		name, ok := strings.CutSuffix(e.Name(), ".jsonl")
+		if !ok || e.IsDir() {
+			continue
+		}
+		info, err := e.Info()
+		if err != nil {
+			continue
+		}
+		out = append(out, Session{ID: name, Last: info.ModTime()})
+	}
+	slices.SortFunc(out, func(a, b Session) int {
+		if c := b.Last.Compare(a.Last); c != 0 {
+			return c
+		}
+		return strings.Compare(a.ID, b.ID)
+	})
+	if limit > 0 && len(out) > limit {
+		out = out[:limit]
+	}
+	return out
+}
+
+// Head is what the start of a transcript says about the session.
+type Head struct {
+	Started time.Time
+	Prompt  string // the first thing the person asked, on one line
+}
+
+// maxHead is how much of a transcript is read to find its head.
+const maxHead = 256 * 1024
+
+// maxPrompt is the longest prompt kept, in characters.
+const maxPrompt = 100
+
+// ReadHead reads when a session started and what it was first asked. Lines that
+// are not a person's own words are skipped: meta records, and the wrappers
+// Claude Code puts around slash commands.
+func ReadHead(path string) Head {
+	f, err := os.Open(path)
+	if err != nil {
+		return Head{}
+	}
+	defer func() { _ = f.Close() }()
+	buf := make([]byte, maxHead)
+	n, _ := io.ReadFull(f, buf)
+	buf = buf[:n]
+
+	var h Head
+	for _, line := range bytes.Split(buf, []byte{'\n'}) {
+		if len(line) == 0 || !gjson.ValidBytes(line) {
+			continue
+		}
+		rec := gjson.ParseBytes(line)
+		if h.Started.IsZero() {
+			h.Started, _ = time.Parse(time.RFC3339Nano, rec.Get("timestamp").String())
+		}
+		if rec.Get("type").String() != "user" || rec.Get("isMeta").Bool() {
+			continue
+		}
+		if text := promptText(rec.Get("message.content")); text != "" {
+			h.Prompt = text
+			break
+		}
+	}
+	return h
+}
+
+// promptText is the text of a user message, or "" when it is not a person's own words.
+func promptText(content gjson.Result) string {
+	text := content.String()
+	if content.IsArray() {
+		text = ""
+		content.ForEach(func(_, part gjson.Result) bool {
+			if part.Get("type").String() == "text" {
+				text = part.Get("text").String()
+				return false
+			}
+			return true
+		})
+	}
+	text = strings.Join(strings.Fields(text), " ")
+	if text == "" || strings.HasPrefix(text, "<") || strings.HasPrefix(text, "Caveat:") {
+		return ""
+	}
+	if r := []rune(text); len(r) > maxPrompt {
+		text = string(r[:maxPrompt-1]) + "…"
+	}
+	return text
 }

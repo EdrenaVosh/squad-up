@@ -6,28 +6,28 @@
                                                                                                                                             
                                                                                                                                             
                                                                                                                                             
-          ╭─ Usage ────────────────────────────────────────────────────────────────────────────────────── session s1 · 13:30:00 ─╮          
-          │ ▐▛█▜▌ 1 agent working  42k tokens so far                                                                             │          
-          │                                                                                                                      │          
-          │ AGENT             STATE          RUNS  SENT    CACHED  OUT     TOTAL    SHARE                                        │          
-          │ ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────── │          
-          │ ■ main            ▐▛█▜▌ active   —     17k     35k     530     17k      ████████████████░░░░░░░░░░░░░░░░░░░░░░  42%  │          
-          │ ■ reviewer        done           1     20k     0       55      20k      ███████████████████░░░░░░░░░░░░░░░░░░░  50%  │          
-          │ ■ tester          ▐▛█▜▌ working  1     3k      12k     700     3.7k     ███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   9%  │          
-          │ ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────── │          
-          │ SQUAD                            2     40k     47k     1.2k    42k      ██████████████████████████████████████ 100%  │          
-          │                                                                                                                      │          
-          │ CACHE HIT         ███████████░░░░░░░░░  53% of the input was read from the cache                                     │          
-          │                                                                                                                      │          
-          │ SENT is fresh input plus what was written to the cache; CACHED is what was read back from it (cheap, so it is left   │          
-          │ out of TOTAL). TOTAL is SENT plus OUT, the way Claude Code counts a run. Numbers come from the session's own         │          
-          │ transcripts, not from an estimate.                                                                                   │          
-          │                                                                                                                      │          
-          │                                                                                                                      │          
-          │                                                                                                                      │          
-          │                                                                                                                      │          
-          │                                                                                                                      │          
-          ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯          
+          ╭─ Usage ─────────────────────────────────────────────────────────────────────────────────── 1 session in this folder ─╮          
+          │ SESSIONS                             │ ▐▛█▜▌ 1 agent working  42k tokens                                             │          
+          │                                      │ began 12:30 · last activity just now                                          │          
+          │ ▌ ▐▛█▜▌ 12:30  42k tokens            │  Make the login page faster                                                   │          
+          │     Make the login page faster       │                                                                               │          
+          │                                      │ AGENT           STATE         RUNS SENT   CACHED OUT    TOTAL   SHARE         │          
+          │                                      │ ───────────────────────────────────────────────────────────────────────────── │          
+          │                                      │ ■ main          ▐▛█▜▌ active  —    17k    35k    530    17k     ███░░░░  42%  │          
+          │                                      │ ■ reviewer      done          1    20k    0      55     20k     ███░░░░  50%  │          
+          │                                      │ ■ tester        ▐▛█▜▌ working 1    3k     12k    700    3.7k    █░░░░░░   9%  │          
+          │                                      │ ───────────────────────────────────────────────────────────────────────────── │          
+          │                                      │ SQUAD                         2    40k    47k    1.2k   42k     ███████ 100%  │          
+          │                                      │                                                                               │          
+          │                                      │ CACHE HIT       ████████░░░░░░░░  53% of the input came from the cache        │          
+          │                                      │                                                                               │          
+          │                                      │ SENT is fresh input plus cache writes; CACHED is read back from the cache     │          
+          │                                      │ (cheap, so it is not in TOTAL); TOTAL is SENT plus OUT, as Claude Code        │          
+          │                                      │ counts a run. The numbers come from the session's own transcripts, not from   │          
+          │                                      │ an estimate.                                                                  │          
+          │                                      │                                                                               │          
+          │                                      │                                                                               │          
+          ╰──────────────────────────────────────┴───────────────────────────────────────────────────────────────────────────────╯          
                                                                                                                                             
                                                                                                                                             
                                                                                                                                             
@@ -37,4 +37,4 @@
                                                                                                                                             
                                                                                                                                             
                                                                                                                                             
-  z  count from now   esc  back   ?  help
+  ↑↓  session   z  count from now   esc  back   ?  help

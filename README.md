@@ -202,13 +202,15 @@ squad edit bugs reviewer --independent        # --independent=false undoes it
 
 A subagent never sees the conversation, only the task its caller writes for it. So independence is done in three places, all in text: the agent's system prompt gets a short charter (work from the task and instructions, don't rely on or ask for other agents' conclusions, say what is missing instead of guessing, be impartial); its description tells whoever calls it to give only the task and instructions; and the main agent is told which agents are independent and to give them nothing from other agents' reasoning. Its tools, `CLAUDE.md` and repository access stay as they are, so it can still follow review rules kept in your repository if its prompt says where they are. Claude Code does not enforce any of this, and a model can ignore it.
 
-### Live tokens
+### Live tokens, session by session
 
 ```sh
 squad usage --watch        # or press u on the main screen
 ```
 
-A live report for the newest Claude Code session in the folder: the main session and every subagent, with a state (a working mascot while a subagent runs), runs, tokens sent, read from the cache, produced, the total, each one's share of the squad, and the cache hit rate. `z` starts counting from now, which measures one task. `squad run` prints the table when `claude` exits, and `squad usage --json` is there for scripts.
+A live screen with the **sessions of the folder** in a list (when each began, what it has spent, what it was first asked, and a working mascot while it runs) and, for the selected one, the main session and every subagent: state, runs, tokens sent, read from the cache, produced, the total, each one's share of the squad, and the cache hit rate. The list follows the disk: a session that starts appears within a second, one that is deleted goes away, and your selection stays on its session. Session ids are not shown there, because there can be many; `z` starts counting the selected session from now, which measures one task. The main screen has a small panel with the newest session.
+
+On the command line, `squad usage` prints the newest session of the folder, `squad usage --list` lists the sessions with their ids and first prompts, and `squad usage --session <id>` (or `--json`) shows a particular one.
 
 The numbers are **not estimated**. Claude Code records the API's own token counts for every message, and squad reads them from `~/.claude/projects/<project>/<session>.jsonl` and `<session>/subagents/agent-<id>.jsonl`. Like Claude Code's own count, *total* is fresh input plus cache writes plus output; cache reads, which cost a fraction, are shown beside it.
 
@@ -266,7 +268,7 @@ Neither template has a main agent, so the flow reaches Claude Code through `squa
 | `squad clone <preset> <new>` · `rename` · `rm` | Copy, rename or delete a preset (Initial is never changed) |
 | `squad edit <preset> [agent]` | Edit in the interface (`--raw`: in `$EDITOR`; `--prompt-file <file.md>`; `--independent[=false]`) |
 | `squad flow <preset>` | Show or set the team flow: `--order`, or `--gate <agent> --fix <agent> [--rounds n]`, `--off` |
-| `squad usage` | Tokens per agent for a session (`--watch`, `--json`, `--session`, `--dir`) |
+| `squad usage` | Tokens per agent for a session (`--watch` opens the live screen of all sessions; `--list`, `--session <id>`, `--dir`, `--json`) |
 | `squad models` | Which models you can use (`--probe`, `--releases`, `--json`) |
 | `squad lint [preset]` | Check agents and presets (`--strict`, `--json`) |
 | `squad templates` | The two starter presets |

@@ -314,3 +314,82 @@ func TestTheProjectFolderFollowsASymbolicLinkLikeClaudeCodeDoes(t *testing.T) {
 		t.Errorf("ProjectDir(link) = %q, want %q", got, want)
 	}
 }
+
+// ---- several sessions ----
+
+func userRecord(at time.Time, content string, meta bool) string {
+	return fmt.Sprintf(`{"type":"user","isMeta":%v,"timestamp":%q,"message":{"role":"user","content":%q}}`+"\n", meta, at.Format(time.RFC3339), content)
+}
+
+func TestSessionsOfAFolderAreListedNewestFirst(t *testing.T) {
+	p := newProject(t)
+	for i, id := range []string{"old", "mid", "new"} {
+		p.session = id
+		p.main(record("m1", "m", 1, 1, 1, 1, now))
+		at := now.Add(time.Duration(i-3) * time.Hour)
+		if err := os.Chtimes(filepath.Join(p.dir(), id+".jsonl"), at, at); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.WriteFile(filepath.Join(p.dir(), "notes.txt"), []byte("not a session"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	got := usage.ListSessions(p.claude, p.cwd, 2)
+
+	if len(got) != 2 || got[0].ID != "new" || got[1].ID != "mid" {
+		t.Fatalf("sessions = %+v", got)
+	}
+	if !got[0].Last.After(got[1].Last) {
+		t.Errorf("Last = %v, %v", got[0].Last, got[1].Last)
+	}
+	if usage.ListSessions(p.claude, "/nowhere", 5) != nil {
+		t.Error("a folder with no sessions has no list")
+	}
+}
+
+func TestASessionIsKnownByWhenItStartedAndWhatItWasAskedFirst(t *testing.T) {
+	p := newProject(t)
+	started := now.Add(-2 * time.Hour)
+	p.main(
+		userRecord(started, "<command-name>/model</command-name>", false), // a slash command is not a prompt
+		userRecord(started.Add(time.Second), "System reminder", true),     // a meta record is not either
+		userRecord(started.Add(2*time.Second), "Make the login   page\nfaster, please", false),
+		userRecord(started.Add(time.Minute), "A later question", false),
+		record("m1", "m", 1, 1, 1, 1, now),
+	)
+
+	head := usage.ReadHead(filepath.Join(p.dir(), p.session+".jsonl"))
+
+	if !head.Started.Equal(started) {
+		t.Errorf("Started = %v, want %v", head.Started, started)
+	}
+	if head.Prompt != "Make the login page faster, please" {
+		t.Errorf("Prompt = %q: the first real prompt, on one line", head.Prompt)
+	}
+	if got := usage.ReadHead(filepath.Join(p.dir(), "missing.jsonl")); got.Prompt != "" || !got.Started.IsZero() {
+		t.Errorf("a missing file has no head: %+v", got)
+	}
+}
+
+func TestAPromptIsCutToALineThatFits(t *testing.T) {
+	p := newProject(t)
+	p.main(userRecord(now, strings.Repeat("слово ", 100), false))
+
+	head := usage.ReadHead(filepath.Join(p.dir(), p.session+".jsonl"))
+
+	if r := []rune(head.Prompt); len(r) > 120 || !strings.HasSuffix(head.Prompt, "…") {
+		t.Errorf("Prompt = %q (%d runes)", head.Prompt, len(r))
+	}
+}
+
+func TestLinesWithoutUsageAreSkippedWithoutBeingParsed(t *testing.T) {
+	p := newProject(t)
+	big := `{"type":"attachment","payload":"` + strings.Repeat("x", 200_000) + `"}` + "\n"
+	p.main(big, big, record("m1", "m", 1, 10, 0, 5, now))
+
+	r, err := p.watcher().Refresh()
+	if err != nil || r.Total.Total() != 16 {
+		t.Errorf("Refresh = %+v, %v", r.Total, err)
+	}
+}

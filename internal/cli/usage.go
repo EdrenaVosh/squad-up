@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -51,7 +52,7 @@ func toUsageJSON(r usage.Report) usageJSON {
 }
 
 func (a *app) newUsage() *cobra.Command {
-	var watch, asJSON bool
+	var watch, asJSON, list bool
 	var session, dir string
 	cmd := &cobra.Command{
 		Use:   "usage",
@@ -69,6 +70,9 @@ func (a *app) newUsage() *cobra.Command {
 					return &ExitError{Code: 1, Err: err, Fix: "run it from an existing folder"}
 				}
 				dir = wd
+			}
+			if list {
+				return a.listSessions(dir, asJSON)
 			}
 			if watch {
 				if !a.canOpenInterface() {
@@ -104,6 +108,7 @@ func (a *app) newUsage() *cobra.Command {
 		},
 	}
 	cmd.Flags().BoolVar(&watch, "watch", false, "open the live report in the terminal interface")
+	cmd.Flags().BoolVar(&list, "list", false, "list the sessions of the folder with their ids, to pick one for --session")
 	cmd.Flags().BoolVar(&asJSON, "json", false, "print machine-readable output")
 	cmd.Flags().StringVar(&session, "session", "", "the session to report, instead of the newest")
 	cmd.Flags().StringVar(&dir, "dir", "", "the folder whose sessions to read, instead of this one")
@@ -150,4 +155,45 @@ func (a *app) printRunUsage(since time.Time) {
 	}
 	printf(a.io.Err, "\nTokens this session (squad usage --session %s):\n", session)
 	printUsageTable(a, a.io.Err, report)
+}
+
+type sessionJSON struct {
+	ID      string    `json:"id"`
+	Started time.Time `json:"started,omitzero"`
+	Last    time.Time `json:"last"`
+	Total   int       `json:"total"`
+	Prompt  string    `json:"prompt,omitempty"`
+}
+
+// listSessions prints the newest sessions of the folder, with the id that
+// --session takes. The interface does not show ids; this is where they live.
+func (a *app) listSessions(dir string, asJSON bool) error {
+	const limit = 30
+	project := usage.ProjectDir(a.paths.ClaudeDir, dir)
+	out := []sessionJSON{}
+	for _, s := range usage.ListSessions(a.paths.ClaudeDir, dir, limit) {
+		head := usage.ReadHead(filepath.Join(project, s.ID+".jsonl"))
+		row := sessionJSON{ID: s.ID, Started: head.Started, Last: s.Last, Prompt: head.Prompt}
+		if report, err := usage.NewWatcher(project, s.ID).Refresh(); err == nil {
+			row.Total = report.Total.Total()
+		}
+		out = append(out, row)
+	}
+	if asJSON {
+		return writeJSON(a.io.Out, out)
+	}
+	if len(out) == 0 {
+		printf(a.io.Out, "No Claude Code session in %s yet.\n", dir)
+		return nil
+	}
+	printf(a.io.Out, "%-36s  %-16s  %-16s  %8s  %s\n", "SESSION", "STARTED", "LAST ACTIVITY", "TOKENS", "FIRST PROMPT")
+	for _, r := range out {
+		started := "—"
+		if !r.Started.IsZero() {
+			started = r.Started.Local().Format("Jan 2 15:04")
+		}
+		printf(a.io.Out, "%-36s  %-16s  %-16s  %8s  %s\n", r.ID, started, r.Last.Local().Format("Jan 2 15:04"), usage.Short(r.Total), r.Prompt)
+	}
+	printf(a.io.Out, "\nSee one with: squad usage --session <id>\n")
+	return nil
 }

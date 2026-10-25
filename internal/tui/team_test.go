@@ -1,6 +1,8 @@
 package tui_test
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -206,9 +208,12 @@ func TestTheKeysOfTheDemoDoWhatTheScriptExpects(t *testing.T) {
 	h.contains("╔═ ▶ 4 ") // the fourth agent is selected
 
 	h.press("e")
-	h.contains("Equip bug-hunter")
-	h.press("enter")
+	h.contains("Equip bug-hunter", "debugger.md") // what would change is shown first
+	h.press("y")
 	h.contains("Squad ready", "▐▛███▜▌")
 	h.press("esc")
 	h.contains("EQUIPPED")
+	if _, err := os.Stat(filepath.Join(h.paths.ClaudeDir, "agents", "debugger.md")); err != nil {
+		t.Errorf("the agents were not written to the Claude config: %v", err)
+	}
 }

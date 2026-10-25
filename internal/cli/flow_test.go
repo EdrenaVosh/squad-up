@@ -226,3 +226,33 @@ func TestADryRunShowsTheSquadBrief(t *testing.T) {
 		}
 	}
 }
+
+func TestUsageListShowsTheSessionsWithTheirIDsAndFirstPrompts(t *testing.T) {
+	e := newEnv(t)
+	dir := t.TempDir()
+	t.Chdir(dir)
+	if real, err := os.Getwd(); err == nil {
+		dir = real
+	}
+	e.transcript(dir)
+	project := filepath.Join(e.claudeDir, "projects", regexp.MustCompile(`[^a-zA-Z0-9]`).ReplaceAllString(func() string { r, _ := filepath.EvalSymlinks(dir); return r }(), "-"))
+	first := `{"type":"user","timestamp":"2026-10-24T09:00:00Z","message":{"role":"user","content":"Fix the login page"}}` + "\n"
+	old, _ := os.ReadFile(filepath.Join(project, "s1.jsonl"))
+	if err := os.WriteFile(filepath.Join(project, "s1.jsonl"), append([]byte(first), old...), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	r := e.run("usage", "--list")
+
+	if r.code != 0 {
+		t.Fatalf("exit %d: %s", r.code, r.stderr)
+	}
+	for _, want := range []string{"SESSION", "FIRST PROMPT", "s1", "Fix the login page", "squad usage --session"} {
+		if !strings.Contains(r.stdout, want) {
+			t.Errorf("stdout lacks %q:\n%s", want, r.stdout)
+		}
+	}
+	if j := e.run("usage", "--list", "--json"); !strings.Contains(j.stdout, `"id": "s1"`) || !strings.Contains(j.stdout, `"prompt": "Fix the login page"`) {
+		t.Errorf("json: %s", j.stdout)
+	}
+}

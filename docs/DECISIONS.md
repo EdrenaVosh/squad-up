@@ -226,3 +226,13 @@ The five starters of the first design (solo-indie, bug-hunt, refactor-day, ship-
 - **Agent names are unchanged**: an agent's name is its identifier for Claude Code and the name of its file, so it stays a slug.
 
 The demo script (`docs/demo.tape`) creates the preset as plain "Bug Hunter", and points `HOME` into the sandbox, so every path the interface prints is written as `~/…` and the prompt is a bare `$`: nothing in the recording names the account or the folders of whoever records it. `squad status` still prints absolute paths, and the script does not run it. `PLAN.md` no longer holds the author's home path.
+
+## Usage, session by session
+
+Several Claude Code sessions can run in one folder, so the usage screen no longer follows only the newest one and no longer shows a session id.
+
+- **The screen** lists the folder's sessions (the 15 newest) on the left, each with when it began, its total and what it was first asked, and shows the table of the selected one on the right (above it, in a narrow window). The feed lists the folder again every second: a session that appears is added, one that is deleted is dropped, a transcript is read only from where it was read last, and the selection is kept by id, so the list can change under it; when its session is deleted the selection falls to the newest. A running mascot marks sessions written to in the last 20 seconds, a dot those of the last two minutes.
+- **What names a session** is its start time and the first thing the person asked, read from the first 256 KB of the transcript (the first user record that is not a meta record, a slash command wrapper or a caveat, cut to 100 characters, on one line). The prompt is local text from the transcript; nothing is sent anywhere.
+- **Ids** appear only on the command line, where they are needed: `squad usage --list` (also `--json`) and `squad usage --session <id>`. The main screen's panel follows the newest session and says how many others are running.
+- **Speed.** Lines of a transcript without `"usage"` are skipped without being parsed, which matters for transcripts of tens of megabytes.
+- **Demo.** The demo script has an explicit equip step (`e`, read what would change, `y`), the agents at work, and `ls` of the Claude config before and after `squad restore --yes` to show that the team was really written and taken away.

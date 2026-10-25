@@ -100,14 +100,15 @@ func settingsPanel(c workspace.Card, w, h int) []string {
 
 // usagePanel charts the tokens each agent of the latest session has spent.
 func usagePanel(f *usageFeed, w, h int) []string {
-	rep := f.shown()
 	title := "TOKENS · LIVE"
-	if !rep.Found {
+	v := f.latest()
+	if v == nil || !v.report.Found {
 		lines := wrapStyled("no session in this folder yet", sMuted, w-4)
 		lines = append(lines, "")
 		lines = append(lines, wrapStyled("start `squad run` here and every agent's tokens show up as it works", sMuted, w-4)...)
 		return panel(title, lines, w, h)
 	}
+	rep := v.shown()
 	inner := w - 4
 	nameW := min(12, max(inner/3, 6))
 	numW := 6
@@ -125,7 +126,11 @@ func usagePanel(f *usageFeed, w, h int) []string {
 		}
 		lines = append(lines, mark+pad(truncate(a.Name, nameW), nameW)+" "+shareBar(float64(a.Tokens.Total())/float64(total), barW, f.tint(a.Name))+" "+fmt.Sprintf("%*s", numW, tokensShort(a.Tokens.Total())))
 	}
-	lines = append(lines, "", sBold.Render(tokensShort(rep.Total.Total()))+sMuted.Render(" tokens · u opens the report"))
+	more := ""
+	if n := f.running() - 1; n > 0 && v != nil {
+		more = fmt.Sprintf(" · +%s running", plural(n, "other session"))
+	}
+	lines = append(lines, "", sBold.Render(tokensShort(rep.Total.Total()))+sMuted.Render(" tokens"+more+" · u opens the report"))
 	return panel(title, lines, w, h)
 }
 
