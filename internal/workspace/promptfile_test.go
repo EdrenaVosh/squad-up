@@ -46,6 +46,7 @@ func TestReadPromptFileAcceptsWhatATerminalPastes(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Setenv("HOME", dir)
+	t.Setenv("USERPROFILE", dir) // Windows does not read HOME
 
 	for _, in := range []string{
 		"'" + path + "'",

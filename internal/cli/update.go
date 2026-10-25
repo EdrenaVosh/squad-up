@@ -2,6 +2,7 @@ package cli
 
 import (
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -14,16 +15,16 @@ const installScript = "curl -fsSL https://raw.githubusercontent.com/EdrenaVosh/s
 
 // updateAdvice says how a program installed at path is updated. It looks at
 // where the file is, because that tells how it got there.
-func updateAdvice(path string) (how, command string) {
-	slashed := filepath.ToSlash(path)
+func updateAdvice(exe string) (how, command string) {
+	slashed := filepath.ToSlash(exe)
 	switch {
 	case strings.Contains(slashed, "/Cellar/"), strings.Contains(slashed, "/Caskroom/"), strings.Contains(slashed, "/homebrew/"), strings.Contains(slashed, "/linuxbrew/"):
 		return "Homebrew", "brew upgrade EdrenaVosh/tap/squad-up"
 	case strings.Contains(slashed, "/go/bin/"):
 		return "go install", "go install github.com/EdrenaVosh/squad-up/cmd/squad@latest"
-	case strings.HasSuffix(filepath.Dir(slashed), "/.local/bin"):
+	case strings.HasSuffix(path.Dir(slashed), "/.local/bin"):
 		return "the install script", installScript
-	case strings.HasSuffix(filepath.Dir(slashed), "/bin") && strings.Contains(slashed, "squad-up/bin"):
+	case strings.HasSuffix(path.Dir(slashed), "/bin") && strings.Contains(slashed, "squad-up/bin"):
 		return "a build from source", "git pull && make install"
 	}
 	return "an unknown source", installScript

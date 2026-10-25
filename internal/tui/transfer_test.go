@@ -215,7 +215,7 @@ func TestExportToAFolderThatDoesNotExistSaysSo(t *testing.T) {
 	h.typeText("/no/such/folder/x.squad.json")
 	h.press("enter")
 
-	h.contains("no such folder: /no/such/folder")
+	h.contains("no such folder:") // the folder is shown in the form of the system
 }
 
 func TestExportOfInitialIsRefused(t *testing.T) {

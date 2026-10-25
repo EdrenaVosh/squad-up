@@ -84,7 +84,7 @@ func TestTheSkillIsOnlyRunByTheUser(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	text := string(data)
+	text := strings.ReplaceAll(string(data), "\r\n", "\n") // a Windows checkout may use CRLF
 	front, _, ok := strings.Cut(strings.TrimPrefix(text, "---\n"), "\n---\n")
 	if !strings.HasPrefix(text, "---\n") || !ok {
 		t.Fatal("SKILL.md has no frontmatter")

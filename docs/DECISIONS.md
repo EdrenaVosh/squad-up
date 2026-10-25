@@ -290,3 +290,16 @@ SIGTERM and SIGHUP are passed on to claude (so closing the terminal stops claude
 ## Known limitation: a very large preset on Windows
 
 `squad run` refuses an `--agents` value over 30,000 bytes and sends you to `squad use`. On Windows the real limit of a command line is about 32 KB **after** the quotes are escaped (each `"` becomes `\"`) and counting the other arguments (the team brief, the settings path, yours), so a preset just under the cap can still fail to start, with the system's "filename or extension is too long" instead of our hint. Presets that big are far from the two starter templates; it is left as it is, and `squad use` has no such limit.
+
+## What the first CI run found (Windows, and a time zone)
+
+The first run of CI on GitHub failed on all three systems. None of it was a bug in what squad does for a user; the tests assumed the machine they were written on:
+
+- **Time zone.** `usage.golden` was recorded where the local time is UTC+4 (`began 12:30`); CI runs in UTC (`08:30`). The tui tests now run with `time.Local = time.UTC` (`internal/tui/main_test.go`); the suite was checked in UTC, Tokyo and New York.
+- **Line ends.** Git for Windows checks files out with CRLF, so every golden screen and `SKILL.md` differed by invisible `\r`. `.gitattributes` now says `* text=auto eol=lf`, and the golden comparison and the plugin test also ignore a CRLF.
+- **`HOME`.** Windows reads `USERPROFILE`, not `HOME`, so paths were not shown as `~/…` and `~/my prompt.md` was not expanded; the tests set both.
+- **A real Windows bug.** `squad update` took the folder of the program with `filepath.Dir` on a slash-separated path, which on Windows turns the slashes back and never matched; it uses `path.Dir` now.
+- **Long temp folders.** An error message containing the temp path wraps wherever it falls; one test looked for `settings.json` in it and passed only by luck of the folder's length. It looks for the words of the message now (checked with a very long `TMPDIR`).
+- The welcome screen still spelled `S Q U A D U P` after the rename; it is `S Q U A D - U P`.
+
+macOS was not read (its log was not available); Windows is fixed by reading the log, not by running it.

@@ -44,7 +44,8 @@ type harness struct {
 func newWorkspace(t *testing.T) (workspace.Workspace, *initial.Meta) {
 	t.Helper()
 	home := t.TempDir()
-	t.Setenv("HOME", home) // so that paths under it are shown as ~/…, the same on every machine
+	t.Setenv("HOME", home)        // so that paths under it are shown as ~/…, the same on every machine
+	t.Setenv("USERPROFILE", home) // the same for Windows, which does not read HOME
 	p := paths.Paths{ClaudeDir: filepath.Join(t.TempDir(), "claude"), Home: filepath.Join(home, "squad-up")}
 	testutil.WriteFiles(t, p.ClaudeDir, map[string]string{
 		"agents/reviewer.md":    agentFile("reviewer", "Reviews diffs for bugs. Use after any code change.", "tools: Read, Grep\ncolor: green\n", "Be strict."),
@@ -275,7 +276,8 @@ func (h *harness) goldenAt(name string, w, ht int) {
 	if err != nil {
 		h.t.Fatalf("no golden screen %s (run the tests with -screens): %v", path, err)
 	}
-	if got != string(want) {
+	// a Git checkout on Windows may turn the file's line ends into CRLF
+	if got != strings.ReplaceAll(string(want), "\r\n", "\n") {
 		h.t.Errorf("the screen differs from %s (run the tests with -screens to accept)\n--- got ---\n%s\n--- want ---\n%s", path, got, want)
 	}
 }
@@ -331,7 +333,8 @@ type cleanSetup struct {
 func testutilClean(t *testing.T) cleanSetup {
 	t.Helper()
 	home := t.TempDir()
-	t.Setenv("HOME", home) // so that paths under it are shown as ~/…, the same on every machine
+	t.Setenv("HOME", home)        // so that paths under it are shown as ~/…, the same on every machine
+	t.Setenv("USERPROFILE", home) // the same for Windows, which does not read HOME
 	p := paths.Paths{ClaudeDir: filepath.Join(t.TempDir(), "claude"), Home: filepath.Join(home, "squad-up")}
 	meta, err := initial.Capture(p, fixedNow)
 	if err != nil {

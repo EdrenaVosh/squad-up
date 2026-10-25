@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	wordmark = "S Q U A D U P"
+	wordmark = "S Q U A D - U P"
 	tagline  = "Switch Claude Code agent teams with one command"
 )
 

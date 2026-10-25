@@ -201,7 +201,7 @@ func TestEquipFailureLeavesEverythingAsItWas(t *testing.T) {
 
 	h.press("e")
 
-	h.contains("✗", "settings.json")
+	h.contains("✗", "is not valid JSON") // the path before it is long and wraps wherever the temp folder puts it
 	h.press("x")
 	h.contains("PRESETS")
 }
