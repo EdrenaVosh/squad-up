@@ -68,6 +68,21 @@ homebrew_casks:
     homepage: https://github.com/EdrenaVosh/squad-up
     description: Switch Claude Code agent teams with one command
     license: MIT
+    # The binaries are not signed or notarized, so macOS would refuse to open
+    # them the first time. Taking the quarantine mark off is GoReleaser's
+    # documented way for a command-line tool in a cask. GoReleaser 2.19 calls
+    # this `install` form deprecated (its replacement, `install_steps`, has no
+    # "only on macOS" condition, and xattr does not exist on Linux); it still
+    # works and only makes `goreleaser check` print a warning.
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr",
+                           args: ["-dr", "com.apple.quarantine", "#{staged_path}/squad"]
+            system_command "/usr/bin/xattr",
+                           args: ["-dr", "com.apple.quarantine", "#{staged_path}/squad-up"]
+          end
 
 changelog:
   sort: asc

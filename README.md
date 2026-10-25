@@ -379,7 +379,7 @@ Neither template has a main agent, so the flow reaches Claude Code through `squa
 
 ## Safety and privacy
 
-- **Every write to `~/.claude` is guarded:** lock, backup, atomic write, manifest. A failure in the middle rolls back from the backup, and Ctrl-C waits until the files are written, so an operation is never left half done. Only files squad wrote, or files byte-identical to your Initial snapshot, are ever removed.
+- **Every write to `~/.claude` is guarded:** lock, backup, atomic write, manifest. A failure in the middle rolls back from the backup, and Ctrl-C waits until the files are written, so an interrupt does not leave an operation half done (a killed process or a power cut still can: delete `~/.squad-up/.lock` and run `squad restore`). Only files squad wrote, or files byte-identical to your Initial snapshot, are ever removed.
 - **What it never touches:** `env`, `hooks`, `enabledPlugins` and `~/.claude.json` are neither read into logs nor written. The status line is changed only when you run `squad statusline enable`.
 - **Imported presets never run code.** Hooks and MCP servers are stripped unless you allow them, dangerous permission modes need your consent, and `--yes` alone never counts as consent.
 - **No telemetry.** The network is used only for what you ask: an `https` or gist import, a gist export through `gh`, and the model check (which talks to Claude through your own `claude`).

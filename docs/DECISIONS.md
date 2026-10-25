@@ -276,3 +276,9 @@ The README now starts the use with *How to use*: five commands at a glance, then
 ## `PLAN.md` and the how-it-works SVG are gone
 
 The planning document and `docs/assets/how-it-works.svg` were deleted at the author's request. The README keeps its Mermaid diagram of how squad-up works (GitHub draws it from text); the SVG that stood above it is removed, and so are the links to the plan in the README and CONTRIBUTING. Older notes in this file that say "the plan" refer to `PLAN.md` as it was; `git log -- PLAN.md` finds it.
+
+## The cask removes the quarantine mark (macOS)
+
+The binaries are not signed or notarized, so Gatekeeper would block the first run after `brew install`. The cask now has a `postflight` that runs `xattr -dr com.apple.quarantine` on `squad` and `squad-up`, inside `if OS.mac?` (the cask also has Linux archives, and `xattr` does not exist there). The generated `dist/homebrew/Casks/squad-up.rb` was read and is valid Ruby; **the install itself was not run**, so whether Homebrew accepts the stanza is unverified.
+
+GoReleaser 2.19 marks this `hooks.post.install` form deprecated: `goreleaser check` prints a warning and exits with 1 (the release workflow does not run `check`, and `release` only warns). The replacement, `install_steps` with `run` and `{{ .StagedPath }}`, was not used because it has no condition for the platform, which would break the Linux install. Move to it when GoReleaser or Homebrew gets one.
