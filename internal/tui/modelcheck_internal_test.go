@@ -7,8 +7,8 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/x/ansi"
 
-	"github.com/EdrenaVosh/squadup/internal/models"
-	"github.com/EdrenaVosh/squadup/internal/workspace"
+	"github.com/EdrenaVosh/squad-up/internal/models"
+	"github.com/EdrenaVosh/squad-up/internal/workspace"
 )
 
 func TestARunningCheckShowsWhoHasAnsweredAndWhoIsStillBeingAsked(t *testing.T) {

@@ -6,8 +6,8 @@ import (
 
 	"github.com/charmbracelet/x/ansi"
 
-	"github.com/EdrenaVosh/squadup/internal/preset"
-	"github.com/EdrenaVosh/squadup/internal/workspace"
+	"github.com/EdrenaVosh/squad-up/internal/preset"
+	"github.com/EdrenaVosh/squad-up/internal/workspace"
 )
 
 func flowCard(flow *preset.Flow, main string) workspace.Card {

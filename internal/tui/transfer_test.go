@@ -7,15 +7,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/EdrenaVosh/squadup/internal/preset"
-	"github.com/EdrenaVosh/squadup/internal/transfer"
-	"github.com/EdrenaVosh/squadup/internal/tui"
+	"github.com/EdrenaVosh/squad-up/internal/preset"
+	"github.com/EdrenaVosh/squad-up/internal/transfer"
+	"github.com/EdrenaVosh/squad-up/internal/tui"
 )
 
 // writeDoc exports a bundle into a temp file and returns the path.
 func writeDoc(t *testing.T, b preset.Bundle) string {
 	t.Helper()
-	data, err := transfer.Export(b, "squadup@test", fixedNow)
+	data, err := transfer.Export(b, "squad-up@test", fixedNow)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -164,7 +164,7 @@ func TestImportOfABrokenFileStaysOnTheMainScreen(t *testing.T) {
 
 	h.importFile(path)
 
-	h.contains("PRESETS", "not a squadup file")
+	h.contains("PRESETS", "not a squad-up file")
 	h.lacks("Import preview")
 
 	h.importFile(filepath.Join(t.TempDir(), "missing.json"))
@@ -197,7 +197,7 @@ func TestExportWritesAFileAfterAskingWhere(t *testing.T) {
 		t.Fatal(err)
 	}
 	var doc struct{ Format string }
-	if json.Unmarshal(data, &doc) != nil || doc.Format != "squadup-preset" {
+	if json.Unmarshal(data, &doc) != nil || doc.Format != "squad-up-preset" {
 		t.Errorf("bad file: %s", data)
 	}
 

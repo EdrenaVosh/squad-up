@@ -9,14 +9,14 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/EdrenaVosh/squadup/internal/apply"
-	"github.com/EdrenaVosh/squadup/internal/editor"
-	"github.com/EdrenaVosh/squadup/internal/fsx"
-	"github.com/EdrenaVosh/squadup/internal/lint"
-	"github.com/EdrenaVosh/squadup/internal/preset"
-	"github.com/EdrenaVosh/squadup/internal/tui"
-	"github.com/EdrenaVosh/squadup/internal/workspace"
-	"github.com/EdrenaVosh/squadup/templates"
+	"github.com/EdrenaVosh/squad-up/internal/apply"
+	"github.com/EdrenaVosh/squad-up/internal/editor"
+	"github.com/EdrenaVosh/squad-up/internal/fsx"
+	"github.com/EdrenaVosh/squad-up/internal/lint"
+	"github.com/EdrenaVosh/squad-up/internal/preset"
+	"github.com/EdrenaVosh/squad-up/internal/tui"
+	"github.com/EdrenaVosh/squad-up/internal/workspace"
+	"github.com/EdrenaVosh/squad-up/templates"
 )
 
 // libraryError turns a failure of a preset operation into a user error.
@@ -35,7 +35,7 @@ func libraryError(err error, protectedFix string) error {
 	case errors.Is(err, fsx.ErrLocked):
 		return &ExitError{Code: 1, Err: err, Fix: "wait for the other squad to finish"}
 	}
-	return &ExitError{Code: 1, Err: err, Fix: "check the permissions of ~/.squadup"}
+	return &ExitError{Code: 1, Err: err, Fix: "check the permissions of ~/.squad-up"}
 }
 
 const cloneInitialFix = "make an editable copy with `squad clone initial <name>`"

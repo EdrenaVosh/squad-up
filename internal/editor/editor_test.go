@@ -5,7 +5,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/EdrenaVosh/squadup/internal/editor"
+	"github.com/EdrenaVosh/squad-up/internal/editor"
 )
 
 func TestCommandPrefersVisualOverEditorAndKeepsArguments(t *testing.T) {

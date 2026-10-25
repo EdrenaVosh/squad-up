@@ -2,7 +2,7 @@
 env FAKE_CLAUDE_ARGS_FILE=$WORK/claude-args.txt
 exec squad list
 copytree claude claude.orig
-copytree squadup squadup.orig
+copytree squad-up squad-up.orig
 
 exec squad run solo
 stdout 'fake claude session'
@@ -12,7 +12,7 @@ grep '--agents' claude-args.txt
 grep '"planner"' claude-args.txt
 grep '--settings' claude-args.txt
 treeeq claude claude.orig
-treeeq squadup squadup.orig
+treeeq squad-up squad-up.orig
 
 # Arguments after -- reach claude.
 exec squad run solo -- --model opus
@@ -40,7 +40,7 @@ Be strict.
 {
   "model": "opus"
 }
--- squadup/presets/solo/preset.yaml --
+-- squad-up/presets/solo/preset.yaml --
 schema: 1
 name: solo
 mode: replace
@@ -48,7 +48,7 @@ main: null
 agents: [planner]
 settings:
   model: sonnet
--- squadup/presets/solo/agents/planner.md --
+-- squad-up/presets/solo/agents/planner.md --
 ---
 name: planner
 description: Plans work. Use before any large change.

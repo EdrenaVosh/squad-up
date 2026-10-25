@@ -38,11 +38,11 @@ The first release.
   reviewer, tester) and *Feature Creator* (planner, executor, an independent
   reviewer), each with a review loop; starting from one is the first option of
   the *New preset* dialog.
-- **Projects and Claude Code:** a `.squadup` file pins a preset to a project;
+- **Projects and Claude Code:** a `.squad-up` file pins a preset to a project;
   `squad statusline` shows the active preset; a Claude Code plugin adds
-  `/squadup:squad`.
+  `/squad-up:squad`.
 - **Installation:** Homebrew, `install.sh`, `go install`, and release archives
   for macOS, Linux and Windows.
 
-[Unreleased]: https://github.com/EdrenaVosh/squadup/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/EdrenaVosh/squadup/releases/tag/v0.1.0
+[Unreleased]: https://github.com/EdrenaVosh/squad-up/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/EdrenaVosh/squad-up/releases/tag/v0.1.0

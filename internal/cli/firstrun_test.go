@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/EdrenaVosh/squadup/internal/testutil"
+	"github.com/EdrenaVosh/squad-up/internal/testutil"
 )
 
 func TestFirstRunOnExistingSetupCapturesInitialAndPrintsSummary(t *testing.T) {
@@ -22,7 +22,7 @@ func TestFirstRunOnExistingSetupCapturesInitialAndPrintsSummary(t *testing.T) {
 		t.Fatalf("exit code = %d\nstderr:\n%s", r.code, r.stderr)
 	}
 	for _, want := range []string{
-		"Welcome to squadup",
+		"Welcome to squad-up",
 		"We found your existing Claude Code setup",
 		"saved it as ◇ Initial",
 		"  Agents       3   docs-writer · reviewer · tester",
@@ -140,7 +140,7 @@ func TestJSONOutputStaysCleanOnFirstRun(t *testing.T) {
 	if !json.Valid([]byte(r.stdout)) {
 		t.Fatalf("stdout is not valid JSON:\n%s", r.stdout)
 	}
-	if !strings.Contains(r.stderr, "Welcome to squadup") {
+	if !strings.Contains(r.stderr, "Welcome to squad-up") {
 		t.Errorf("the summary should still reach stderr:\n%s", r.stderr)
 	}
 }

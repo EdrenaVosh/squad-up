@@ -9,8 +9,8 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/x/ansi"
 
-	"github.com/EdrenaVosh/squadup/internal/apply"
-	"github.com/EdrenaVosh/squadup/internal/workspace"
+	"github.com/EdrenaVosh/squad-up/internal/apply"
+	"github.com/EdrenaVosh/squad-up/internal/workspace"
 )
 
 type equipState int

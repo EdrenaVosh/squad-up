@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/EdrenaVosh/squadup/internal/claude"
-	"github.com/EdrenaVosh/squadup/internal/models"
-	"github.com/EdrenaVosh/squadup/internal/paths"
-	"github.com/EdrenaVosh/squadup/internal/testutil"
+	"github.com/EdrenaVosh/squad-up/internal/claude"
+	"github.com/EdrenaVosh/squad-up/internal/models"
+	"github.com/EdrenaVosh/squad-up/internal/paths"
+	"github.com/EdrenaVosh/squad-up/internal/testutil"
 )
 
 // ---- catalog ----

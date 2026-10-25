@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/EdrenaVosh/squadup/internal/tui"
-	"github.com/EdrenaVosh/squadup/internal/usage"
+	"github.com/EdrenaVosh/squad-up/internal/tui"
+	"github.com/EdrenaVosh/squad-up/internal/usage"
 )
 
 const workCwd = "/work/my-app"

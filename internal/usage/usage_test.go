@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/EdrenaVosh/squadup/internal/usage"
+	"github.com/EdrenaVosh/squad-up/internal/usage"
 )
 
 var now = time.Date(2026, 10, 25, 12, 0, 0, 0, time.UTC)

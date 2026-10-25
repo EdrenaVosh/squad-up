@@ -3,7 +3,7 @@ package cli
 import (
 	"errors"
 
-	"github.com/EdrenaVosh/squadup/internal/workspace"
+	"github.com/EdrenaVosh/squad-up/internal/workspace"
 )
 
 // nameError turns a problem with a preset name into a validation failure

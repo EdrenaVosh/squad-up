@@ -1,7 +1,7 @@
 package tui
 
 import (
-	"github.com/EdrenaVosh/squadup/internal/workspace"
+	"github.com/EdrenaVosh/squad-up/internal/workspace"
 )
 
 // newEditStart builds the screens `squad edit` opens: the preset, and above it

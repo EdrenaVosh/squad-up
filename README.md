@@ -1,14 +1,14 @@
 <div align="center">
 
-# squadup
+# squad-up
 
 **Switch Claude Code agent teams with one command, and always get your original setup back.**
 
 Build teams of agents, give each its model, tools and rules, let a main agent lead them through a review loop,<br>
 watch every agent's tokens live, and share the whole team as one file.
 
-[![CI](https://github.com/EdrenaVosh/squadup/actions/workflows/ci.yml/badge.svg)](https://github.com/EdrenaVosh/squadup/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/EdrenaVosh/squadup?display_name=tag&sort=semver)](https://github.com/EdrenaVosh/squadup/releases)
+[![CI](https://github.com/EdrenaVosh/squad-up/actions/workflows/ci.yml/badge.svg)](https://github.com/EdrenaVosh/squad-up/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/EdrenaVosh/squad-up?display_name=tag&sort=semver)](https://github.com/EdrenaVosh/squad-up/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Go](https://img.shields.io/badge/go-1.27-00ADD8?logo=go&logoColor=white)
 ![Platforms](https://img.shields.io/badge/macOS%20·%20Linux%20·%20Windows-lightgrey)
@@ -17,14 +17,14 @@ watch every agent's tokens live, and share the whole team as one file.
 
 <!--
   Record the demo with `vhs docs/demo.tape` (see the file), then uncomment:
-  <img src="docs/assets/demo.gif" alt="squadup in the terminal" width="900">
+  <img src="docs/assets/demo.gif" alt="squad-up in the terminal" width="900">
 -->
 
 </div>
 
 ---
 
-## Why squadup
+## Why squad-up
 
 [Claude Code](https://code.claude.com) can delegate work to *subagents*: small specialists defined by a Markdown file with a name, a description, a model, some tools and a prompt. They are powerful, but they live as loose files in `~/.claude/agents`, and everything around them is manual:
 
@@ -34,7 +34,7 @@ watch every agent's tokens live, and share the whole team as one file.
 - you have no idea **which agent spent your tokens**;
 - sharing a team with a colleague means sending a folder of files and a list of instructions.
 
-squadup is a small command-line tool and terminal interface that fixes those things. You keep **presets**: named teams of agents with their settings. One command equips a preset, another puts your original setup back exactly as it was.
+squad-up is a small command-line tool and terminal interface that fixes those things. You keep **presets**: named teams of agents with their settings. One command equips a preset, another puts your original setup back exactly as it was.
 
 | | |
 | --- | --- |
@@ -52,31 +52,31 @@ Requires [Claude Code](https://code.claude.com/docs) (squad calls the `claude` c
 **Homebrew** (macOS, Linux)
 
 ```sh
-brew install EdrenaVosh/tap/squadup
+brew install EdrenaVosh/tap/squad-up
 ```
 
 **Install script** (macOS, Linux): downloads the release, checks its checksum, installs to `~/.local/bin`
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/EdrenaVosh/squadup/main/scripts/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/EdrenaVosh/squad-up/main/scripts/install.sh | sh
 ```
 
 **Go**
 
 ```sh
-go install github.com/EdrenaVosh/squadup/cmd/squad@latest
+go install github.com/EdrenaVosh/squad-up/cmd/squad@latest
 ```
 
-**Prebuilt archives** for macOS, Linux and Windows are on the [releases page](https://github.com/EdrenaVosh/squadup/releases) (`.tar.gz`, and `.zip` for Windows).
+**Prebuilt archives** for macOS, Linux and Windows are on the [releases page](https://github.com/EdrenaVosh/squad-up/releases) (`.tar.gz`, and `.zip` for Windows).
 
 **From source**
 
 ```sh
-git clone https://github.com/EdrenaVosh/squadup && cd squadup
+git clone https://github.com/EdrenaVosh/squad-up && cd squad-up
 make install            # builds and copies squad to ~/.local/bin
 ```
 
-Every install gives you two names for the same program: **`squad`** (short, used in this README) and **`squadup`** (the project name, for a shell where `squad` is already taken).
+Every install gives you two names for the same program: **`squad`** (short, used in this README) and **`squad-up`** (the project name, for a shell where `squad` is already taken).
 
 Check it works:
 
@@ -90,11 +90,11 @@ Update later with `squad update`, which tells you the right command for the way 
 <details>
 <summary><b>Optional: the Claude Code plugin</b></summary>
 
-A small plugin adds `/squadup:squad` inside a Claude Code session: show the equipped preset, or switch with `/squadup:squad bug-hunter`. It only calls the `squad` tool, so squad must be installed.
+A small plugin adds `/squad-up:squad` inside a Claude Code session: show the equipped preset, or switch with `/squad-up:squad bug-hunter`. It only calls the `squad` tool, so squad must be installed.
 
 ```sh
-claude plugin marketplace add EdrenaVosh/squadup
-claude plugin install squadup@squadup
+claude plugin marketplace add EdrenaVosh/squad-up
+claude plugin install squad-up@squad-up
 ```
 
 </details>
@@ -105,7 +105,7 @@ claude plugin install squadup@squadup
 squad                          # first run: saves your setup as Initial, then opens the interface
 ```
 
-Nothing is changed by that first run. squadup copies what it finds in `~/.claude` (agents and a few settings) into `~/.squadup` and says so. From the welcome screen create a first preset from your current setup, from a starter template, or from scratch.
+Nothing is changed by that first run. squad-up copies what it finds in `~/.claude` (agents and a few settings) into `~/.squad-up` and says so. From the welcome screen create a first preset from your current setup, from a starter template, or from scratch.
 
 Or do it from the command line:
 
@@ -133,12 +133,12 @@ cd my-project && squad pin bugs && squad run
 
 ## How it works
 
-![How squadup works](docs/assets/how-it-works.svg)
+![How squad-up works](docs/assets/how-it-works.svg)
 
 ```mermaid
 flowchart LR
     You([You]) --> Squad["squad<br/>interface + CLI"]
-    Squad <--> Library[("Preset library<br/>~/.squadup/presets")]
+    Squad <--> Library[("Preset library<br/>~/.squad-up/presets")]
     Library --> Compile["Compile (in memory)<br/>independence charter,<br/>flow brief"]
     Compile -->|squad use| Equip["writes ~/.claude<br/>backup · manifest · restore"]
     Compile -->|squad run| Run["claude --agents --settings<br/>nothing written"]
@@ -153,7 +153,7 @@ flowchart LR
     Session -. transcripts .-> Usage["squad usage<br/>tokens per agent, live"]
 ```
 
-1. **A preset is a folder** in `~/.squadup/presets/<name>/`: a `preset.yaml` (default model, effort, permissions, the order of the agents, an optional main agent and flow) and one Markdown file per agent, in exactly the format Claude Code reads. Your original setup is kept as the read-only preset *Initial*.
+1. **A preset is a folder** in `~/.squad-up/presets/<name>/`: a `preset.yaml` (default model, effort, permissions, the order of the agents, an optional main agent and flow) and one Markdown file per agent, in exactly the format Claude Code reads. Your original setup is kept as the read-only preset *Initial*.
 2. **squad compiles it** when it hands it to Claude Code: it adds the independence charter to independent agents and the team brief to the main agent. The files you stored stay as you wrote them.
 3. **Two ways to use a preset.**
    - `squad use` **equips** it: writes the agents and the settings it manages into `~/.claude`, after a lock and a backup, with a manifest of exactly what it wrote. `squad undo` goes back a step, `squad restore` returns Initial.
@@ -176,7 +176,7 @@ squad edit bugs reviewer --prompt-file review.md      # replace its prompt from 
 
 ### The interface
 
-Run `squad` in a terminal. Presets on the left, the selected preset's agents as equally sized, readable tiles on the right (the selected one is outlined in a bright double border), panels for settings, live tokens, what equipping would change, and health. It animates (a flowing gradient, and a small orange Claude-style mascot hard at work in the tiles of an equipped preset); `SQUADUP_NO_ANIM=1` keeps it still, and `NO_COLOR`, `CI`, a dumb terminal or a pipe get plain text. It works from 80×24 up and grows with the terminal.
+Run `squad` in a terminal. Presets on the left, the selected preset's agents as equally sized, readable tiles on the right (the selected one is outlined in a bright double border), panels for settings, live tokens, what equipping would change, and health. It animates (a flowing gradient, and a small orange Claude-style mascot hard at work in the tiles of an equipped preset); `SQUAD_UP_NO_ANIM=1` keeps it still, and `NO_COLOR`, `CI`, a dumb terminal or a pipe get plain text. It works from 80×24 up and grows with the terminal.
 
 Keys: arrows or the mouse select, `enter` opens, `e` equips (with a preview), `t` tries a preset for one session, `a` edits the selected agent, `u` opens live tokens, `m` checks your models, `n` creates, `i` imports, `x` exports, `?` helps.
 
@@ -251,7 +251,7 @@ Neither template has a main agent, so the flow reaches Claude Code through `squa
 - **Manual edits are safe.** If you changed a file squad wrote, `squad use` tells you and asks: keep your edits in the preset, or discard them. Never silently.
 - **`squad log` and `squad undo`.** Every change to your config is journaled; go back one step or to any point.
 - **Status line.** `squad statusline enable` shows `◆ <preset>` in Claude Code's status line; your own line keeps running first.
-- **Project pin.** A `.squadup` file with one preset name, safe to commit.
+- **Project pin.** A `.squad-up` file with one preset name, safe to commit.
 
 ## Commands
 
@@ -285,7 +285,7 @@ Neither template has a main agent, so the flow reaches Claude Code through `squa
 
 `squad <command> --help` has the details. Global flags: `--claude-dir`, `--home`, `--no-color`, `-y/--yes`.
 
-**Environment:** `CLAUDE_CONFIG_DIR` (where Claude Code's config lives, default `~/.claude`), `SQUADUP_HOME` (where presets live, default `~/.squadup`), `SQUADUP_NO_ANIM=1`, `NO_COLOR`.
+**Environment:** `CLAUDE_CONFIG_DIR` (where Claude Code's config lives, default `~/.claude`), `SQUAD_UP_HOME` (where presets live, default `~/.squad-up`), `SQUAD_UP_NO_ANIM=1`, `NO_COLOR`.
 
 ## Safety and privacy
 
@@ -327,7 +327,7 @@ Release archives are built for Windows (`.zip`) and the test suite builds there,
 <details>
 <summary><b>Where is everything stored?</b></summary>
 
-Presets in `~/.squadup/presets/<name>/`, your original setup in `~/.squadup/presets/initial/`, backups and the journal under `~/.squadup`, and the model check cache there too. Delete `~/.squadup` and squad forgets everything; `~/.claude` stays as it is.
+Presets in `~/.squad-up/presets/<name>/`, your original setup in `~/.squad-up/presets/initial/`, backups and the journal under `~/.squad-up`, and the model check cache there too. Delete `~/.squad-up` and squad forgets everything; `~/.claude` stays as it is.
 
 </details>
 

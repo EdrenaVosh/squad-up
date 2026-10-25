@@ -17,9 +17,9 @@ import (
 
 	"github.com/goccy/go-yaml"
 
-	"github.com/EdrenaVosh/squadup/internal/agentfile"
-	"github.com/EdrenaVosh/squadup/internal/preset"
-	"github.com/EdrenaVosh/squadup/internal/team"
+	"github.com/EdrenaVosh/squad-up/internal/agentfile"
+	"github.com/EdrenaVosh/squad-up/internal/preset"
+	"github.com/EdrenaVosh/squad-up/internal/team"
 )
 
 // acceptedKeys are the frontmatter fields `--agents` understands, besides the
@@ -36,7 +36,7 @@ var settingsKeys = []string{"model", "effortLevel", "permissions"}
 
 // EnvPreset names the environment variable that tells claude (and so its
 // status line command) which preset `squad run` started it with.
-const EnvPreset = "SQUADUP_RUN_PRESET"
+const EnvPreset = "SQUAD_UP_RUN_PRESET"
 
 // Spec is everything claude is started with.
 type Spec struct {

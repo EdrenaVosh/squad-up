@@ -9,9 +9,9 @@ import (
 	"slices"
 	"time"
 
-	"github.com/EdrenaVosh/squadup/internal/fsx"
-	"github.com/EdrenaVosh/squadup/internal/paths"
-	"github.com/EdrenaVosh/squadup/internal/settings"
+	"github.com/EdrenaVosh/squad-up/internal/fsx"
+	"github.com/EdrenaVosh/squad-up/internal/paths"
+	"github.com/EdrenaVosh/squad-up/internal/settings"
 )
 
 const stateSchema = 1

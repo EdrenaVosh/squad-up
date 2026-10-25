@@ -4,7 +4,8 @@ import (
 	"strings"
 )
 
-// glyphs is a 5×5 pixel font for the letters of the wordmark.
+// glyphs is a 5-row pixel font for the letters of the wordmark (the hyphen is
+// narrower than a letter).
 var glyphs = map[rune][5]string{
 	'S': {".####", "#....", ".###.", "....#", "####."},
 	'Q': {".###.", "#...#", "#.#.#", "#..#.", ".##.#"},
@@ -12,9 +13,10 @@ var glyphs = map[rune][5]string{
 	'A': {".###.", "#...#", "#####", "#...#", "#...#"},
 	'D': {"####.", "#...#", "#...#", "#...#", "####."},
 	'P': {"####.", "#...#", "####.", "#....", "#...."},
+	'-': {"...", "...", "###", "...", "..."},
 }
 
-const bigWord = "SQUADUP"
+const bigWord = "SQUAD-UP"
 
 // bitmap returns the wordmark as rows of pixels: one string per pixel row,
 // '#' for a lit pixel, with one empty column between the letters.

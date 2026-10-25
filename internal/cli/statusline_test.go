@@ -128,7 +128,7 @@ func TestStatuslineCommandShowsThePresetAndStaysQuiet(t *testing.T) {
 	if r := e.run("statusline"); strings.TrimSpace(r.stdout) != "◆ solo" {
 		t.Errorf("NO_COLOR: %q", r.stdout)
 	}
-	t.Setenv("SQUADUP_RUN_PRESET", "bug-hunt")
+	t.Setenv("SQUAD_UP_RUN_PRESET", "bug-hunt")
 	if r := e.run("statusline"); strings.TrimSpace(r.stdout) != "◆ bug-hunt (run)" {
 		t.Errorf("run preset: %q", r.stdout)
 	}

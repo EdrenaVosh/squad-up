@@ -8,7 +8,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/EdrenaVosh/squadup/internal/agentfile"
+	"github.com/EdrenaVosh/squad-up/internal/agentfile"
 )
 
 // maxPromptFile is the largest file squad takes as a prompt: 256 KB, far more

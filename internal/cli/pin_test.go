@@ -20,7 +20,7 @@ func TestPinWritesTheFileInTheCurrentFolder(t *testing.T) {
 	if r.code != 0 {
 		t.Fatalf("exit %d: %s", r.code, r.stderr)
 	}
-	data, _ := os.ReadFile(filepath.Join(dir, ".squadup"))
+	data, _ := os.ReadFile(filepath.Join(dir, ".squad-up"))
 	if string(data) != "solo\n" || !strings.Contains(r.stdout, "solo") {
 		t.Errorf("file %q, stdout %q", data, r.stdout)
 	}
@@ -28,7 +28,7 @@ func TestPinWritesTheFileInTheCurrentFolder(t *testing.T) {
 	if r := e.run("pin", "--clear"); r.code != 0 || !strings.Contains(r.stdout, "Removed") {
 		t.Errorf("--clear: %d %q", r.code, r.stdout)
 	}
-	if _, err := os.Stat(filepath.Join(dir, ".squadup")); err == nil {
+	if _, err := os.Stat(filepath.Join(dir, ".squad-up")); err == nil {
 		t.Error("the file is still there")
 	}
 	if r := e.run("pin", "--clear"); r.code != 0 || !strings.Contains(r.stdout, "nothing") {
@@ -50,7 +50,7 @@ func TestPinRefusesWhatCannotBePinned(t *testing.T) {
 	if r := e.run("pin"); r.code != 2 {
 		t.Errorf("no name: %d %q", r.code, r.stderr)
 	}
-	if _, err := os.Stat(".squadup"); err == nil {
+	if _, err := os.Stat(".squad-up"); err == nil {
 		t.Error("a refused pin left a file")
 	}
 }
@@ -59,7 +59,7 @@ func TestRunWithoutANameUsesTheNearestPin(t *testing.T) {
 	e := newEnv(t)
 	e.addPresets()
 	root := t.TempDir()
-	if err := os.WriteFile(filepath.Join(root, ".squadup"), []byte("bug-hunt\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, ".squad-up"), []byte("bug-hunt\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	sub := filepath.Join(root, "src")
@@ -76,7 +76,7 @@ func TestRunWithoutANameUsesTheNearestPin(t *testing.T) {
 	if !strings.Contains(r.stdout, "Would run") || !strings.Contains(r.stdout, "debugger") {
 		t.Errorf("stdout = %q", r.stdout)
 	}
-	if !strings.Contains(r.stderr, "bug-hunt") || !strings.Contains(r.stderr, ".squadup") {
+	if !strings.Contains(r.stderr, "bug-hunt") || !strings.Contains(r.stderr, ".squad-up") {
 		t.Errorf("the pin should be announced: %q", r.stderr)
 	}
 }
@@ -85,7 +85,7 @@ func TestRunWithAnExplicitNameIgnoresThePin(t *testing.T) {
 	e := newEnv(t)
 	e.addPresets()
 	root := t.TempDir()
-	if err := os.WriteFile(filepath.Join(root, ".squadup"), []byte("bug-hunt\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, ".squad-up"), []byte("bug-hunt\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	t.Chdir(root)
@@ -113,14 +113,14 @@ func TestRunNamesABrokenPinFile(t *testing.T) {
 	e := newEnv(t)
 	e.addPresets()
 	root := t.TempDir()
-	if err := os.WriteFile(filepath.Join(root, ".squadup"), []byte("Not A Name\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, ".squad-up"), []byte("Not A Name\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	t.Chdir(root)
 
 	r := e.run("run", "--dry-run")
 
-	if r.code != 1 || !strings.Contains(r.stderr, filepath.Join(root, ".squadup")) {
+	if r.code != 1 || !strings.Contains(r.stderr, filepath.Join(root, ".squad-up")) {
 		t.Errorf("%d %q", r.code, r.stderr)
 	}
 }
@@ -129,7 +129,7 @@ func TestStatusNotesWhenTheProjectPinsAnotherPreset(t *testing.T) {
 	e := newEnv(t)
 	e.addPresets()
 	root := t.TempDir()
-	if err := os.WriteFile(filepath.Join(root, ".squadup"), []byte("bug-hunt\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, ".squad-up"), []byte("bug-hunt\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	t.Chdir(root)

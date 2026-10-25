@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/EdrenaVosh/squadup/internal/fsx"
+	"github.com/EdrenaVosh/squad-up/internal/fsx"
 )
 
 func TestWriteFileAtomicCreatesParentsAndWritesContent(t *testing.T) {
@@ -100,7 +100,7 @@ func TestReadFileIfExists(t *testing.T) {
 }
 
 // The safety fuse: a test binary must never write into the developer's real
-// ~/.claude or ~/.squadup.
+// ~/.claude or ~/.squad-up.
 func TestWritesIntoRealConfigPanicInTests(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
@@ -113,7 +113,7 @@ func TestWritesIntoRealConfigPanicInTests(t *testing.T) {
 		"RemoveAll":       func(p string) error { return fsx.RemoveAll(p) },
 		"Rename":          func(p string) error { return fsx.Rename(p, p+".moved") },
 	} {
-		for _, root := range []string{".claude", ".squadup"} {
+		for _, root := range []string{".claude", ".squad-up"} {
 			t.Run(name+"/"+root, func(t *testing.T) {
 				defer func() {
 					if recover() == nil {

@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/EdrenaVosh/squadup/internal/preset"
-	"github.com/EdrenaVosh/squadup/internal/testutil"
+	"github.com/EdrenaVosh/squad-up/internal/preset"
+	"github.com/EdrenaVosh/squad-up/internal/testutil"
 )
 
 // open selects a preset on the main screen and opens it.

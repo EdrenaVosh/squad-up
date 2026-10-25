@@ -20,7 +20,7 @@ exec squad status
 stdout 'Manual edits detected'
 
 exec squad use other --yes --save-edits
-grep 'edited by hand' squadup/presets/solo/agents/planner.md
+grep 'edited by hand' squad-up/presets/solo/agents/planner.md
 
 -- claude/agents/reviewer.md --
 ---
@@ -40,25 +40,25 @@ name: planner
 description: Plans work. Use before any large change.
 ---
 edited by hand
--- squadup/presets/solo/preset.yaml --
+-- squad-up/presets/solo/preset.yaml --
 schema: 1
 name: solo
 mode: replace
 main: null
 agents: [planner]
--- squadup/presets/solo/agents/planner.md --
+-- squad-up/presets/solo/agents/planner.md --
 ---
 name: planner
 description: Plans work. Use before any large change.
 ---
 Plan it.
--- squadup/presets/other/preset.yaml --
+-- squad-up/presets/other/preset.yaml --
 schema: 1
 name: other
 mode: replace
 main: null
 agents: [helper]
--- squadup/presets/other/agents/helper.md --
+-- squad-up/presets/other/agents/helper.md --
 ---
 name: helper
 description: Helps. Use when asked.

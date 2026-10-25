@@ -8,9 +8,9 @@ import (
 	"charm.land/bubbles/v2/textinput"
 	tea "charm.land/bubbletea/v2"
 
-	"github.com/EdrenaVosh/squadup/internal/apply"
-	"github.com/EdrenaVosh/squadup/internal/preset"
-	"github.com/EdrenaVosh/squadup/internal/workspace"
+	"github.com/EdrenaVosh/squad-up/internal/apply"
+	"github.com/EdrenaVosh/squad-up/internal/preset"
+	"github.com/EdrenaVosh/squad-up/internal/workspace"
 )
 
 // listWidth is the width of the preset list on the main screen.
@@ -383,13 +383,13 @@ func (h *home) View(c viewCtx) string {
 	h.listW, h.ox, h.oy = listWidth, c.ox, c.oy
 	if c.w < 2*listWidth+10 {
 		left := h.listLines(inner, rows-2, c)
-		return banner + frame("◆ squadup", shine, label, left, c.w, rows, 0)
+		return banner + frame("◆ squad-up", shine, label, left, c.w, rows, 0)
 	}
 	left := h.listLines(listWidth, rows-2, c)
 	right := cardLines(h.card, inner-listWidth-1, rows-2, rosterOpts{
 		frames: h.appear.frames(c), frame: c.frame, selected: h.agent, live: h.card.Active && !h.card.Initial,
 	})
-	return banner + frame("◆ squadup", shine, label, panes(left, right, listWidth, inner), c.w, rows, listWidth)
+	return banner + frame("◆ squad-up", shine, label, panes(left, right, listWidth, inner), c.w, rows, listWidth)
 }
 
 // panes puts two columns side by side with a divider; every line comes out

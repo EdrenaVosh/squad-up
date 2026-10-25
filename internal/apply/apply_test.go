@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/EdrenaVosh/squadup/internal/apply"
-	"github.com/EdrenaVosh/squadup/internal/testutil"
+	"github.com/EdrenaVosh/squad-up/internal/apply"
+	"github.com/EdrenaVosh/squad-up/internal/testutil"
 	"github.com/tidwall/gjson"
 )
 

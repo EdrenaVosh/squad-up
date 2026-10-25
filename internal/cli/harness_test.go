@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/EdrenaVosh/squadup/internal/cli"
-	"github.com/EdrenaVosh/squadup/internal/preset"
-	"github.com/EdrenaVosh/squadup/internal/testutil"
+	"github.com/EdrenaVosh/squad-up/internal/cli"
+	"github.com/EdrenaVosh/squad-up/internal/preset"
+	"github.com/EdrenaVosh/squad-up/internal/testutil"
 )
 
 var fixedNow = time.Date(2026, 10, 24, 9, 30, 0, 0, time.UTC)
@@ -35,7 +35,7 @@ const (
 )
 
 // env is an isolated pair of config directories plus a fixed clock. Every test
-// runs squad against it, never against the real ~/.claude or ~/.squadup.
+// runs squad against it, never against the real ~/.claude or ~/.squad-up.
 type env struct {
 	t         *testing.T
 	claudeDir string
@@ -52,10 +52,10 @@ func newEnv(t *testing.T) *env {
 	e := &env{
 		t:         t,
 		claudeDir: filepath.Join(t.TempDir(), "claude"),
-		home:      filepath.Join(t.TempDir(), "squadup"),
+		home:      filepath.Join(t.TempDir(), "squad-up"),
 	}
 	t.Setenv("CLAUDE_CONFIG_DIR", e.claudeDir)
-	t.Setenv("SQUADUP_HOME", e.home)
+	t.Setenv("SQUAD_UP_HOME", e.home)
 	t.Setenv("ANTHROPIC_MODEL", "")
 	testutil.HideClaude(t)
 	return e

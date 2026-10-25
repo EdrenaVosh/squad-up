@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/EdrenaVosh/squadup/internal/workspace"
+	"github.com/EdrenaVosh/squad-up/internal/workspace"
 )
 
 // The main screen switches to its spacious layout from this size.
@@ -122,7 +122,7 @@ func (h *home) viewSpacious(c viewCtx, rows int) string {
 	right := h.detail(inner-listW-1, bodyH, len(header), listW, c)
 
 	lines := append(header, panes(left, right, listW, inner)...)
-	return frame("◆ squadup", c.shift(), "", lines, c.w, rows, listW)
+	return frame("◆ squad-up", c.shift(), "", lines, c.w, rows, listW)
 }
 
 // cardList is the presets as cards of three lines each, Initial pinned at the

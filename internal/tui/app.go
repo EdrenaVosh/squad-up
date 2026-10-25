@@ -1,4 +1,4 @@
-// Package tui is the terminal interface of squadup: the main screen with the
+// Package tui is the terminal interface of squad-up: the main screen with the
 // presets, the editors, and the confirmation before a preset is equipped. It
 // also holds every user-facing text (copy.go).
 package tui
@@ -13,10 +13,10 @@ import (
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/ansi"
 
-	"github.com/EdrenaVosh/squadup/internal/claude"
-	"github.com/EdrenaVosh/squadup/internal/initial"
-	"github.com/EdrenaVosh/squadup/internal/paths"
-	"github.com/EdrenaVosh/squadup/internal/workspace"
+	"github.com/EdrenaVosh/squad-up/internal/claude"
+	"github.com/EdrenaVosh/squad-up/internal/initial"
+	"github.com/EdrenaVosh/squad-up/internal/paths"
+	"github.com/EdrenaVosh/squad-up/internal/workspace"
 )
 
 // StartKind says which screen the interface opens on.
@@ -338,7 +338,7 @@ func (a *App) View() tea.View {
 	var content string
 	switch {
 	case a.w < 40 || a.h < 10:
-		note := sWarn.Render("Terminal too small") + "\n" + sMuted.Render("squadup needs 80×24")
+		note := sWarn.Render("Terminal too small") + "\n" + sMuted.Render("squad-up needs 80×24")
 		content = lipgloss.Place(a.w, a.h, lipgloss.Center, lipgloss.Center, note)
 	default:
 		ctx := viewCtx{w: a.w, h: a.h - 1, claude: a.claude, frame: a.frame, anim: a.env.Animate, usage: a.usage}
@@ -355,7 +355,7 @@ func (a *App) View() tea.View {
 	v := tea.NewView(content)
 	v.AltScreen = true
 	v.MouseMode = tea.MouseModeCellMotion
-	v.WindowTitle = "squadup"
+	v.WindowTitle = "squad-up"
 	return v
 }
 

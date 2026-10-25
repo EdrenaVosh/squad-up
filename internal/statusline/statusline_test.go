@@ -12,9 +12,9 @@ import (
 
 	"github.com/tidwall/gjson"
 
-	"github.com/EdrenaVosh/squadup/internal/apply"
-	"github.com/EdrenaVosh/squadup/internal/paths"
-	"github.com/EdrenaVosh/squadup/internal/statusline"
+	"github.com/EdrenaVosh/squad-up/internal/apply"
+	"github.com/EdrenaVosh/squad-up/internal/paths"
+	"github.com/EdrenaVosh/squad-up/internal/statusline"
 )
 
 var now = time.Date(2026, 10, 24, 9, 30, 0, 0, time.UTC)
@@ -23,7 +23,7 @@ const ours = "'/opt/squad' statusline"
 
 func setup(t *testing.T, settings string) paths.Paths {
 	t.Helper()
-	p := paths.Paths{ClaudeDir: filepath.Join(t.TempDir(), "claude"), Home: filepath.Join(t.TempDir(), "squadup")}
+	p := paths.Paths{ClaudeDir: filepath.Join(t.TempDir(), "claude"), Home: filepath.Join(t.TempDir(), "squad-up")}
 	if settings != "" {
 		if err := os.MkdirAll(p.ClaudeDir, 0o755); err != nil {
 			t.Fatal(err)

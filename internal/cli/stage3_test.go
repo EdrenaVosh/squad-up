@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/EdrenaVosh/squadup/internal/testutil"
+	"github.com/EdrenaVosh/squad-up/internal/testutil"
 )
 
 // ---- models ----
@@ -296,7 +296,7 @@ func TestRunStartsClaudeWithThePresetAndWritesNothing(t *testing.T) {
 		t.Error("run changed the Claude config")
 	}
 	if got := testutil.Tree(t, e.home); !reflect.DeepEqual(got, homeBefore) {
-		t.Errorf("run changed ~/.squadup: state, backups or journal must not appear")
+		t.Errorf("run changed ~/.squad-up: state, backups or journal must not appear")
 	}
 }
 

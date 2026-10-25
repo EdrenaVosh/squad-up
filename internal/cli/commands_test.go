@@ -7,10 +7,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/EdrenaVosh/squadup/internal/apply"
-	"github.com/EdrenaVosh/squadup/internal/fsx"
-	"github.com/EdrenaVosh/squadup/internal/paths"
-	"github.com/EdrenaVosh/squadup/internal/testutil"
+	"github.com/EdrenaVosh/squad-up/internal/apply"
+	"github.com/EdrenaVosh/squad-up/internal/fsx"
+	"github.com/EdrenaVosh/squad-up/internal/paths"
+	"github.com/EdrenaVosh/squad-up/internal/testutil"
 )
 
 func (e *env) paths() paths.Paths { return paths.Paths{ClaudeDir: e.claudeDir, Home: e.home} }
@@ -209,7 +209,7 @@ func TestStatusShowsActivePresetClaudeAndNoDrift(t *testing.T) {
 		"Drift          none",
 		"Claude         2.7.1 (Claude Code) · firstParty",
 		"Config dir     " + e.claudeDir,
-		"Squadup home   " + e.home,
+		"Squad-up home  " + e.home,
 	} {
 		if !strings.Contains(r.stdout, want) {
 			t.Errorf("stdout lacks %q:\n%s", want, r.stdout)

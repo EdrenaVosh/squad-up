@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/EdrenaVosh/squadup/internal/paths"
+	"github.com/EdrenaVosh/squad-up/internal/paths"
 )
 
 func setHome(t *testing.T, home string) {
@@ -17,14 +17,14 @@ func TestResolveDefaultsToHomeDirectories(t *testing.T) {
 	home := t.TempDir()
 	setHome(t, home)
 	t.Setenv("CLAUDE_CONFIG_DIR", "")
-	t.Setenv("SQUADUP_HOME", "")
+	t.Setenv("SQUAD_UP_HOME", "")
 
 	got, err := paths.Resolve("", "")
 
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got.ClaudeDir != filepath.Join(home, ".claude") || got.Home != filepath.Join(home, ".squadup") {
+	if got.ClaudeDir != filepath.Join(home, ".claude") || got.Home != filepath.Join(home, ".squad-up") {
 		t.Fatalf("Resolve() = %+v", got)
 	}
 }
@@ -33,7 +33,7 @@ func TestResolvePrefersEnvOverDefault(t *testing.T) {
 	setHome(t, t.TempDir())
 	claudeDir, squadHome := t.TempDir(), t.TempDir()
 	t.Setenv("CLAUDE_CONFIG_DIR", claudeDir)
-	t.Setenv("SQUADUP_HOME", squadHome)
+	t.Setenv("SQUAD_UP_HOME", squadHome)
 
 	got, err := paths.Resolve("", "")
 
@@ -47,7 +47,7 @@ func TestResolvePrefersEnvOverDefault(t *testing.T) {
 
 func TestResolvePrefersFlagsOverEnv(t *testing.T) {
 	t.Setenv("CLAUDE_CONFIG_DIR", t.TempDir())
-	t.Setenv("SQUADUP_HOME", t.TempDir())
+	t.Setenv("SQUAD_UP_HOME", t.TempDir())
 	claudeDir, squadHome := t.TempDir(), t.TempDir()
 
 	got, err := paths.Resolve(claudeDir, squadHome)

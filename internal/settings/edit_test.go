@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/EdrenaVosh/squadup/internal/settings"
+	"github.com/EdrenaVosh/squad-up/internal/settings"
 )
 
 func TestApplyReplacesAValueInPlaceAndKeepsEverythingElseByteForByte(t *testing.T) {

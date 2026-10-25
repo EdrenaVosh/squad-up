@@ -6,8 +6,8 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/EdrenaVosh/squadup/internal/agentfile"
-	"github.com/EdrenaVosh/squadup/internal/testutil"
+	"github.com/EdrenaVosh/squad-up/internal/agentfile"
+	"github.com/EdrenaVosh/squad-up/internal/testutil"
 )
 
 func TestScanDirFindsMarkdownRecursivelyInPathOrder(t *testing.T) {

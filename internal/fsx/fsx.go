@@ -15,7 +15,7 @@ import (
 )
 
 // guard panics when a test binary is about to modify the developer's real
-// ~/.claude or ~/.squadup. Tests must point CLAUDE_CONFIG_DIR and SQUADUP_HOME
+// ~/.claude or ~/.squad-up. Tests must point CLAUDE_CONFIG_DIR and SQUAD_UP_HOME
 // at temporary directories.
 func guard(path string) {
 	if !testing.Testing() {
@@ -29,7 +29,7 @@ func guard(path string) {
 	if err != nil {
 		return
 	}
-	for _, name := range []string{".claude", ".squadup"} {
+	for _, name := range []string{".claude", ".squad-up"} {
 		root := filepath.Join(home, name)
 		if abs == root || strings.HasPrefix(abs, root+string(filepath.Separator)) {
 			panic(fmt.Sprintf("fsx: test attempted to modify real config %s (path %s)", root, abs))

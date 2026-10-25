@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/EdrenaVosh/squadup/internal/testutil"
+	"github.com/EdrenaVosh/squad-up/internal/testutil"
 )
 
 func TestFetchReadsAFileAndStdin(t *testing.T) {
@@ -164,7 +164,7 @@ func TestGistNeedsGH(t *testing.T) {
 func TestCreateGistSendsTheFileOnStdinAndReturnsTheURL(t *testing.T) {
 	log, stdin := testutil.FakeGH(t)
 
-	url, err := CreateGist(context.Background(), "", "solo.squad.json", []byte("payload"), "A squadup preset")
+	url, err := CreateGist(context.Background(), "", "solo.squad.json", []byte("payload"), "A squad-up preset")
 	if err != nil || url != "https://gist.github.com/me/abc123" {
 		t.Fatalf("%q, %v", url, err)
 	}
@@ -172,7 +172,7 @@ func TestCreateGistSendsTheFileOnStdinAndReturnsTheURL(t *testing.T) {
 		t.Errorf("stdin = %q", got)
 	}
 	calls, _ := os.ReadFile(log)
-	if !strings.Contains(string(calls), "gist create --filename solo.squad.json --desc A squadup preset -") {
+	if !strings.Contains(string(calls), "gist create --filename solo.squad.json --desc A squad-up preset -") {
 		t.Errorf("gh call: %s", calls)
 	}
 	if strings.Contains(string(calls), "--public") {

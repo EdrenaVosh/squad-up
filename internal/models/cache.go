@@ -11,9 +11,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/EdrenaVosh/squadup/internal/claude"
-	"github.com/EdrenaVosh/squadup/internal/fsx"
-	"github.com/EdrenaVosh/squadup/internal/paths"
+	"github.com/EdrenaVosh/squad-up/internal/claude"
+	"github.com/EdrenaVosh/squad-up/internal/fsx"
+	"github.com/EdrenaVosh/squad-up/internal/paths"
 )
 
 // cacheTTL is how long probe results stay valid.

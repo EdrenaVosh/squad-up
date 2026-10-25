@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/EdrenaVosh/squadup/internal/project"
+	"github.com/EdrenaVosh/squad-up/internal/project"
 )
 
 func write(t *testing.T, path, content string) {
@@ -21,8 +21,8 @@ func write(t *testing.T, path, content string) {
 
 func TestFindWalksUpToTheNearestFile(t *testing.T) {
 	root := t.TempDir()
-	write(t, filepath.Join(root, ".squadup"), "outer\n")
-	write(t, filepath.Join(root, "app", ".squadup"), "# the app team\nsolo-indie\n")
+	write(t, filepath.Join(root, ".squad-up"), "outer\n")
+	write(t, filepath.Join(root, "app", ".squad-up"), "# the app team\nsolo-indie\n")
 	deep := filepath.Join(root, "app", "src", "pkg")
 	if err := os.MkdirAll(deep, 0o755); err != nil {
 		t.Fatal(err)
@@ -32,7 +32,7 @@ func TestFindWalksUpToTheNearestFile(t *testing.T) {
 	if err != nil || pin == nil {
 		t.Fatalf("Find = %v, %v", pin, err)
 	}
-	if pin.Preset != "solo-indie" || pin.File != filepath.Join(root, "app", ".squadup") {
+	if pin.Preset != "solo-indie" || pin.File != filepath.Join(root, "app", ".squad-up") {
 		t.Errorf("pin = %+v", pin)
 	}
 
@@ -54,11 +54,11 @@ func TestFindReturnsNilWhenNothingIsPinned(t *testing.T) {
 
 func TestFindReportsABrokenFileWithItsPath(t *testing.T) {
 	root := t.TempDir()
-	write(t, filepath.Join(root, ".squadup"), "Not A Name\n")
+	write(t, filepath.Join(root, ".squad-up"), "Not A Name\n")
 
 	_, err := project.Find(root)
 
-	if err == nil || !strings.Contains(err.Error(), filepath.Join(root, ".squadup")) {
+	if err == nil || !strings.Contains(err.Error(), filepath.Join(root, ".squad-up")) {
 		t.Fatalf("err = %v", err)
 	}
 }
@@ -88,7 +88,7 @@ func TestWriteAndRemove(t *testing.T) {
 	if err := project.Write(dir, "bug-hunt"); err != nil {
 		t.Fatal(err)
 	}
-	data, _ := os.ReadFile(filepath.Join(dir, ".squadup"))
+	data, _ := os.ReadFile(filepath.Join(dir, ".squad-up"))
 	if string(data) != "bug-hunt\n" {
 		t.Errorf("file = %q", data)
 	}

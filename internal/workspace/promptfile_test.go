@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/EdrenaVosh/squadup/internal/workspace"
+	"github.com/EdrenaVosh/squad-up/internal/workspace"
 )
 
 func writeTemp(t *testing.T, name, content string) string {

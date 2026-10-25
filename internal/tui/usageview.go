@@ -9,7 +9,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 
-	"github.com/EdrenaVosh/squadup/internal/usage"
+	"github.com/EdrenaVosh/squad-up/internal/usage"
 )
 
 // usageScreen is the live report of the tokens each agent spends, session by

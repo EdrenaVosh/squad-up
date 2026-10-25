@@ -9,7 +9,7 @@
 <text x="390.0" y="201.0" font-size="14" text-anchor="middle" fill="#1e1e1e">terminal interface + CLI</text>
 <rect x="610" y="115" width="340" height="140" rx="12" fill="#ffec99" stroke="#1e1e1e" stroke-width="2"/>
 <text x="780.0" y="157.0" font-size="17" text-anchor="middle" fill="#1e1e1e" font-weight="bold">Preset library</text>
-<text x="780.0" y="179.0" font-size="14" text-anchor="middle" fill="#1e1e1e">~/.squadup/presets/&lt;name&gt;/</text>
+<text x="780.0" y="179.0" font-size="14" text-anchor="middle" fill="#1e1e1e">~/.squad-up/presets/&lt;name&gt;/</text>
 <text x="780.0" y="201.0" font-size="14" text-anchor="middle" fill="#1e1e1e">preset.yaml + agents/*.md</text>
 <text x="780.0" y="223.0" font-size="14" text-anchor="middle" fill="#1e1e1e">Initial = your original setup, never changed</text>
 <rect x="1060" y="130" width="330" height="110" rx="12" fill="#d0bfff" stroke="#1e1e1e" stroke-width="2"/>
@@ -57,8 +57,8 @@
 <line x1="805" y1="465" x2="805" y2="520" stroke="#1e1e1e" stroke-width="2.5" marker-end="url(#a)"/>
 <line x1="1225" y1="465" x2="1225" y2="520" stroke="#1e1e1e" stroke-width="2.5" marker-end="url(#a)"/>
 <line x1="500" y1="700" x2="420" y2="680" stroke="#1e1e1e" stroke-width="2.5" marker-end="url(#a)"/>
-<text x="40" y="58" font-size="34" fill="#1e1e1e" font-weight="bold">squadup — how it works</text>
-<text x="40" y="90" font-size="16" fill="#495057">You design teams of Claude Code agents once. Claude Code runs them. squadup is the control room around it.</text>
+<text x="40" y="58" font-size="34" fill="#1e1e1e" font-weight="bold">squad-up — how it works</text>
+<text x="40" y="90" font-size="16" fill="#495057">You design teams of Claude Code agents once. Claude Code runs them. squad-up is the control room around it.</text>
 <text x="194" y="164" font-size="14" fill="#495057">design,</text>
 <text x="194" y="182" font-size="14" fill="#495057">switch</text>
 <text x="512" y="144" font-size="14" fill="#495057">create · edit</text>

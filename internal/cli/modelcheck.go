@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/EdrenaVosh/squadup/internal/workspace"
+	"github.com/EdrenaVosh/squad-up/internal/workspace"
 )
 
 // workspace is the shared layer for presets, linting and model checks.

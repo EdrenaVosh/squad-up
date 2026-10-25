@@ -7,12 +7,12 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/EdrenaVosh/squadup/internal/agentfile"
-	"github.com/EdrenaVosh/squadup/internal/initial"
-	"github.com/EdrenaVosh/squadup/internal/lint"
-	"github.com/EdrenaVosh/squadup/internal/preset"
-	"github.com/EdrenaVosh/squadup/internal/settings"
-	"github.com/EdrenaVosh/squadup/internal/team"
+	"github.com/EdrenaVosh/squad-up/internal/agentfile"
+	"github.com/EdrenaVosh/squad-up/internal/initial"
+	"github.com/EdrenaVosh/squad-up/internal/lint"
+	"github.com/EdrenaVosh/squad-up/internal/preset"
+	"github.com/EdrenaVosh/squad-up/internal/settings"
+	"github.com/EdrenaVosh/squad-up/internal/team"
 )
 
 // AgentInfo is what a slot of a preset shows about its agent.

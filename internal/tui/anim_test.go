@@ -6,8 +6,8 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 
-	"github.com/EdrenaVosh/squadup/internal/testutil"
-	"github.com/EdrenaVosh/squadup/internal/tui"
+	"github.com/EdrenaVosh/squad-up/internal/testutil"
+	"github.com/EdrenaVosh/squad-up/internal/tui"
 )
 
 // animated is a harness whose interface runs its animations. The clock does

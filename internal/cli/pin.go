@@ -7,11 +7,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/EdrenaVosh/squadup/internal/preset"
-	"github.com/EdrenaVosh/squadup/internal/project"
+	"github.com/EdrenaVosh/squad-up/internal/preset"
+	"github.com/EdrenaVosh/squad-up/internal/project"
 )
 
-// projectPin returns the preset pinned by the nearest .squadup file above the
+// projectPin returns the preset pinned by the nearest .squad-up file above the
 // current folder, or nil.
 func (a *app) projectPin() (*project.Pin, error) {
 	dir, err := os.Getwd()
@@ -29,10 +29,10 @@ func (a *app) newPin() *cobra.Command {
 	var clear bool
 	cmd := &cobra.Command{
 		Use:   "pin <preset>",
-		Short: "Pin a preset to this project (writes a .squadup file); `squad run` then needs no name",
-		Long: "Writes the preset's name into .squadup in the current folder. Commit it to share the choice with your team:\n" +
+		Short: "Pin a preset to this project (writes a .squad-up file); `squad run` then needs no name",
+		Long: "Writes the preset's name into .squad-up in the current folder. Commit it to share the choice with your team:\n" +
 			"the file holds only a name, and each person's own library decides what it means.\n" +
-			"`squad run` with no name uses the nearest .squadup above the current folder, and `squad status` says when it differs from what is equipped.",
+			"`squad run` with no name uses the nearest .squad-up above the current folder, and `squad status` says when it differs from what is equipped.",
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(_ *cobra.Command, args []string) error {
 			dir, err := os.Getwd()
@@ -68,6 +68,6 @@ func (a *app) newPin() *cobra.Command {
 			return nil
 		},
 	}
-	cmd.Flags().BoolVar(&clear, "clear", false, "remove the .squadup file of this folder")
+	cmd.Flags().BoolVar(&clear, "clear", false, "remove the .squad-up file of this folder")
 	return cmd
 }

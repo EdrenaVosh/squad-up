@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/EdrenaVosh/squadup/internal/cli"
-	"github.com/EdrenaVosh/squadup/internal/tui"
+	"github.com/EdrenaVosh/squad-up/internal/cli"
+	"github.com/EdrenaVosh/squad-up/internal/tui"
 )
 
 // tuiRun runs squad as if on a terminal, with a fake interface that records
@@ -78,7 +78,7 @@ func TestTheFirstRunGoesToTheWelcomeScreenInsteadOfPrintingText(t *testing.T) {
 	if got := r.env.Welcome.Summary().AgentNames; len(got) != 3 {
 		t.Errorf("welcome agents = %v", got)
 	}
-	if strings.Contains(r.stderr, "Welcome to squadup") {
+	if strings.Contains(r.stderr, "Welcome to squad-up") {
 		t.Errorf("the text summary must not be printed when the interface shows it:\n%s", r.stderr)
 	}
 }
@@ -112,7 +112,7 @@ func TestNoColorCiAndDumbTerminalsGetText(t *testing.T) {
 			if r.opened != 0 {
 				t.Fatal("the interface must not open")
 			}
-			if !strings.Contains(r.stdout, "Usage:") || !strings.Contains(r.stderr, "Welcome to squadup") {
+			if !strings.Contains(r.stdout, "Usage:") || !strings.Contains(r.stderr, "Welcome to squad-up") {
 				t.Errorf("text mode prints help and the summary:\nstdout:\n%s\nstderr:\n%s", r.stdout, r.stderr)
 			}
 			if strings.Contains(r.stdout+r.stderr, "\x1b[") {

@@ -6,7 +6,7 @@ set -eu
 
 sandbox="${1:?usage: sandbox.sh <sandbox-dir>}"
 claude_dir="$sandbox/claude"
-home_dir="$sandbox/squadup"
+home_dir="$sandbox/squad-up"
 
 mkdir -p "$home_dir"
 if [ -d "$claude_dir" ]; then
@@ -50,7 +50,7 @@ cat > "$claude_dir/settings.json" <<'EOF'
   "theme": "dark",
   "model": "opus",
   "env": {
-    "SANDBOX_MARKER": "squadup-sandbox"
+    "SANDBOX_MARKER": "squad-up-sandbox"
   },
   "permissions": {
     "defaultMode": "acceptEdits",

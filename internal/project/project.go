@@ -1,4 +1,4 @@
-// Package project reads and writes the `.squadup` file that pins a preset to
+// Package project reads and writes the `.squad-up` file that pins a preset to
 // a project folder.
 package project
 
@@ -10,17 +10,17 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/EdrenaVosh/squadup/internal/fsx"
-	"github.com/EdrenaVosh/squadup/internal/preset"
+	"github.com/EdrenaVosh/squad-up/internal/fsx"
+	"github.com/EdrenaVosh/squad-up/internal/preset"
 )
 
 // FileName is the name of the pin file.
-const FileName = ".squadup"
+const FileName = ".squad-up"
 
 // Pin is a preset pinned to a project.
 type Pin struct {
 	Preset string
-	File   string // the path of the .squadup file
+	File   string // the path of the .squad-up file
 }
 
 // Parse reads the preset name from the content of a pin file: the first line
@@ -42,7 +42,7 @@ func Parse(data []byte) (string, error) {
 	return "", errors.New("the file names no preset")
 }
 
-// Find looks for a .squadup file in dir and in each folder above it, and
+// Find looks for a .squad-up file in dir and in each folder above it, and
 // returns the nearest. It returns nil when there is none.
 func Find(dir string) (*Pin, error) {
 	dir, err := filepath.Abs(dir)

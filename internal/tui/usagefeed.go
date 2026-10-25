@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/EdrenaVosh/squadup/internal/usage"
-	"github.com/EdrenaVosh/squadup/internal/workspace"
+	"github.com/EdrenaVosh/squad-up/internal/usage"
+	"github.com/EdrenaVosh/squad-up/internal/workspace"
 )
 
 // usageInterval is how often the token report is read again.

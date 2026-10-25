@@ -9,7 +9,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/EdrenaVosh/squadup/internal/preset"
+	"github.com/EdrenaVosh/squad-up/internal/preset"
 )
 
 //go:embed all:bug-hunter all:feature-creator

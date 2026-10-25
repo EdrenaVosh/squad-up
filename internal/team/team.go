@@ -16,8 +16,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/EdrenaVosh/squadup/internal/agentfile"
-	"github.com/EdrenaVosh/squadup/internal/preset"
+	"github.com/EdrenaVosh/squad-up/internal/agentfile"
+	"github.com/EdrenaVosh/squad-up/internal/preset"
 )
 
 const (

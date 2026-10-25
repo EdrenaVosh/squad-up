@@ -10,10 +10,10 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 
-	"github.com/EdrenaVosh/squadup/internal/fsx"
-	"github.com/EdrenaVosh/squadup/internal/transfer"
-	"github.com/EdrenaVosh/squadup/internal/workspace"
-	"github.com/EdrenaVosh/squadup/templates"
+	"github.com/EdrenaVosh/squad-up/internal/fsx"
+	"github.com/EdrenaVosh/squad-up/internal/transfer"
+	"github.com/EdrenaVosh/squad-up/internal/workspace"
+	"github.com/EdrenaVosh/squad-up/templates"
 )
 
 // ---- import ----
@@ -308,7 +308,7 @@ func writeExport(ws workspace.Workspace, name, path string) tea.Cmd {
 	if err != nil {
 		return flashErr(err.Error())
 	}
-	data, err := transfer.Export(*b, "squadup", ws.Now())
+	data, err := transfer.Export(*b, "squad-up", ws.Now())
 	if err != nil {
 		return flashErr(err.Error())
 	}

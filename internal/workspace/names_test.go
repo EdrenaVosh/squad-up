@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/EdrenaVosh/squadup/internal/preset"
-	"github.com/EdrenaVosh/squadup/internal/workspace"
+	"github.com/EdrenaVosh/squad-up/internal/preset"
+	"github.com/EdrenaVosh/squad-up/internal/workspace"
 )
 
 func TestSlugMakesAFileSafeIDFromAnyTitle(t *testing.T) {

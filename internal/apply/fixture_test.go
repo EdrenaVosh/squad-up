@@ -5,11 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/EdrenaVosh/squadup/internal/apply"
-	"github.com/EdrenaVosh/squadup/internal/initial"
-	"github.com/EdrenaVosh/squadup/internal/paths"
-	"github.com/EdrenaVosh/squadup/internal/preset"
-	"github.com/EdrenaVosh/squadup/internal/testutil"
+	"github.com/EdrenaVosh/squad-up/internal/apply"
+	"github.com/EdrenaVosh/squad-up/internal/initial"
+	"github.com/EdrenaVosh/squad-up/internal/paths"
+	"github.com/EdrenaVosh/squad-up/internal/preset"
+	"github.com/EdrenaVosh/squad-up/internal/testutil"
 	"github.com/tidwall/gjson"
 )
 
@@ -46,7 +46,7 @@ func newFx(t *testing.T, files map[string]string) *fx {
 	t.Helper()
 	f := &fx{
 		t:     t,
-		p:     paths.Paths{ClaudeDir: filepath.Join(t.TempDir(), "claude"), Home: filepath.Join(t.TempDir(), "squadup")},
+		p:     paths.Paths{ClaudeDir: filepath.Join(t.TempDir(), "claude"), Home: filepath.Join(t.TempDir(), "squad-up")},
 		clock: time.Date(2026, 10, 24, 9, 0, 0, 0, time.UTC),
 	}
 	if files == nil {

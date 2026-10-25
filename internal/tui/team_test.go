@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/EdrenaVosh/squadup/internal/preset"
-	"github.com/EdrenaVosh/squadup/internal/testutil"
+	"github.com/EdrenaVosh/squad-up/internal/preset"
+	"github.com/EdrenaVosh/squad-up/internal/testutil"
 )
 
 func TestTheIndependentSwitch(t *testing.T) {
@@ -185,7 +185,7 @@ func TestAnAgentThatStillHasTheOldShareFieldIsNotWarnedAboutAndLosesItOnSave(t *
 }
 
 // The keys of docs/demo.tape, which cannot be recorded in a test: a new preset
-// from the first template, its agents looked at, and the interface left.
+// from the first template, a look at its four agents, and the interface left.
 func TestTheKeysOfTheDemoDoWhatTheScriptExpects(t *testing.T) {
 	h := newHarness(t)
 	h.resize(156, 48)
@@ -196,14 +196,10 @@ func TestTheKeysOfTheDemoDoWhatTheScriptExpects(t *testing.T) {
 	h.contains("Use a template")
 	h.press("enter") // the first option
 	h.contains("Bug Hunter", "Feature Creator")
-	h.press("enter") // Bug Hunter, the first
+	h.press("enter") // Bug Hunter, the first: its preset opens
 	h.contains("Bug Hunter", "AGENTS", "debugger", "fixer", "reviewer", "tester")
-
-	h.press("down", "down", "down", "down", "esc")
+	h.press("esc")
 	h.contains("PRESETS", "Bug Hunter")
-	h.goTo("bug-hunter") // in the sandbox of the demo it is the only preset, so it is already selected
-	h.press("right", "right", "right")
-	h.contains("╔═ ▶ 4 ") // the fourth agent is selected
 
 	h.press("q")
 	if !h.quit {

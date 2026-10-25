@@ -7,10 +7,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/EdrenaVosh/squadup/internal/version"
+	"github.com/EdrenaVosh/squad-up/internal/version"
 )
 
-const installScript = "curl -fsSL https://raw.githubusercontent.com/EdrenaVosh/squadup/main/scripts/install.sh | sh"
+const installScript = "curl -fsSL https://raw.githubusercontent.com/EdrenaVosh/squad-up/main/scripts/install.sh | sh"
 
 // updateAdvice says how a program installed at path is updated. It looks at
 // where the file is, because that tells how it got there.
@@ -18,12 +18,12 @@ func updateAdvice(path string) (how, command string) {
 	slashed := filepath.ToSlash(path)
 	switch {
 	case strings.Contains(slashed, "/Cellar/"), strings.Contains(slashed, "/Caskroom/"), strings.Contains(slashed, "/homebrew/"), strings.Contains(slashed, "/linuxbrew/"):
-		return "Homebrew", "brew upgrade EdrenaVosh/tap/squadup"
+		return "Homebrew", "brew upgrade EdrenaVosh/tap/squad-up"
 	case strings.Contains(slashed, "/go/bin/"):
-		return "go install", "go install github.com/EdrenaVosh/squadup/cmd/squad@latest"
+		return "go install", "go install github.com/EdrenaVosh/squad-up/cmd/squad@latest"
 	case strings.HasSuffix(filepath.Dir(slashed), "/.local/bin"):
 		return "the install script", installScript
-	case strings.HasSuffix(filepath.Dir(slashed), "/bin") && strings.Contains(slashed, "squadup/bin"):
+	case strings.HasSuffix(filepath.Dir(slashed), "/bin") && strings.Contains(slashed, "squad-up/bin"):
 		return "a build from source", "git pull && make install"
 	}
 	return "an unknown source", installScript
@@ -44,7 +44,7 @@ func (a *app) newUpdate() *cobra.Command {
 				}
 			}
 			how, command := updateAdvice(exe)
-			printf(a.io.Out, "You have %s, installed with %s.\n\nTo update, run:\n  %s\n\nWhat is new: https://github.com/EdrenaVosh/squadup/blob/main/CHANGELOG.md\n",
+			printf(a.io.Out, "You have %s, installed with %s.\n\nTo update, run:\n  %s\n\nWhat is new: https://github.com/EdrenaVosh/squad-up/blob/main/CHANGELOG.md\n",
 				version.String(), how, command)
 			return nil
 		},

@@ -6,8 +6,8 @@ exec squad use solo --dry-run
 stdout 'Dry run'
 stdout '\+ agents/planner.md'
 treeeq claude claude.orig
-! exists squadup/backups
-! exists squadup/log.jsonl
+! exists squad-up/backups
+! exists squad-up/log.jsonl
 
 # Without --yes and without a terminal squad refuses.
 ! exec squad use solo
@@ -34,7 +34,7 @@ Be strict.
 {
   "model": "opus"
 }
--- squadup/presets/solo/preset.yaml --
+-- squad-up/presets/solo/preset.yaml --
 schema: 1
 name: solo
 mode: replace
@@ -42,7 +42,7 @@ main: null
 agents: [planner]
 settings:
   model: sonnet
--- squadup/presets/solo/agents/planner.md --
+-- squad-up/presets/solo/agents/planner.md --
 ---
 name: planner
 description: Plans work. Use before any large change.

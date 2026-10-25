@@ -10,10 +10,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/EdrenaVosh/squadup/internal/apply"
-	"github.com/EdrenaVosh/squadup/internal/fsx"
-	"github.com/EdrenaVosh/squadup/internal/preset"
-	"github.com/EdrenaVosh/squadup/internal/tui"
+	"github.com/EdrenaVosh/squad-up/internal/apply"
+	"github.com/EdrenaVosh/squad-up/internal/fsx"
+	"github.com/EdrenaVosh/squad-up/internal/preset"
+	"github.com/EdrenaVosh/squad-up/internal/tui"
 )
 
 // opFlags are the flags shared by use, restore and undo.
@@ -243,7 +243,7 @@ func executeError(err error) error {
 	case errors.Is(err, apply.ErrDrift):
 		return &ExitError{Code: 1, Err: err, Fix: "re-run with --save-edits or --discard-edits"}
 	}
-	return &ExitError{Code: 1, Err: err, Fix: "check that the Claude config and ~/.squadup are writable, then try again"}
+	return &ExitError{Code: 1, Err: err, Fix: "check that the Claude config and ~/.squad-up are writable, then try again"}
 }
 
 func renderPlan(w io.Writer, p *apply.Plan, extraWarnings []string) {

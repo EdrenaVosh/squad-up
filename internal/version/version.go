@@ -5,7 +5,7 @@ import "fmt"
 
 // Set at build time:
 //
-//	-X github.com/EdrenaVosh/squadup/internal/version.Version=...
+//	-X github.com/EdrenaVosh/squad-up/internal/version.Version=...
 var (
 	Version = "dev"
 	Commit  = "none"

@@ -13,17 +13,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/EdrenaVosh/squadup/internal/agentfile"
-	"github.com/EdrenaVosh/squadup/internal/apply"
-	"github.com/EdrenaVosh/squadup/internal/claude"
-	"github.com/EdrenaVosh/squadup/internal/fsx"
-	"github.com/EdrenaVosh/squadup/internal/initial"
-	"github.com/EdrenaVosh/squadup/internal/lint"
-	"github.com/EdrenaVosh/squadup/internal/models"
-	"github.com/EdrenaVosh/squadup/internal/paths"
-	"github.com/EdrenaVosh/squadup/internal/preset"
-	"github.com/EdrenaVosh/squadup/internal/settings"
-	"github.com/EdrenaVosh/squadup/templates"
+	"github.com/EdrenaVosh/squad-up/internal/agentfile"
+	"github.com/EdrenaVosh/squad-up/internal/apply"
+	"github.com/EdrenaVosh/squad-up/internal/claude"
+	"github.com/EdrenaVosh/squad-up/internal/fsx"
+	"github.com/EdrenaVosh/squad-up/internal/initial"
+	"github.com/EdrenaVosh/squad-up/internal/lint"
+	"github.com/EdrenaVosh/squad-up/internal/models"
+	"github.com/EdrenaVosh/squad-up/internal/paths"
+	"github.com/EdrenaVosh/squad-up/internal/preset"
+	"github.com/EdrenaVosh/squad-up/internal/settings"
+	"github.com/EdrenaVosh/squad-up/templates"
 )
 
 var (
@@ -41,7 +41,7 @@ var (
 	ErrEquipped = errors.New("the preset is equipped right now")
 )
 
-// Workspace is the squadup data of one Claude Code config directory.
+// Workspace is the squad-up data of one Claude Code config directory.
 type Workspace struct {
 	Paths paths.Paths
 	Now   func() time.Time // defaults to time.Now
@@ -71,7 +71,7 @@ func CheckName(name string) error {
 	return nil
 }
 
-// locked runs fn while holding the squadup lock, so that nothing else changes
+// locked runs fn while holding the squad-up lock, so that nothing else changes
 // the presets or the state meanwhile.
 func (w Workspace) locked(fn func() error) error {
 	unlock, err := fsx.Lock(w.Paths.LockFile())

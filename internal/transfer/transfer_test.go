@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/EdrenaVosh/squadup/internal/preset"
+	"github.com/EdrenaVosh/squad-up/internal/preset"
 )
 
 var fixedNow = time.Date(2026, 10, 24, 12, 0, 0, 0, time.UTC)
@@ -47,7 +47,7 @@ func sampleBundle() preset.Bundle {
 
 func export(t *testing.T, b preset.Bundle) []byte {
 	t.Helper()
-	data, err := Export(b, "squadup@test", fixedNow)
+	data, err := Export(b, "squad-up@test", fixedNow)
 	if err != nil {
 		t.Fatalf("Export: %v", err)
 	}
@@ -62,7 +62,7 @@ func TestExportWritesTheDocumentedShape(t *testing.T) {
 		t.Fatalf("export is not JSON: %v", err)
 	}
 	for key, want := range map[string]any{
-		"format": "squadup-preset", "schema": float64(1), "generator": "squadup@test", "exportedAt": "2026-10-24T12:00:00Z",
+		"format": "squad-up-preset", "schema": float64(1), "generator": "squad-up@test", "exportedAt": "2026-10-24T12:00:00Z",
 	} {
 		if doc[key] != want {
 			t.Errorf("%s = %v, want %v", key, doc[key], want)
@@ -120,7 +120,7 @@ func TestExportThenParseGivesTheSameBundle(t *testing.T) {
 func TestExportAllIsACollection(t *testing.T) {
 	other := sampleBundle()
 	other.Preset.Name = "second"
-	data, err := ExportAll([]preset.Bundle{sampleBundle(), other}, "squadup@test", fixedNow)
+	data, err := ExportAll([]preset.Bundle{sampleBundle(), other}, "squad-up@test", fixedNow)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -131,7 +131,7 @@ func TestExportAllIsACollection(t *testing.T) {
 	if err := json.Unmarshal(data, &doc); err != nil {
 		t.Fatal(err)
 	}
-	if doc.Format != "squadup-presets" || len(doc.Presets) != 2 {
+	if doc.Format != "squad-up-presets" || len(doc.Presets) != 2 {
 		t.Errorf("doc = %+v", doc)
 	}
 	got, err := Parse(data, Options{})
@@ -147,12 +147,12 @@ func TestParseRefusesDocumentsItCannotTrust(t *testing.T) {
 		data string
 		want string
 	}{
-		{"not JSON", "name: solo", "not a squadup file"},
-		{"empty", "", "not a squadup file"},
-		{"other format", `{"format":"something","schema":1}`, "not a squadup preset"},
+		{"not JSON", "name: solo", "not a squad-up file"},
+		{"empty", "", "not a squad-up file"},
+		{"other format", `{"format":"something","schema":1}`, "not a squad-up preset"},
 		{"newer schema", strings.Replace(good, `"schema": 1`, `"schema": 2`, 1), "newer"},
-		{"no preset", `{"format":"squadup-preset","schema":1}`, "no preset"},
-		{"empty collection", `{"format":"squadup-presets","schema":1,"presets":[]}`, "no presets"},
+		{"no preset", `{"format":"squad-up-preset","schema":1}`, "no preset"},
+		{"empty collection", `{"format":"squad-up-presets","schema":1,"presets":[]}`, "no presets"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -168,7 +168,7 @@ func TestParseRefusesUnsafeAgentFileNames(t *testing.T) {
 	for _, file := range []string{"../evil.md", "/etc/evil.md", "sub/dir.md", `..\evil.md`, "notes.txt", "Bad Name.md", ".md", "evil"} {
 		t.Run(file, func(t *testing.T) {
 			doc := map[string]any{
-				"format": "squadup-preset", "schema": 1,
+				"format": "squad-up-preset", "schema": 1,
 				"preset": map[string]any{"name": "x", "mode": "replace"},
 				"agents": []any{map[string]any{"file": file, "content": reviewerAgent}},
 			}
@@ -183,7 +183,7 @@ func TestParseRefusesUnsafeAgentFileNames(t *testing.T) {
 
 func TestParseRefusesAnAgentWhoseNameDiffersFromItsFile(t *testing.T) {
 	doc := map[string]any{
-		"format": "squadup-preset", "schema": 1,
+		"format": "squad-up-preset", "schema": 1,
 		"preset": map[string]any{"name": "x", "mode": "replace"},
 		"agents": []any{map[string]any{"file": "other.md", "content": reviewerAgent}},
 	}
@@ -202,7 +202,7 @@ func TestParseRefusesDuplicatesAndBrokenFiles(t *testing.T) {
 	}
 	for name, agents := range cases {
 		t.Run(name, func(t *testing.T) {
-			doc := map[string]any{"format": "squadup-preset", "schema": 1, "preset": map[string]any{"name": "x", "mode": "replace"}, "agents": agents}
+			doc := map[string]any{"format": "squad-up-preset", "schema": 1, "preset": map[string]any{"name": "x", "mode": "replace"}, "agents": agents}
 			data, _ := json.Marshal(doc)
 			if _, err := Parse(data, Options{}); err == nil {
 				t.Fatal("expected a refusal")
@@ -213,7 +213,7 @@ func TestParseRefusesDuplicatesAndBrokenFiles(t *testing.T) {
 
 func TestParseValidatesThePreset(t *testing.T) {
 	doc := map[string]any{
-		"format": "squadup-preset", "schema": 1,
+		"format": "squad-up-preset", "schema": 1,
 		"preset": map[string]any{"name": "Bad Name", "mode": "sideways", "accent": "mauve"},
 	}
 	data, _ := json.Marshal(doc)
@@ -232,7 +232,7 @@ func TestParseRefusesAMainAgentThatIsNotInThePreset(t *testing.T) {
 	b := sampleBundle()
 	ghost := "ghost"
 	b.Preset.Main = &ghost
-	data, err := Export(b, "squadup@test", fixedNow)
+	data, err := Export(b, "squad-up@test", fixedNow)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -419,7 +419,7 @@ func TestParseWarnsAboutSecretsInTheFile(t *testing.T) {
 }
 
 func TestParseRefusesAFileOverTheSizeLimit(t *testing.T) {
-	data := append([]byte(`{"format":"squadup-preset","schema":1,"pad":"`), make([]byte, MaxSize)...)
+	data := append([]byte(`{"format":"squad-up-preset","schema":1,"pad":"`), make([]byte, MaxSize)...)
 	_, err := Parse(data, Options{})
 	if err == nil || !strings.Contains(err.Error(), "too large") {
 		t.Fatalf("err = %v", err)

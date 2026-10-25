@@ -8,9 +8,9 @@ stderr 'Permissions  acceptEdits · 1 allow · 0 ask · 1 deny'
 stderr 'Nothing was changed'
 stdout 'No presets yet'
 stdout '● initial'
-exists squadup/presets/initial/agents/team/tester.md
-cmp squadup/presets/initial/agents/reviewer.md claude/agents/reviewer.md
-cmp squadup/presets/initial/settings.orig.json claude/settings.json
+exists squad-up/presets/initial/agents/team/tester.md
+cmp squad-up/presets/initial/agents/reviewer.md claude/agents/reviewer.md
+cmp squad-up/presets/initial/settings.orig.json claude/settings.json
 
 # The summary is shown only once.
 exec squad list

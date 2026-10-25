@@ -10,13 +10,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/EdrenaVosh/squadup/internal/apply"
-	"github.com/EdrenaVosh/squadup/internal/initial"
-	"github.com/EdrenaVosh/squadup/internal/models"
-	"github.com/EdrenaVosh/squadup/internal/paths"
-	"github.com/EdrenaVosh/squadup/internal/preset"
-	"github.com/EdrenaVosh/squadup/internal/testutil"
-	"github.com/EdrenaVosh/squadup/internal/workspace"
+	"github.com/EdrenaVosh/squad-up/internal/apply"
+	"github.com/EdrenaVosh/squad-up/internal/initial"
+	"github.com/EdrenaVosh/squad-up/internal/models"
+	"github.com/EdrenaVosh/squad-up/internal/paths"
+	"github.com/EdrenaVosh/squad-up/internal/preset"
+	"github.com/EdrenaVosh/squad-up/internal/testutil"
+	"github.com/EdrenaVosh/squad-up/internal/workspace"
 )
 
 var now = time.Date(2026, 10, 24, 9, 30, 0, 0, time.UTC)
@@ -29,7 +29,7 @@ func agentMD(name, body string) string {
 // "solo", with two agents and a main agent.
 func setup(t *testing.T) workspace.Workspace {
 	t.Helper()
-	p := paths.Paths{ClaudeDir: filepath.Join(t.TempDir(), "claude"), Home: filepath.Join(t.TempDir(), "squadup")}
+	p := paths.Paths{ClaudeDir: filepath.Join(t.TempDir(), "claude"), Home: filepath.Join(t.TempDir(), "squad-up")}
 	testutil.WriteFiles(t, p.ClaudeDir, map[string]string{
 		"agents/reviewer.md":    agentMD("reviewer", "Initial reviewer."),
 		"agents/team/tester.md": agentMD("tester", "Initial tester."),

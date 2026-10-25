@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/EdrenaVosh/squadup/internal/testutil"
-	"github.com/EdrenaVosh/squadup/internal/version"
+	"github.com/EdrenaVosh/squad-up/internal/testutil"
+	"github.com/EdrenaVosh/squad-up/internal/version"
 )
 
 func TestVersionFlagPrintsBuildInfo(t *testing.T) {

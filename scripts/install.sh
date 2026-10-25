@@ -1,21 +1,21 @@
 #!/bin/sh
-# squadup installer: downloads a release, checks its checksum and puts `squad`
-# and `squadup` in a folder on your PATH.
+# squad-up installer: downloads a release, checks its checksum and puts `squad`
+# and `squad-up` in a folder on your PATH.
 #
-#   curl -fsSL https://raw.githubusercontent.com/EdrenaVosh/squadup/main/scripts/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/EdrenaVosh/squad-up/main/scripts/install.sh | sh
 #
 # Settings, all optional:
-#   SQUADUP_VERSION       a version such as 0.1.0 (default: the latest release)
-#   SQUADUP_INSTALL_DIR   where to put the programs (default: ~/.local/bin)
-#   SQUADUP_INSTALL_FROM  a release archive on this machine, to install from it
+#   SQUAD_UP_VERSION       a version such as 0.1.0 (default: the latest release)
+#   SQUAD_UP_INSTALL_DIR   where to put the programs (default: ~/.local/bin)
+#   SQUAD_UP_INSTALL_FROM  a release archive on this machine, to install from it
 #                         instead of downloading; checksums.txt must lie beside it
 set -eu
 
-REPO="EdrenaVosh/squadup"
-DIR="${SQUADUP_INSTALL_DIR:-$HOME/.local/bin}"
+REPO="EdrenaVosh/squad-up"
+DIR="${SQUAD_UP_INSTALL_DIR:-$HOME/.local/bin}"
 
 say() { printf '%s\n' "$*"; }
-fail() { printf 'squadup install: %s\n' "$*" >&2; exit 1; }
+fail() { printf 'squad-up install: %s\n' "$*" >&2; exit 1; }
 have() { command -v "$1" >/dev/null 2>&1; }
 
 os() {
@@ -49,7 +49,7 @@ fetch() { # url file
 }
 
 latest_version() {
-  have curl || fail "curl is needed to find the latest release; set SQUADUP_VERSION to skip the lookup"
+  have curl || fail "curl is needed to find the latest release; set SQUAD_UP_VERSION to skip the lookup"
   url=$(curl -fsSL -o /dev/null -w '%{url_effective}' "https://github.com/$REPO/releases/latest") || fail "could not look up the latest release"
   tag=${url##*/}
   [ -n "$tag" ] && [ "$tag" != "latest" ] || fail "there is no release yet"
@@ -59,8 +59,8 @@ latest_version() {
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT INT TERM
 
-if [ -n "${SQUADUP_INSTALL_FROM:-}" ]; then
-  archive=$SQUADUP_INSTALL_FROM
+if [ -n "${SQUAD_UP_INSTALL_FROM:-}" ]; then
+  archive=$SQUAD_UP_INSTALL_FROM
   [ -f "$archive" ] || fail "$archive does not exist"
   sums="$(dirname "$archive")/checksums.txt"
   [ -f "$sums" ] || fail "checksums.txt is not beside $archive, so it cannot be checked"
@@ -68,11 +68,11 @@ if [ -n "${SQUADUP_INSTALL_FROM:-}" ]; then
 else
   os=$(os)
   arch=$(arch)
-  version=${SQUADUP_VERSION:-$(latest_version)}
+  version=${SQUAD_UP_VERSION:-$(latest_version)}
   version=${version#v}
-  name="squadup_${version}_${os}_${arch}.tar.gz"
+  name="squad-up_${version}_${os}_${arch}.tar.gz"
   base="https://github.com/$REPO/releases/download/v${version}"
-  say "Downloading squadup $version for $os/$arch"
+  say "Downloading squad-up $version for $os/$arch"
   fetch "$base/$name" "$TMP/$name" || fail "could not download $base/$name"
   fetch "$base/checksums.txt" "$TMP/checksums.txt" || fail "could not download the checksums"
   archive=$TMP/$name
@@ -88,14 +88,14 @@ say "Checksum ok"
 
 tar -xzf "$archive" -C "$TMP" || fail "could not unpack $archive"
 mkdir -p "$DIR"
-for program in squad squadup; do
+for program in squad squad-up; do
   [ -f "$TMP/$program" ] || fail "$program is not in the archive"
   cp "$TMP/$program" "$DIR/$program.new"
   chmod 0755 "$DIR/$program.new"
   mv -f "$DIR/$program.new" "$DIR/$program"
 done
 
-say "Installed squad and squadup in $DIR"
+say "Installed squad and squad-up in $DIR"
 case ":$PATH:" in
   *":$DIR:"*) ;;
   *) say "Note: $DIR is not on your PATH. Add this to your shell profile:  export PATH=\"$DIR:\$PATH\"" ;;

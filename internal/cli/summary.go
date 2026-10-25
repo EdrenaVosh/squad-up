@@ -5,8 +5,8 @@ import (
 	"io"
 	"strings"
 
-	"github.com/EdrenaVosh/squadup/internal/initial"
-	"github.com/EdrenaVosh/squadup/internal/tui"
+	"github.com/EdrenaVosh/squad-up/internal/initial"
+	"github.com/EdrenaVosh/squad-up/internal/tui"
 )
 
 // renderWelcome prints the first-run text: what was found and saved as Initial.

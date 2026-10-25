@@ -3,9 +3,9 @@ package tui_test
 import (
 	"testing"
 
-	"github.com/EdrenaVosh/squadup/internal/models"
-	"github.com/EdrenaVosh/squadup/internal/testutil"
-	"github.com/EdrenaVosh/squadup/internal/tui"
+	"github.com/EdrenaVosh/squad-up/internal/models"
+	"github.com/EdrenaVosh/squad-up/internal/testutil"
+	"github.com/EdrenaVosh/squad-up/internal/tui"
 )
 
 // firstRun is a harness whose interface opens on the welcome screen.
@@ -27,7 +27,7 @@ func tuiEnv(h *harness) tui.Env {
 func TestWelcomeAt80x24(t *testing.T) {
 	h := firstRun(t)
 
-	h.contains("Welcome to squadup", "We found your existing Claude Code setup", "saved it as ◇ Initial", "Agents", "3   docs-writer · reviewer · tester",
+	h.contains("Welcome to squad-up", "We found your existing Claude Code setup", "saved it as ◇ Initial", "Agents", "3   docs-writer · reviewer · tester",
 		"Model", "opus", "Nothing was changed.", "Start from my current setup", "Create a first preset")
 	h.golden("welcome")
 }
@@ -55,7 +55,7 @@ func TestStartFromMyCurrentSetup(t *testing.T) {
 	}
 	h.press("esc")
 	h.contains("PRESETS", "my-setup")
-	h.lacks("Welcome to squadup")
+	h.lacks("Welcome to squad-up")
 }
 
 func TestCreateAFirstPreset(t *testing.T) {
@@ -68,7 +68,7 @@ func TestCreateAFirstPreset(t *testing.T) {
 	h.contains("first", "AGENTS")
 	h.press("esc")
 	h.contains("PRESETS")
-	h.lacks("Welcome to squadup")
+	h.lacks("Welcome to squad-up")
 }
 
 func TestSkippingTheWelcomeGoesToTheMainScreen(t *testing.T) {
@@ -77,7 +77,7 @@ func TestSkippingTheWelcomeGoesToTheMainScreen(t *testing.T) {
 	h.press("esc")
 
 	h.contains("PRESETS", "initial")
-	h.lacks("Welcome to squadup")
+	h.lacks("Welcome to squad-up")
 }
 
 func TestWelcomeCanCheckTheModelsAfterAskingWhatToCheck(t *testing.T) {
@@ -87,7 +87,7 @@ func TestWelcomeCanCheckTheModelsAfterAskingWhatToCheck(t *testing.T) {
 	h.press("down", "down", "down", "enter")
 	h.contains("Check your models", "The four latest", "Every release", "roughly 20k tokens")
 	h.press("esc")
-	h.contains("Welcome to squadup")
+	h.contains("Welcome to squad-up")
 
 	h.press("enter", "enter")
 
@@ -95,7 +95,7 @@ func TestWelcomeCanCheckTheModelsAfterAskingWhatToCheck(t *testing.T) {
 	h.lacks("RELEASES")
 	h.goldenAt("model-check", 80, 24)
 	h.press("x") // any key closes it
-	h.contains("Welcome to squadup")
+	h.contains("Welcome to squad-up")
 }
 
 func TestEveryReleaseCanBeCheckedByItsFullID(t *testing.T) {

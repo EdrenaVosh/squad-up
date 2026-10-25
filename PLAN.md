@@ -1,8 +1,8 @@
-# squadup — план разработки
+# squad-up — план разработки
 
 Oct 23, 2026 · @Alex
 
-squadup — CLI для Claude Code: хранит пресеты команды агентов (агенты, модели, права), переключает их одной командой и всегда умеет вернуть исходный конфиг (Initial). Название утверждено: на 23.10.2026 имя `squadup` свободно, а `loadout` и `claude-loadout` заняты.
+squad-up — CLI для Claude Code: хранит пресеты команды агентов (агенты, модели, права), переключает их одной командой и всегда умеет вернуть исходный конфиг (Initial). Название утверждено: на 23.10.2026 имя `squad-up` свободно, а `loadout` и `claude-loadout` заняты.
 
 ## Границы v1
 
@@ -21,7 +21,7 @@ v1 управляет только тем, что составляет «ком�
 **Не входит в v1** (кандидаты в v1.1+)
 
 - Создание скиллов: в агенте можно сослаться на скилл по имени в поле `skills`, но сами `SKILL.md` тула не пишет.
-- Хуки, MCP-серверы, `CLAUDE.md`, `env`, `statusLine` в `settings.json` (исключение — опциональная статус-строка squadup, только по явной команде).
+- Хуки, MCP-серверы, `CLAUDE.md`, `env`, `statusLine` в `settings.json` (исключение — опциональная статус-строка squad-up, только по явной команде).
 - Проектный scope (`.claude/agents` внутри репозитория).
 - Облачный шэринг, аккаунты, мониторинг токенов в живой сессии.
 
@@ -42,7 +42,7 @@ v1 управляет только тем, что составляет «ком�
 | Линтер кода | `golangci-lint` | Стандарт |
 | Релизы | GoReleaser | Один конфиг: бинарники под все ОС, GitHub Release, Homebrew tap, чексуммы |
 | GIF для README | `charmbracelet/vhs` | Запись терминала по сценарию, воспроизводимо |
-| Данные тулы | `~/.squadup/` (переопределяется `SQUADUP_HOME`) | Отдельно от `~/.claude`, легко чистить и бэкапить |
+| Данные тулы | `~/.squad-up/` (переопределяется `SQUAD_UP_HOME`) | Отдельно от `~/.claude`, легко чистить и бэкапить |
 | Применение пресета | Копирование файлов + манифест с хэшами, без симлинков | Работает на Windows, даёт детекцию ручных правок |
 | settings.json | Тула владеет только ключами `model`, `effortLevel`, `agent`, `permissions` (плюс `statusLine` по явному включению) | Хуки, env и плагины пользователя никогда не задеваются |
 | Шаблоны | Вшиваются в бинарь через `embed` | Работают офлайн, ничего не скачивается |
@@ -73,7 +73,7 @@ v1 управляет только тем, что составляет «ком�
 Пресет — это папка: `preset.yaml` с настройками плюс файлы агентов ровно в том виде, в каком их ждёт Claude Code. Так пресет можно тюнить руками в редакторе, а агента — скопировать без тулы.
 
 ```text
-~/.squadup/
+~/.squad-up/
   config.json          # настройки тулы (тема, проба моделей)
   state.json           # активный пресет + манифест записанных файлов
   presets/
@@ -146,7 +146,7 @@ You are a strict code reviewer. Report findings ranked by severity...
 Если у пользователя уже есть свои агенты или настройки, тула находит их до любого другого действия, сохраняет как Initial и явно показывает, что именно захвачено. Пользователь должен уйти с первого экрана с мыслью «моё не потеряется».
 
 ```text
-╭─ Welcome to squadup ─────────────────────────────────────────────────────╮
+╭─ Welcome to squad-up ─────────────────────────────────────────────────────╮
 │ We found your existing Claude Code setup                                │
 │ and saved it as  ◇ Initial  — your safe point.                         │
 │                                                                         │
@@ -166,7 +166,7 @@ You are a strict code reviewer. Report findings ranked by severity...
 - В списке пресетов Initial всегда подписан «your original setup · captured <дата>»; пока ни один пресет не применён, он помечен как активный.
 - Без TTY или при запуске команды (`squad list` и т.п.) та же сводка печатается один раз текстом, перед выводом команды.
 - Агенты с ошибками (битый YAML, недопустимое имя) тоже копируются байт в байт и показываются с пометкой «1 agent has issues — run squad lint initial»: Initial хранит конфиг как есть, не чинит его.
-- Переустановка тулы не трогает уже существующий `~/.squadup`. Если `~/.squadup` удалён, тула снимает Initial заново и пишет об этом: исходное состояние до прошлой установки в таком случае уже недоступно.
+- Переустановка тулы не трогает уже существующий `~/.squad-up`. Если `~/.squad-up` удалён, тула снимает Initial заново и пишет об этом: исходное состояние до прошлой установки в таком случае уже недоступно.
 
 **`squad use <preset>`**
 
@@ -203,7 +203,7 @@ You are a strict code reviewer. Report findings ranked by severity...
 
 ## Команды CLI
 
-Исполняемый файл — `squad` (алиас `squadup`). Без аргументов открывает TUI; каждое действие TUI есть и как команда.
+Исполняемый файл — `squad` (алиас `squad-up`). Без аргументов открывает TUI; каждое действие TUI есть и как команда.
 
 | Команда | Что делает |
 | --- | --- |
@@ -211,7 +211,7 @@ You are a strict code reviewer. Report findings ranked by severity...
 | `squad list` (`ls`) | Список пресетов, активный отмечен |
 | `squad status` | Активный пресет, дрейф, версия `claude`, провайдер, модели |
 | `squad use <preset>` | Применить в `~/.claude` (`--dry-run`, `--yes`) |
-| `squad run [preset] [-- args]` | Запустить `claude` с пресетом без записи; без имени — пресет из `.squadup` в текущей папке (этап 6) |
+| `squad run [preset] [-- args]` | Запустить `claude` с пресетом без записи; без имени — пресет из `.squad-up` в текущей папке (этап 6) |
 | `squad restore` | Вернуть Initial |
 | `squad undo` | Откатить последнее применение из бэкапа |
 | `squad new [name]` | Создать пресет: \`--from \<preset |
@@ -233,7 +233,7 @@ You are a strict code reviewer. Report findings ranked by severity...
 | --- | --- |
 | `squad log` | История операций; `squad undo --to <id>` откатывает к точке |
 | `squad card <agent>` | Карточка агента для скриншота |
-| `squad pin <preset>` | Закрепить пресет за текущим проектом (файл `.squadup`) |
+| `squad pin <preset>` | Закрепить пресет за текущим проектом (файл `.squad-up`) |
 | `squad statusline enable`, `disable` | Показывать активный пресет в статус-строке Claude Code |
 | `squad update` | Проверить новую версию и подсказать команду обновления |
 | `squad completion <shell>` | Автодополнение для zsh, bash, fish (из cobra), включая имена пресетов |
@@ -247,7 +247,7 @@ You are a strict code reviewer. Report findings ranked by severity...
 Главный экран (ориентир для вёрстки, 80×24):
 
 ```text
-╭─ squadup ─────────────────────────────────────────────── claude 2.1.x · sonnet ─╮
+╭─ squad-up ─────────────────────────────────────────────── claude 2.1.x · sonnet ─╮
 │ PRESETS              │ Solo Indie                          ● EQUIPPED │
 │                      │ Planner, reviewer and tester for one-person apps   │
 │ ● solo-indie         │                                                   │
@@ -287,9 +287,9 @@ You are a strict code reviewer. Report findings ranked by severity...
 
 ```json
 {
-  "format": "squadup-preset",
+  "format": "squad-up-preset",
   "schema": 1,
-  "generator": "squadup@0.1.0",
+  "generator": "squad-up@0.1.0",
   "exportedAt": "2026-10-23T22:10:05Z",
   "preset": { "name": "solo-indie", "title": "Solo Indie", "mode": "replace", "settings": { "model": "sonnet" } },
   "agents": [
@@ -317,15 +317,15 @@ You are a strict code reviewer. Report findings ranked by severity...
 
 ## Репозиторий, установка и релизы
 
-Репозиторий создаётся локально в `~/dev/squadup` (`git init`, ветка `main`, модуль `github.com/<owner>/squadup`) и публикуется на GitHub только после подтверждения автора. В репозитории лежит исходный код; пользователь получает один собранный файл `squad` из GitHub Releases.
+Репозиторий создаётся локально в `~/dev/squad-up` (`git init`, ветка `main`, модуль `github.com/<owner>/squad-up`) и публикуется на GitHub только после подтверждения автора. В репозитории лежит исходный код; пользователь получает один собранный файл `squad` из GitHub Releases.
 
 ```text
-squadup/
+squad-up/
   go.mod  go.sum
   cmd/squad/main.go        # точка входа: cobra-команды; без аргументов — TUI
   internal/
     cli/                   # по файлу на команду: use.go, run.go, restore.go, export.go ...
-    paths/                 # CLAUDE_CONFIG_DIR, SQUADUP_HOME, --claude-dir
+    paths/                 # CLAUDE_CONFIG_DIR, SQUAD_UP_HOME, --claude-dir
     claude/                # поиск бинаря, -v, auth status, запуск
     preset/                # структуры Preset/Agent, Validate(), хранилище
     agentfile/             # parse/serialize md + frontmatter, байт-точный round-trip
@@ -350,13 +350,13 @@ squadup/
 
 | Способ | Команда |
 | --- | --- |
-| Homebrew (macOS, Linux) | `brew install <owner>/tap/squadup` |
-| Скрипт (macOS, Linux) | `curl -fsSL https://raw.githubusercontent.com/<owner>/squadup/main/scripts/install.sh \| sh` |
-| Для Go-разработчиков | `go install github.com/<owner>/squadup/cmd/squad@latest` |
+| Homebrew (macOS, Linux) | `brew install <owner>/tap/squad-up` |
+| Скрипт (macOS, Linux) | `curl -fsSL https://raw.githubusercontent.com/<owner>/squad-up/main/scripts/install.sh \| sh` |
+| Для Go-разработчиков | `go install github.com/<owner>/squad-up/cmd/squad@latest` |
 | Вручную (включая Windows) | Скачать архив из GitHub Releases, положить `squad` в PATH |
 | Из исходников | `git clone … && make install` |
 
-Короткая форма `brew install squadup` требует формулы в `homebrew/core`. Условия: стабильный тег, сборка из исходников, репозиторий старше 30 дней и заметность: минимум 75 звёзд (или 30 форков / 30 watchers), а если формулу предлагает сам автор — 225 звёзд (или 90 / 90) ([Homebrew](https://docs.brew.sh/Package-Acceptance-Policy)). До этого — свой tap; после первой команды `brew tap <owner>/tap` дальше работает и короткое `brew install squadup`. Когда порог пройден, формулу переносим в core и сначала проверяем, что имя там свободно.
+Короткая форма `brew install squad-up` требует формулы в `homebrew/core`. Условия: стабильный тег, сборка из исходников, репозиторий старше 30 дней и заметность: минимум 75 звёзд (или 30 форков / 30 watchers), а если формулу предлагает сам автор — 225 звёзд (или 90 / 90) ([Homebrew](https://docs.brew.sh/Package-Acceptance-Policy)). До этого — свой tap; после первой команды `brew tap <owner>/tap` дальше работает и короткое `brew install squad-up`. Когда порог пройден, формулу переносим в core и сначала проверяем, что имя там свободно.
 
 `install.sh` определяет ОС и архитектуру, скачивает нужный архив из последнего релиза, проверяет чексумму и кладёт бинарь в `~/.local/bin` (или `/usr/local/bin` с вопросом), подсказывает, если папки нет в PATH. `squad update` проверяет новую версию и подсказывает команду обновления для способа, которым ставили.
 
@@ -375,7 +375,7 @@ README начинается с GIF и трёх строк: install, `squad`, `sq
 
 **Тесты**
 
-- Изоляция: каждый тест работает в `t.TempDir()` с заданными `SQUADUP_HOME` и `CLAUDE_CONFIG_DIR`. Предохранитель в `internal/paths`: в тестовой сборке запись в настоящий `~/.claude` вызывает panic.
+- Изоляция: каждый тест работает в `t.TempDir()` с заданными `SQUAD_UP_HOME` и `CLAUDE_CONFIG_DIR`. Предохранитель в `internal/paths`: в тестовой сборке запись в настоящий `~/.claude` вызывает panic.
 - Заглушка `claude`: небольшая Go-программа в `testdata`, подкладывается в `PATH`; отвечает на `-v`, `auth status`, `-p --model` и пишет полученные аргументы в файл для проверки `run`.
 - Unit (табличные тесты): round-trip агента (parse → serialize = те же байты), правка settings не меняет чужие ключи, их порядок и отступы, сопоставление `availableModels`, линтер, оценка токенов, валидация импорта (включая path traversal).
 - E2E на testscript (`testdata/script/*.txtar`): первый запуск с чужим конфигом → Initial и сводка; первый запуск на пустом `~/.claude`; `use A` → `use B` → `restore` = исходное дерево; ручная правка → дрейф; чужой файл агента переживает любые операции; `undo`; импорт опасного пресета; `run` передаёт правильные флаги.
@@ -400,11 +400,11 @@ README начинается с GIF и трёх строк: install, `squad`, `sq
 | 2. Применение | `use`, `restore`, `undo`, манифест, бэкапы, lock, дрейф, правка settings, `--dry-run`, журнал `squad log` | Golden-тест `use A → use B → restore` зелёный на трёх ОС |
 | 3. Run, модели, линтер | `run`, `models` (каталог + политика + проба + кэш), `lint` с линтером делегирования, оценка стоимости пресета | `squad run` запускает настоящий `claude` с агентами пресета; линтер ловит все правила из раздела ниже |
 | 4. TUI | First run, Home, Preset, Agent editor, Permission profiles, Equip confirm, `new`, `edit`, `clone`, `rename`, `rm`; стоимость и линт на карточке пресета | Весь сценарий без единого флага; работает в 80×24 и с `NO_COLOR` |
-| 5. Обмен и шаблоны | `export`, `import`, gist, Import preview, проверки безопасности, 5 стартовых шаблонов, `squad card` | Экспорт → импорт в чистый `SQUADUP_HOME` даёт идентичный пресет |
-| 6. Интеграции | Файл `.squadup` в проекте, `squad statusline`, плагин Claude Code с `/squad` | `/squad` в сессии Claude Code показывает и переключает пресет; статус-строка включается и отключается без потерь |
+| 5. Обмен и шаблоны | `export`, `import`, gist, Import preview, проверки безопасности, 5 стартовых шаблонов, `squad card` | Экспорт → импорт в чистый `SQUAD_UP_HOME` даёт идентичный пресет |
+| 6. Интеграции | Файл `.squad-up` в проекте, `squad statusline`, плагин Claude Code с `/squad` | `/squad` в сессии Claude Code показывает и переключает пресет; статус-строка включается и отключается без потерь |
 | 7. Релиз v0.1.0 | README с GIF (vhs), LICENSE, CHANGELOG, `install.sh`, Homebrew tap, локальная сборка релиза (goreleaser --snapshot) без публикации | `brew install` и `install.sh` на чистой машине проходят путь от установки до Equip и Restore |
 
-**Все этапы 0–7 выполняются только локально.** Критерий этапа 7 проверяется на локальных архивах из `dist/`: `install.sh` умеет ставить из локального файла (`SQUADUP_INSTALL_FROM=./dist/...`). Публикация — отдельный этап 8 после того, как автор посмотрит код и потестирует: создать GitHub-репозитории `squadup` и `homebrew-tap`, добавить секрет с токеном, запушить, поставить тег `v0.1.0`. Этап 8 начинается только по явной команде автора.
+**Все этапы 0–7 выполняются только локально.** Критерий этапа 7 проверяется на локальных архивах из `dist/`: `install.sh` умеет ставить из локального файла (`SQUAD_UP_INSTALL_FROM=./dist/...`). Публикация — отдельный этап 8 после того, как автор посмотрит код и потестирует: создать GitHub-репозитории `squad-up` и `homebrew-tap`, добавить секрет с токеном, запушить, поставить тег `v0.1.0`. Этап 8 начинается только по явной команде автора.
 
 После v0.1: проектный scope (`.claude/agents` в репозитории), скиллы в пресетах, Scoop/WinGet для Windows.
 
@@ -416,11 +416,11 @@ README начинается с GIF и трёх строк: install, `squad`, `sq
 | --- | --- | --- |
 | Линтер делегирования | Правила: неизвестное поле и похожее известное (`disallowed_tools` → `disallowedTools`); недопустимое имя и дубли; `description` короче 40 символов или без «когда вызывать» (нет слов use / when / after / before); два агента с почти одинаковыми описаниями; пустой промпт; `main`, которого нет среди агентов. Уровни error / warn / info | 3 |
 | Стоимость пресета | Приблизительная оценка токенов, которые имена и описания агентов занимают в каждой сессии (символы ÷ 4), с пометкой «\~»; для агента отдельно — размер промпта, который грузится при вызове | 3 |
-| Журнал | `~/.squadup/log.jsonl`: каждая операция (время, команда, пресет, id бэкапа). `squad log` показывает историю, `squad undo --to <id>` откатывает к любой точке | 2 |
+| Журнал | `~/.squad-up/log.jsonl`: каждая операция (время, команда, пресет, id бэкапа). `squad log` показывает историю, `squad undo --to <id>` откатывает к любой точке | 2 |
 | Карточка агента | `squad card <agent> [--preset p]`: рамка lipgloss в цвете агента — имя, роль (первая фраза description), модель, effort, инструменты, «сила прав» шкалой. Для скриншотов и соцсетей | 5 |
 | Gist | `squad export <p> --gist` через установленный `gh` (если нет — понятная ошибка); `squad import gist:<id>` | 5 |
 | Стартовые шаблоны | Solo Indie (planner, reviewer, tester), Bug Hunt (debugger, tester), Refactor Day (architect, refactorer, reviewer), Ship It (release-checker, changelog-writer), Read-only Audit (security-auditor, reviewer; только Read/Grep/Glob). Промпты — конкретные, с форматом ответа; каждый шаблон проходит `squad lint` без предупреждений | 5 |
-| Пресет на проект | `squad pin <preset>` пишет файл `.squadup` (имя пресета) в текущую папку; `squad run` без аргумента ищет ближайший `.squadup` вверх по дереву; `squad status` пишет, если активный пресет не совпадает с закреплённым | 6 |
+| Пресет на проект | `squad pin <preset>` пишет файл `.squad-up` (имя пресета) в текущую папку; `squad run` без аргумента ищет ближайший `.squad-up` вверх по дереву; `squad status` пишет, если активный пресет не совпадает с закреплённым | 6 |
 | Статус-строка | `squad statusline enable` сохраняет текущий `statusLine` пользователя и ставит команду `squad statusline`; та запускает прежнюю команду с тем же stdin и дописывает «◆ solo-indie». `disable` возвращает как было. Формат `statusLine` и входного JSON сверить по документации | 6 |
 | Плагин Claude Code | Папка `plugin/` (`.claude-plugin/plugin.json` + команда или скилл `/squad`) и `marketplace.json` в корне репозитория. `/squad` вызывает `squad status --json` / `squad list --json` и по просьбе `squad use <p> --yes`; если бинаря нет — показывает команду установки. Сам плагин не содержит агентов, чтобы не тратить контекст. Формат плагина сверить по документации | 6 |
 
@@ -430,7 +430,7 @@ README начинается с GIF и трёх строк: install, `squad`, `sq
 
 | Вопрос | Решение |
 | --- | --- |
-| Имя | `squadup`, команда `squad` |
+| Имя | `squad-up`, команда `squad` |
 | Стек | Go + Charm, один бинарь, установка через Homebrew и `install.sh` |
 | Режим пресета | replace: пресет заменяет агентов Initial |
 | Windows | «Должно работать»: бинарь собирается и тестируется в CI, но официальной поддержки нет |
@@ -448,8 +448,8 @@ README начинается с GIF и трёх строк: install, `squad`, `sq
 | --- | --- |
 | `make build` | Собрать `./bin/squad` |
 | `make test` | Все тесты + линтер |
-| `make sandbox` | Создать `./.sandbox/claude` с примером чужого конфига (3 агента, settings.json с правами и чужими ключами) и пустой `./.sandbox/squadup` |
-| `make try` | Запустить `squad` с `CLAUDE_CONFIG_DIR` и `SQUADUP_HOME`, указывающими в песочницу; аргументы передаются: `make try ARGS="use solo-indie"` |
+| `make sandbox` | Создать `./.sandbox/claude` с примером чужого конфига (3 агента, settings.json с правами и чужими ключами) и пустой `./.sandbox/squad-up` |
+| `make try` | Запустить `squad` с `CLAUDE_CONFIG_DIR` и `SQUAD_UP_HOME`, указывающими в песочницу; аргументы передаются: `make try ARGS="use solo-indie"` |
 | `make try-claude` | Открыть настоящий `claude` на песочнице, чтобы увидеть агентов пресета внутри Claude Code (нужен логин; сверить, как логин ведёт себя при другом `CLAUDE_CONFIG_DIR`) |
 | `make sandbox-reset` | Сбросить песочницу |
 | `make snapshot` | `goreleaser release --snapshot --clean`: архивы для всех ОС в `dist/` без публикации |
@@ -462,12 +462,12 @@ README начинается с GIF и трёх строк: install, `squad`, `sq
 Этот раздел — контракт. Если правило конфликтует с удобством, побеждает правило.
 
 1. Прочитать план целиком до первой строки кода. Работать строго по этапам; после каждого — коммит и отчёт: что сделано, что проверено, что отложено.
-2. Никогда не писать в настоящий `~/.claude` автора во время разработки. Ручные проверки — только с `CLAUDE_CONFIG_DIR` и `SQUADUP_HOME`, указывающими на временные папки.
+2. Никогда не писать в настоящий `~/.claude` автора во время разработки. Ручные проверки — только с `CLAUDE_CONFIG_DIR` и `SQUAD_UP_HOME`, указывающими на временные папки.
 3. Перед использованием флага или поля Claude Code свериться с `claude --help` на машине и с документацией на code.claude.com. Особенно: поле JSON с фактической моделью в `-p --output-format json`, пути managed-settings, формат `statusLine`, способ изолировать `--agents` от глобальных агентов. Расхождение с планом — записать в `docs/DECISIONS.md` и сообщить.
 4. Все строки интерфейса, сообщения об ошибках, README и комментарии в коде — на английском. Тексты UI вынести в `internal/tui/copy.go`.
-5. Ошибка для пользователя = что случилось + как починить, без стектрейса (стектрейс — под `DEBUG=squadup`).
+5. Ошибка для пользователя = что случилось + как починить, без стектрейса (стектрейс — под `DEBUG=squad-up`).
 6. Зависимости — только из раздела «Ключевые решения», актуальные стабильные версии, lock-файл в репозитории. Новая зависимость — с обоснованием в отчёте.
-7. Работа только локальная: только локальные git-коммиты. Запрещено до явной команды автора: \`git remote add\`, \`git push\`, \`gh repo create\`, любые вызовы \`gh\`, создание тегов релиза, \`goreleaser release\` без \`--snapshot\`, публикация в любой реестр. Путь модуля Go — \`github.com/\<owner>/squadup\`, где \`\<owner>\` — GitHub-логин автора (спросить на этапе 0, если не указан).
+7. Работа только локальная: только локальные git-коммиты. Запрещено до явной команды автора: \`git remote add\`, \`git push\`, \`gh repo create\`, любые вызовы \`gh\`, создание тегов релиза, \`goreleaser release\` без \`--snapshot\`, публикация в любой реестр. Путь модуля Go — \`github.com/\<owner>/squad-up\`, где \`\<owner>\` — GitHub-логин автора (спросить на этапе 0, если не указан).
 8. Этап сдан, когда выполнен критерий из таблицы «Этапы», проходят lint, typecheck и тесты, и нет незакрытых TODO без issue.
 
 ## Источники
@@ -477,4 +477,4 @@ README начинается с GIF и трёх строк: install, `squad`, `sq
 - [Claude Code: model configuration](https://code.claude.com/docs/en/model-config.md) — алиасы, `availableModels`, effort
 - [Claude Code: settings reference](https://code.claude.com/docs/en/settings-reference) — ключи settings.json, синтаксис прав
 - [Claude Code: .claude directory](https://code.claude.com/docs/en/claude-directory.md) — `CLAUDE_CONFIG_DIR`, содержимое `~/.claude`
-- npm registry, проверка имён 23.10.2026: `squadup` свободно; `loadout`, `claude-loadout`, `agent-loadout`, `claude-squad`, `claude-presets` заняты
+- npm registry, проверка имён 23.10.2026: `squad-up` свободно; `loadout`, `claude-loadout`, `agent-loadout`, `claude-squad`, `claude-presets` заняты

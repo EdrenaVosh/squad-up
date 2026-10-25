@@ -9,11 +9,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/EdrenaVosh/squadup/internal/apply"
-	"github.com/EdrenaVosh/squadup/internal/claude"
-	"github.com/EdrenaVosh/squadup/internal/models"
-	"github.com/EdrenaVosh/squadup/internal/tui"
-	"github.com/EdrenaVosh/squadup/internal/workspace"
+	"github.com/EdrenaVosh/squad-up/internal/apply"
+	"github.com/EdrenaVosh/squad-up/internal/claude"
+	"github.com/EdrenaVosh/squad-up/internal/models"
+	"github.com/EdrenaVosh/squad-up/internal/tui"
+	"github.com/EdrenaVosh/squad-up/internal/workspace"
 )
 
 const statusTimeout = 15 * time.Second
@@ -51,7 +51,7 @@ type statusJSON struct {
 	Pinned    *pinnedJSON `json:"pinned,omitempty"`
 }
 
-// pinnedJSON is the preset the project pins with a .squadup file.
+// pinnedJSON is the preset the project pins with a .squad-up file.
 type pinnedJSON struct {
 	Preset  string `json:"preset"`
 	File    string `json:"file"`
@@ -178,7 +178,7 @@ func renderStatus(a *app, st statusJSON) {
 	}
 	row("Models", modelsRow(st.Models))
 	row("Config dir", st.ClaudeDir)
-	row("Squadup home", st.Home)
+	row("Squad-up home", st.Home)
 
 	for _, w := range st.Warnings {
 		printf(a.io.Out, "\n! %s\n", w)

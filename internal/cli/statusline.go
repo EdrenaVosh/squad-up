@@ -14,9 +14,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tidwall/gjson"
 
-	"github.com/EdrenaVosh/squadup/internal/fsx"
-	"github.com/EdrenaVosh/squadup/internal/runner"
-	"github.com/EdrenaVosh/squadup/internal/statusline"
+	"github.com/EdrenaVosh/squad-up/internal/fsx"
+	"github.com/EdrenaVosh/squad-up/internal/runner"
+	"github.com/EdrenaVosh/squad-up/internal/statusline"
 )
 
 // statuslineTimeout bounds the user's own status line command.
@@ -69,7 +69,7 @@ func (a *app) statuslineCommand() (string, error) {
 		return "", fmt.Errorf("find the squad binary: %w", err)
 	}
 	command := shellQuote(exe) + " statusline"
-	if home, err := os.UserHomeDir(); err == nil && a.paths.Home != filepath.Join(home, ".squadup") {
+	if home, err := os.UserHomeDir(); err == nil && a.paths.Home != filepath.Join(home, ".squad-up") {
 		command += " --home " + shellQuote(a.paths.Home)
 	}
 	return command, nil

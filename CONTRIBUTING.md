@@ -1,13 +1,13 @@
 # Contributing
 
-Thanks for looking. squadup is a small Go program; the whole contract is in
+Thanks for looking. squad-up is a small Go program; the whole contract is in
 [`PLAN.md`](PLAN.md), the reasons behind each choice are in
 [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
 ## Set up
 
 ```sh
-git clone https://github.com/EdrenaVosh/squadup && cd squadup
+git clone https://github.com/EdrenaVosh/squad-up && cd squad-up
 make test        # golangci-lint, go vet and go test -race ./...
 make build       # bin/squad
 ```

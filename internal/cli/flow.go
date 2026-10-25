@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/EdrenaVosh/squadup/internal/preset"
+	"github.com/EdrenaVosh/squad-up/internal/preset"
 )
 
 func (a *app) newFlow() *cobra.Command {

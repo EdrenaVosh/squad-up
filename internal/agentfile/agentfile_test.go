@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/EdrenaVosh/squadup/internal/agentfile"
+	"github.com/EdrenaVosh/squad-up/internal/agentfile"
 )
 
 const canonicalSample = `---

@@ -12,19 +12,19 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/EdrenaVosh/squadup/internal/agentfile"
-	"github.com/EdrenaVosh/squadup/internal/fsx"
-	"github.com/EdrenaVosh/squadup/internal/preset"
-	"github.com/EdrenaVosh/squadup/internal/transfer"
-	"github.com/EdrenaVosh/squadup/internal/tui"
-	"github.com/EdrenaVosh/squadup/internal/version"
-	"github.com/EdrenaVosh/squadup/internal/workspace"
-	"github.com/EdrenaVosh/squadup/templates"
+	"github.com/EdrenaVosh/squad-up/internal/agentfile"
+	"github.com/EdrenaVosh/squad-up/internal/fsx"
+	"github.com/EdrenaVosh/squad-up/internal/preset"
+	"github.com/EdrenaVosh/squad-up/internal/transfer"
+	"github.com/EdrenaVosh/squad-up/internal/tui"
+	"github.com/EdrenaVosh/squad-up/internal/version"
+	"github.com/EdrenaVosh/squad-up/internal/workspace"
+	"github.com/EdrenaVosh/squad-up/templates"
 )
 
-const collectionFile = "squadup-presets.squad.json"
+const collectionFile = "squad-up-presets.squad.json"
 
-func (a *app) generator() string { return "squadup@" + version.Version }
+func (a *app) generator() string { return "squad-up@" + version.Version }
 
 func (a *app) fetcher() transfer.Fetcher {
 	return transfer.Fetcher{HTTP: a.io.HTTP, Stdin: a.io.In}
@@ -62,10 +62,10 @@ func (a *app) newExport() *cobra.Command {
 			}
 
 			var data []byte
-			file, desc := bundles[0].Preset.Name+".squad.json", "squadup preset: "+bundles[0].Preset.Name
+			file, desc := bundles[0].Preset.Name+".squad.json", "squad-up preset: "+bundles[0].Preset.Name
 			if all {
 				data, err = transfer.ExportAll(bundles, a.generator(), a.now())
-				file, desc = collectionFile, "squadup presets"
+				file, desc = collectionFile, "squad-up presets"
 			} else {
 				data, err = transfer.Export(bundles[0], a.generator(), a.now())
 			}

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/EdrenaVosh/squadup/internal/fsx"
+	"github.com/EdrenaVosh/squad-up/internal/fsx"
 )
 
 func TestLockExcludesASecondHolderUntilReleased(t *testing.T) {

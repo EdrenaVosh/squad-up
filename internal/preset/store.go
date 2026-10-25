@@ -9,7 +9,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/EdrenaVosh/squadup/internal/fsx"
+	"github.com/EdrenaVosh/squad-up/internal/fsx"
 )
 
 var (

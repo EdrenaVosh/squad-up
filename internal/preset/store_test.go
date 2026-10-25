@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/EdrenaVosh/squadup/internal/preset"
+	"github.com/EdrenaVosh/squad-up/internal/preset"
 )
 
 func bundle() preset.Bundle {

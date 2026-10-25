@@ -2,14 +2,14 @@
 exec squad models
 stdout 'unknown'
 stderr 'squad models --probe'
-! exists squadup/cache/models.json
+! exists squad-up/cache/models.json
 
 env FAKE_CLAUDE_UNAVAILABLE=fable
 exec squad models --probe
 stdout 'claude-opus-5-5'
 stdout 'unavailable'
 stdout 'issue with the selected model'
-exists squadup/cache/models.json
+exists squad-up/cache/models.json
 
 # A later call reads the cache, and status summarises it.
 exec squad models

@@ -14,10 +14,10 @@ import (
 	"github.com/charmbracelet/x/term"
 	"github.com/spf13/cobra"
 
-	"github.com/EdrenaVosh/squadup/internal/initial"
-	"github.com/EdrenaVosh/squadup/internal/paths"
-	"github.com/EdrenaVosh/squadup/internal/tui"
-	"github.com/EdrenaVosh/squadup/internal/version"
+	"github.com/EdrenaVosh/squad-up/internal/initial"
+	"github.com/EdrenaVosh/squad-up/internal/paths"
+	"github.com/EdrenaVosh/squad-up/internal/tui"
+	"github.com/EdrenaVosh/squad-up/internal/version"
 )
 
 // ExitError ends the process with Code. Err says what happened and Fix says
@@ -131,7 +131,7 @@ func (a *app) newRoot() *cobra.Command {
 
 	flags := root.PersistentFlags()
 	flags.StringVar(&a.claudeDir, "claude-dir", "", "Claude Code config directory (default: $CLAUDE_CONFIG_DIR or ~/.claude)")
-	flags.StringVar(&a.home, "home", "", "squadup data directory (default: $SQUADUP_HOME or ~/.squadup)")
+	flags.StringVar(&a.home, "home", "", "squad-up data directory (default: $SQUAD_UP_HOME or ~/.squad-up)")
 	flags.BoolVarP(&a.yes, "yes", "y", false, "skip confirmations")
 	flags.BoolVar(&a.noColor, "no-color", false, "disable colors (NO_COLOR is also respected)")
 
@@ -191,7 +191,7 @@ func (a *app) useColor() bool {
 
 // openInterface runs the terminal interface, starting on the given screen.
 func (a *app) openInterface(start tui.Start) error {
-	env := tui.Env{Paths: a.paths, Now: a.now, Start: start, Animate: os.Getenv("SQUADUP_NO_ANIM") == "", Live: true, Cwd: start.Cwd}
+	env := tui.Env{Paths: a.paths, Now: a.now, Start: start, Animate: os.Getenv("SQUAD_UP_NO_ANIM") == "", Live: true, Cwd: start.Cwd}
 	if start.Kind == tui.StartHome {
 		env.Welcome = a.welcome
 	}

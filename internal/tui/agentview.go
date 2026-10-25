@@ -5,8 +5,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/EdrenaVosh/squadup/internal/preset"
-	"github.com/EdrenaVosh/squadup/internal/team"
+	"github.com/EdrenaVosh/squad-up/internal/preset"
+	"github.com/EdrenaVosh/squad-up/internal/team"
 )
 
 // The agent editor uses a wide layout from this size: the fields on the left,

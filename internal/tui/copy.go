@@ -6,7 +6,7 @@ import "fmt"
 
 // First-run and Initial texts.
 const (
-	WelcomeTitle   = "Welcome to squadup"
+	WelcomeTitle   = "Welcome to squad-up"
 	FoundExisting  = "We found your existing Claude Code setup"
 	SavedAsInitial = "and saved it as ◇ Initial — your safe point."
 	CleanSetup     = "Clean Claude Code setup — Initial is the defaults"

@@ -1,12 +1,12 @@
 version: 2
 
-project_name: squadup
+project_name: squad-up
 
 before:
   hooks:
     - go mod tidy
 
-# Two names for one program: `squad` is the command, `squadup` is the same thing
+# Two names for one program: `squad` is the command, `squad-up` is the same thing
 # under the name of the project, for a shell where `squad` is taken.
 builds:
   - id: squad
@@ -18,12 +18,12 @@ builds:
     goarch: [amd64, arm64]
     ldflags: &ldflags
       - -s -w
-      - -X github.com/EdrenaVosh/squadup/internal/version.Version={{ .Version }}
-      - -X github.com/EdrenaVosh/squadup/internal/version.Commit={{ .ShortCommit }}
-      - -X github.com/EdrenaVosh/squadup/internal/version.Date={{ .Date }}
-  - id: squadup
+      - -X github.com/EdrenaVosh/squad-up/internal/version.Version={{ .Version }}
+      - -X github.com/EdrenaVosh/squad-up/internal/version.Commit={{ .ShortCommit }}
+      - -X github.com/EdrenaVosh/squad-up/internal/version.Date={{ .Date }}
+  - id: squad-up
     main: ./cmd/squad
-    binary: squadup
+    binary: squad-up
     env:
       - CGO_ENABLED=0
     goos: [darwin, linux, windows]
@@ -31,10 +31,10 @@ builds:
     ldflags: *ldflags
 
 archives:
-  - id: squadup
-    ids: [squad, squadup]
+  - id: squad-up
+    ids: [squad, squad-up]
     formats: [tar.gz]
-    name_template: "squadup_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    name_template: "squad-up_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     format_overrides:
       - goos: windows
         formats: [zip]
@@ -51,21 +51,21 @@ checksum:
 release:
   github:
     owner: EdrenaVosh
-    name: squadup
+    name: squad-up
 
-# `brew install EdrenaVosh/tap/squadup`. GoReleaser's own advice for a
+# `brew install EdrenaVosh/tap/squad-up`. GoReleaser's own advice for a
 # precompiled binary is a cask (`brews` is deprecated). The cask is pushed to the
 # homebrew-tap repository by the release workflow; a snapshot build only writes
 # it into dist/.
 homebrew_casks:
-  - name: squadup
-    ids: [squadup]
-    binaries: [squad, squadup]
+  - name: squad-up
+    ids: [squad-up]
+    binaries: [squad, squad-up]
     repository:
       owner: EdrenaVosh
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
-    homepage: https://github.com/EdrenaVosh/squadup
+    homepage: https://github.com/EdrenaVosh/squad-up
     description: Switch Claude Code agent teams with one command
     license: MIT
 

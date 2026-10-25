@@ -1,11 +1,11 @@
 #!/bin/sh
-# Adds three demo presets to the sandbox squadup home so that `squad use` has
+# Adds three demo presets to the sandbox squad-up home so that `squad use` has
 # something to switch to. Existing presets are left alone. Nothing here touches
-# the real ~/.squadup.
+# the real ~/.squad-up.
 set -eu
 
 sandbox="${1:?usage: sandbox-presets.sh <sandbox-dir>}"
-presets="$sandbox/squadup/presets"
+presets="$sandbox/squad-up/presets"
 
 write_agent() { # dir name description body
   mkdir -p "$1/agents"

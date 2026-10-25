@@ -1,17 +1,17 @@
 ---
-description: Show which squadup agent preset is equipped, list the presets, or switch to one
+description: Show which squad-up agent preset is equipped, list the presets, or switch to one
 argument-hint: "[preset]"
 disable-model-invocation: true
 allowed-tools: Bash(command -v squad) Bash(squad status:*) Bash(squad list:*) Bash(squad use:*)
 ---
-You manage the user's squadup agent presets with the `squad` command-line tool. The user asked:
+You manage the user's squad-up agent presets with the `squad` command-line tool. The user asked:
 
 > $ARGUMENTS
 
 Do this, in order:
 
 1. Run `command -v squad`. If it prints nothing, squad is not installed. Tell the user to install it with
-   `curl -fsSL https://raw.githubusercontent.com/EdrenaVosh/squadup/main/scripts/install.sh | sh`
+   `curl -fsSL https://raw.githubusercontent.com/EdrenaVosh/squad-up/main/scripts/install.sh | sh`
    and stop.
 
 2. If the request above is empty, show the situation:
@@ -25,5 +25,5 @@ Do this, in order:
 
 Rules:
 - Never add `--force`, `--discard-edits` or `--save-edits` on your own. If `squad use` stops because of manual edits or conflicting files, show its message and let the user choose.
-- Never edit files in `~/.claude` or `~/.squadup` yourself; only `squad` does that.
+- Never edit files in `~/.claude` or `~/.squad-up` yourself; only `squad` does that.
 - After a switch, say that agent files are picked up within seconds in a running session, while the model and permission settings of a preset are only certain to apply in a new session.

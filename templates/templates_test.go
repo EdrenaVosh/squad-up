@@ -5,10 +5,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/EdrenaVosh/squadup/internal/agentfile"
-	"github.com/EdrenaVosh/squadup/internal/lint"
-	"github.com/EdrenaVosh/squadup/internal/team"
-	"github.com/EdrenaVosh/squadup/templates"
+	"github.com/EdrenaVosh/squad-up/internal/agentfile"
+	"github.com/EdrenaVosh/squad-up/internal/lint"
+	"github.com/EdrenaVosh/squad-up/internal/team"
+	"github.com/EdrenaVosh/squad-up/templates"
 )
 
 // what each template is made of: its agents, in order, with their models.

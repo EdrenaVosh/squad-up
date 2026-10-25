@@ -1,4 +1,4 @@
-module github.com/EdrenaVosh/squadup
+module github.com/EdrenaVosh/squad-up
 
 go 1.27.3
 

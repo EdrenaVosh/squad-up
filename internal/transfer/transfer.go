@@ -17,14 +17,14 @@ import (
 
 	"github.com/goccy/go-yaml"
 
-	"github.com/EdrenaVosh/squadup/internal/agentfile"
-	"github.com/EdrenaVosh/squadup/internal/preset"
+	"github.com/EdrenaVosh/squad-up/internal/agentfile"
+	"github.com/EdrenaVosh/squad-up/internal/preset"
 )
 
 // File formats and the schema this build reads and writes.
 const (
-	FormatPreset     = "squadup-preset"
-	FormatCollection = "squadup-presets"
+	FormatPreset     = "squad-up-preset"
+	FormatCollection = "squad-up-presets"
 	SchemaVersion    = 1
 )
 
@@ -135,7 +135,7 @@ func encode(doc document) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// Export renders one preset as a `squadup-preset` document.
+// Export renders one preset as a `squad-up-preset` document.
 func Export(b preset.Bundle, generator string, now time.Time) ([]byte, error) {
 	e, err := toEntry(b)
 	if err != nil {
@@ -147,7 +147,7 @@ func Export(b preset.Bundle, generator string, now time.Time) ([]byte, error) {
 	})
 }
 
-// ExportAll renders several presets as one `squadup-presets` document.
+// ExportAll renders several presets as one `squad-up-presets` document.
 func ExportAll(bundles []preset.Bundle, generator string, now time.Time) ([]byte, error) {
 	doc := document{
 		Format: FormatCollection, Schema: SchemaVersion, Generator: generator,
@@ -172,7 +172,7 @@ func Parse(data []byte, opts Options) ([]Imported, error) {
 	}
 	var doc document
 	if err := json.Unmarshal(data, &doc); err != nil {
-		return nil, fmt.Errorf("this is not a squadup file (it is not valid JSON: %w)", err)
+		return nil, fmt.Errorf("this is not a squad-up file (it is not valid JSON: %w)", err)
 	}
 	var entries []entry
 	switch doc.Format {
@@ -187,7 +187,7 @@ func Parse(data []byte, opts Options) ([]Imported, error) {
 		}
 		entries = doc.Presets
 	default:
-		return nil, fmt.Errorf("this is not a squadup preset file (format %q)", doc.Format)
+		return nil, fmt.Errorf("this is not a squad-up preset file (format %q)", doc.Format)
 	}
 	switch {
 	case doc.Schema > SchemaVersion:

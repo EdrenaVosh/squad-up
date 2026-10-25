@@ -1,4 +1,4 @@
-// Package paths resolves where Claude Code's config and squadup's data live.
+// Package paths resolves where Claude Code's config and squad-up's data live.
 package paths
 
 import (
@@ -10,18 +10,18 @@ import (
 // Paths is the pair of directories squad works with.
 type Paths struct {
 	ClaudeDir string // the Claude Code config directory
-	Home      string // squadup's own data directory
+	Home      string // squad-up's own data directory
 }
 
 // Resolve picks each directory from, in order: the flag value, the
-// environment variable (CLAUDE_CONFIG_DIR, SQUADUP_HOME), the default under the
+// environment variable (CLAUDE_CONFIG_DIR, SQUAD_UP_HOME), the default under the
 // user's home directory. Results are absolute.
 func Resolve(claudeDirFlag, homeFlag string) (Paths, error) {
 	claudeDir, err := resolveOne(claudeDirFlag, "CLAUDE_CONFIG_DIR", ".claude")
 	if err != nil {
 		return Paths{}, err
 	}
-	home, err := resolveOne(homeFlag, "SQUADUP_HOME", ".squadup")
+	home, err := resolveOne(homeFlag, "SQUAD_UP_HOME", ".squad-up")
 	if err != nil {
 		return Paths{}, err
 	}
@@ -61,7 +61,7 @@ func (p Paths) InitialDir() string { return p.PresetDir("initial") }
 // StateFile records the active preset and the manifest of written files.
 func (p Paths) StateFile() string { return filepath.Join(p.Home, "state.json") }
 
-// ConfigFile holds squadup's own settings.
+// ConfigFile holds squad-up's own settings.
 func (p Paths) ConfigFile() string { return filepath.Join(p.Home, "config.json") }
 
 // BackupsDir holds copies taken before every write.

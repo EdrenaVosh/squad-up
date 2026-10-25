@@ -15,7 +15,7 @@ import (
 
 	"github.com/rogpeppe/go-internal/testscript"
 
-	"github.com/EdrenaVosh/squadup/internal/cli"
+	"github.com/EdrenaVosh/squad-up/internal/cli"
 )
 
 func TestMain(m *testing.M) {
@@ -25,7 +25,7 @@ func TestMain(m *testing.M) {
 }
 
 // TestScripts runs the end-to-end scenarios in testdata/script. Every script
-// gets its own Claude config dir and squadup home inside its work dir.
+// gets its own Claude config dir and squad-up home inside its work dir.
 func TestScripts(t *testing.T) {
 	testscript.Run(t, testscript.Params{
 		Dir: filepath.Join("..", "..", "testdata", "script"),
@@ -34,7 +34,7 @@ func TestScripts(t *testing.T) {
 			env.Setenv("HOME", home)
 			env.Setenv("USERPROFILE", home)
 			env.Setenv("CLAUDE_CONFIG_DIR", filepath.Join(env.WorkDir, "claude"))
-			env.Setenv("SQUADUP_HOME", filepath.Join(env.WorkDir, "squadup"))
+			env.Setenv("SQUAD_UP_HOME", filepath.Join(env.WorkDir, "squad-up"))
 			env.Setenv("ANTHROPIC_MODEL", "")
 			env.Setenv("PATH", fakeClaudeDir()+string(os.PathListSeparator)+withoutClaude(env.Getenv("PATH")))
 			return nil

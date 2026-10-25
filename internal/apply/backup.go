@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/EdrenaVosh/squadup/internal/fsx"
+	"github.com/EdrenaVosh/squad-up/internal/fsx"
 )
 
 // backupsKept is how many operation backups are retained.

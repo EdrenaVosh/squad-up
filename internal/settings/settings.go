@@ -9,7 +9,7 @@ import (
 
 	"github.com/tidwall/gjson"
 
-	"github.com/EdrenaVosh/squadup/internal/fsx"
+	"github.com/EdrenaVosh/squad-up/internal/fsx"
 )
 
 // ManagedKeys are the only settings.json keys squad ever writes.

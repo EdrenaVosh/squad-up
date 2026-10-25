@@ -12,13 +12,13 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/x/ansi"
 
-	"github.com/EdrenaVosh/squadup/internal/apply"
-	"github.com/EdrenaVosh/squadup/internal/initial"
-	"github.com/EdrenaVosh/squadup/internal/paths"
-	"github.com/EdrenaVosh/squadup/internal/preset"
-	"github.com/EdrenaVosh/squadup/internal/testutil"
-	"github.com/EdrenaVosh/squadup/internal/tui"
-	"github.com/EdrenaVosh/squadup/internal/workspace"
+	"github.com/EdrenaVosh/squad-up/internal/apply"
+	"github.com/EdrenaVosh/squad-up/internal/initial"
+	"github.com/EdrenaVosh/squad-up/internal/paths"
+	"github.com/EdrenaVosh/squad-up/internal/preset"
+	"github.com/EdrenaVosh/squad-up/internal/testutil"
+	"github.com/EdrenaVosh/squad-up/internal/tui"
+	"github.com/EdrenaVosh/squad-up/internal/workspace"
 )
 
 var update = flag.Bool("screens", false, "rewrite the golden screens in testdata")
@@ -45,7 +45,7 @@ func newWorkspace(t *testing.T) (workspace.Workspace, *initial.Meta) {
 	t.Helper()
 	home := t.TempDir()
 	t.Setenv("HOME", home) // so that paths under it are shown as ~/…, the same on every machine
-	p := paths.Paths{ClaudeDir: filepath.Join(t.TempDir(), "claude"), Home: filepath.Join(home, "squadup")}
+	p := paths.Paths{ClaudeDir: filepath.Join(t.TempDir(), "claude"), Home: filepath.Join(home, "squad-up")}
 	testutil.WriteFiles(t, p.ClaudeDir, map[string]string{
 		"agents/reviewer.md":    agentFile("reviewer", "Reviews diffs for bugs. Use after any code change.", "tools: Read, Grep\ncolor: green\n", "Be strict."),
 		"agents/team/tester.md": agentFile("tester", "Writes tests. Use when coverage is missing.", "tools: Read, Bash\n", "Test it."),
@@ -332,7 +332,7 @@ func testutilClean(t *testing.T) cleanSetup {
 	t.Helper()
 	home := t.TempDir()
 	t.Setenv("HOME", home) // so that paths under it are shown as ~/…, the same on every machine
-	p := paths.Paths{ClaudeDir: filepath.Join(t.TempDir(), "claude"), Home: filepath.Join(home, "squadup")}
+	p := paths.Paths{ClaudeDir: filepath.Join(t.TempDir(), "claude"), Home: filepath.Join(home, "squad-up")}
 	meta, err := initial.Capture(p, fixedNow)
 	if err != nil {
 		t.Fatal(err)

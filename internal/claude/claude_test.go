@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/EdrenaVosh/squadup/internal/claude"
-	"github.com/EdrenaVosh/squadup/internal/testutil"
+	"github.com/EdrenaVosh/squad-up/internal/claude"
+	"github.com/EdrenaVosh/squad-up/internal/testutil"
 )
 
 func TestFindReturnsErrNotFoundWhenClaudeIsNotOnPath(t *testing.T) {

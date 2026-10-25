@@ -3,7 +3,7 @@ package version_test
 import (
 	"testing"
 
-	"github.com/EdrenaVosh/squadup/internal/version"
+	"github.com/EdrenaVosh/squad-up/internal/version"
 )
 
 func TestStringShowsVersionCommitAndDate(t *testing.T) {

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/EdrenaVosh/squadup/internal/testutil"
+	"github.com/EdrenaVosh/squad-up/internal/testutil"
 )
 
 func TestFlowShowsSetsAndRemovesTheLoop(t *testing.T) {

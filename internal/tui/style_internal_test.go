@@ -6,7 +6,7 @@ import (
 
 	"github.com/charmbracelet/x/ansi"
 
-	"github.com/EdrenaVosh/squadup/internal/workspace"
+	"github.com/EdrenaVosh/squad-up/internal/workspace"
 )
 
 func TestGradientHasOneColorPerCell(t *testing.T) {
@@ -18,9 +18,9 @@ func TestGradientHasOneColorPerCell(t *testing.T) {
 }
 
 func TestGradientTextKeepsTheTextAndFlowsWithTheShift(t *testing.T) {
-	a, b := gradientText("◆ squadup", 0), gradientText("◆ squadup", 12)
+	a, b := gradientText("◆ squad-up", 0), gradientText("◆ squad-up", 12)
 
-	if ansi.Strip(a) != "◆ squadup" || ansi.Strip(b) != "◆ squadup" {
+	if ansi.Strip(a) != "◆ squad-up" || ansi.Strip(b) != "◆ squad-up" {
 		t.Errorf("text changed: %q %q", ansi.Strip(a), ansi.Strip(b))
 	}
 	if a == b {
@@ -166,7 +166,7 @@ func TestTheBigLogoIsMadeOfBlocksAndKeepsItsShape(t *testing.T) {
 			t.Errorf("tall=%v: the logo has no color", tall)
 		}
 	}
-	if bigLogoWidth(false) != 41 || bigLogoWidth(true) != 82 {
+	if bigLogoWidth(false) != 45 || bigLogoWidth(true) != 90 {
 		t.Errorf("widths = %d, %d", bigLogoWidth(false), bigLogoWidth(true))
 	}
 }

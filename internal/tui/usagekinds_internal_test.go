@@ -6,7 +6,7 @@ import (
 
 	"github.com/charmbracelet/x/ansi"
 
-	"github.com/EdrenaVosh/squadup/internal/usage"
+	"github.com/EdrenaVosh/squad-up/internal/usage"
 )
 
 func TestTheKindBarsShareOneScaleAndSplitIntoThreeKinds(t *testing.T) {

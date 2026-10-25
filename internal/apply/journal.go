@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/EdrenaVosh/squadup/internal/fsx"
+	"github.com/EdrenaVosh/squad-up/internal/fsx"
 )
 
 // JournalEntry is one line of log.jsonl: an operation that changed the config.

@@ -31,7 +31,7 @@ func TestThePluginManifestNamesThePlugin(t *testing.T) {
 	var m manifest
 	readJSON(t, filepath.Join(".claude-plugin", "plugin.json"), &m)
 
-	if m.Name != "squadup" || m.Version == "" || m.Description == "" {
+	if m.Name != "squad-up" || m.Version == "" || m.Description == "" {
 		t.Errorf("manifest = %+v", m)
 	}
 }

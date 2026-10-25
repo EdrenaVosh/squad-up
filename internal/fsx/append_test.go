@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/EdrenaVosh/squadup/internal/fsx"
+	"github.com/EdrenaVosh/squad-up/internal/fsx"
 )
 
 func TestAppendFileCreatesThenAppends(t *testing.T) {
@@ -31,8 +31,8 @@ func TestAppendFileIntoRealConfigPanicsInTests(t *testing.T) {
 
 	defer func() {
 		if recover() == nil {
-			t.Fatal("AppendFile into ~/.squadup did not panic")
+			t.Fatal("AppendFile into ~/.squad-up did not panic")
 		}
 	}()
-	_ = fsx.AppendFile(filepath.Join(home, ".squadup", "log.jsonl"), []byte("x"), 0o600)
+	_ = fsx.AppendFile(filepath.Join(home, ".squad-up", "log.jsonl"), []byte("x"), 0o600)
 }

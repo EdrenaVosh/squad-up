@@ -54,7 +54,7 @@ not an agent
   "model": "opus",
   "env": { "SECRET": "keep-out" }
 }
--- squadup/presets/solo/preset.yaml --
+-- squad-up/presets/solo/preset.yaml --
 schema: 1
 name: solo
 title: Solo
@@ -63,19 +63,19 @@ main: null
 agents: [planner, reviewer]
 settings:
   model: sonnet
--- squadup/presets/solo/agents/planner.md --
+-- squad-up/presets/solo/agents/planner.md --
 ---
 name: planner
 description: Plans work. Use before any large change.
 ---
 Plan it.
--- squadup/presets/solo/agents/reviewer.md --
+-- squad-up/presets/solo/agents/reviewer.md --
 ---
 name: reviewer
 description: Reviews diffs. Use after any code change.
 ---
 Solo reviewer.
--- squadup/presets/bug-hunt/preset.yaml --
+-- squad-up/presets/bug-hunt/preset.yaml --
 schema: 1
 name: bug-hunt
 title: Bug Hunt
@@ -84,7 +84,7 @@ main: debugger
 agents: [debugger]
 settings:
   model: haiku
--- squadup/presets/bug-hunt/agents/debugger.md --
+-- squad-up/presets/bug-hunt/agents/debugger.md --
 ---
 name: debugger
 description: Finds bugs. Use when a test fails.

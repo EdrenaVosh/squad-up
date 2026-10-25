@@ -9,7 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/EdrenaVosh/squadup/internal/claude"
+	"github.com/EdrenaVosh/squad-up/internal/claude"
 )
 
 const doctorTimeout = 15 * time.Second

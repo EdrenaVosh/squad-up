@@ -7,9 +7,9 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 
-	"github.com/EdrenaVosh/squadup/internal/initial"
-	"github.com/EdrenaVosh/squadup/internal/models"
-	"github.com/EdrenaVosh/squadup/internal/workspace"
+	"github.com/EdrenaVosh/squad-up/internal/initial"
+	"github.com/EdrenaVosh/squad-up/internal/models"
+	"github.com/EdrenaVosh/squad-up/internal/workspace"
 )
 
 // welcomeScreen is the first thing a new user sees: what was found and saved as
@@ -158,7 +158,7 @@ func (w *welcomeScreen) View(c viewCtx) string {
 		}
 		add(truncate(" "+mark+pad(label, 32)+sMuted.Render(ch.note), inner))
 	}
-	return c.box("Welcome to squadup", "", lines, 0)
+	return c.box("Welcome to squad-up", "", lines, 0)
 }
 
 func issuesText(s initial.Summary) string {

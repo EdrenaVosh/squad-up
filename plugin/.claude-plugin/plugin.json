@@ -1,12 +1,12 @@
 {
-  "name": "squadup",
+  "name": "squad-up",
   "version": "0.1.0",
-  "description": "Show and switch your squadup agent presets without leaving Claude Code",
+  "description": "Show and switch your squad-up agent presets without leaving Claude Code",
   "author": {
     "name": "EdrenaVosh"
   },
-  "homepage": "https://github.com/EdrenaVosh/squadup",
-  "repository": "https://github.com/EdrenaVosh/squadup",
+  "homepage": "https://github.com/EdrenaVosh/squad-up",
+  "repository": "https://github.com/EdrenaVosh/squad-up",
   "license": "MIT",
-  "keywords": ["agents", "presets", "squadup"]
+  "keywords": ["agents", "presets", "squad-up"]
 }

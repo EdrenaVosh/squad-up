@@ -11,9 +11,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/EdrenaVosh/squadup/internal/claude"
-	"github.com/EdrenaVosh/squadup/internal/runner"
-	"github.com/EdrenaVosh/squadup/internal/tui"
+	"github.com/EdrenaVosh/squad-up/internal/claude"
+	"github.com/EdrenaVosh/squad-up/internal/runner"
+	"github.com/EdrenaVosh/squad-up/internal/tui"
 )
 
 func (a *app) newRun() *cobra.Command {
@@ -21,7 +21,7 @@ func (a *app) newRun() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "run [preset] [-- claude arguments]",
 		Short: "Start claude with a preset for this session only; nothing is written to ~/.claude",
-		Long: "Without a preset name, the one pinned by the nearest .squadup file (see `squad pin`) runs.\n" +
+		Long: "Without a preset name, the one pinned by the nearest .squad-up file (see `squad pin`) runs.\n" +
 			"Starts claude with the preset's agents (--agents) and settings (--settings) for one session.\n" +
 			"Nothing is written to your Claude config. The agents are added to your own agents in ~/.claude/agents,\n" +
 			"they do not replace them: Claude Code offers no way to hide those.\n" +

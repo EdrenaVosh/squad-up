@@ -2,11 +2,11 @@ VERSION ?= $(shell (git describe --tags --always --dirty 2>/dev/null || echo dev
 COMMIT  ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo none)
 DATE    ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 
-VERSION_PKG := github.com/EdrenaVosh/squadup/internal/version
+VERSION_PKG := github.com/EdrenaVosh/squad-up/internal/version
 LDFLAGS := -s -w -X $(VERSION_PKG).Version=$(VERSION) -X $(VERSION_PKG).Commit=$(COMMIT) -X $(VERSION_PKG).Date=$(DATE)
 
 SANDBOX := $(CURDIR)/.sandbox
-SANDBOX_ENV := CLAUDE_CONFIG_DIR=$(SANDBOX)/claude SQUADUP_HOME=$(SANDBOX)/squadup
+SANDBOX_ENV := CLAUDE_CONFIG_DIR=$(SANDBOX)/claude SQUAD_UP_HOME=$(SANDBOX)/squad-up
 
 .PHONY: build test lint sandbox sandbox-presets sandbox-reset try try-claude snapshot install clean
 
