@@ -2,13 +2,13 @@
 │ PRESETS              │ ● Solo Indie                               ● EQUIPPED │
 │                      │ Planner, reviewer and tester for one-person apps      │
 │   ○ bug-hunt         │                                                       │
-│   ○ refactor-day     │ ┏━ 1 ━━━━ ▐▛█▜▌ ┓ ╭─ 2 ──── ▐▛█▜▌ ╮ ╭─ 3 ──── ▐▛█▜▌ ╮ │
-│ ▌ ◉ solo-indie       │ ┃ ■ planner   ⇄ ┃ │ ■ reviewer  ⇄ │ │ ■ tester    ⇄ │ │
-│                      │ ┃  opus         ┃ │  sonnet       │ │  haiku        │ │
-│                      │ ┃ ▂▃▅·· high    ┃ │ ▂▃▅·· high    │ │ ▂▃··· medium  │ │
-│                      │ ┃ ■□□□□ plan    ┃ │ ■■□□□ default │ │ ■■■□□ edits   │ │
-│                      │ ┃ 3 tools       ┃ │ 2 tools       │ │ 2 tools       │ │
-│                      │ ┗━━━━━━━━━━━━━━━┛ ╰───────────────╯ ╰───────────────╯ │
+│   ○ refactor-day     │ ╔═ ▶ 1 ══ ▐▛█▜▌ ╗ ╭─ 2 ──── ▐▛█▜▌ ╮ ╭─ 3 ──── ▐▛█▜▌ ╮ │
+│ ▌ ◉ solo-indie       │ ║  planner    ⇄ ║ │ ■ reviewer  ⇄ │ │ ■ tester    ⇄ │ │
+│                      │ ║  opus         ║ │  sonnet       │ │  haiku        │ │
+│                      │ ║ ▂▃▅·· high    ║ │ ▂▃▅·· high    │ │ ▂▃··· medium  │ │
+│                      │ ║ ■□□□□ plan    ║ │ ■■□□□ default │ │ ■■■□□ edits   │ │
+│                      │ ║ 3 tools       ║ │ 2 tools       │ │ 2 tools       │ │
+│                      │ ╚═══════════════╝ ╰───────────────╯ ╰───────────────╯ │
 │                      │                                                       │
 │                      │ Default model   sonnet       Main agent  —            │
 │                      │ Permissions    acceptEdits   Mode        replace      │

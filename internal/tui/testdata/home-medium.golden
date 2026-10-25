@@ -6,19 +6,19 @@
 │ PRESETS 3                    │ ● Bug Hunt  A debugger and a tester for tracking down a failure             │
 │                              │  ◆ AGENTS  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2 slots · in order   │
 │ ▌ ○ Bug Hunt                 │ separate helpers · set a Team flow to link them                             │
-│ ▌   ■ ■ 2 agents             │ ┏━ 1 ━━━━━━━━━━━━━━━━━━━━━━━━┓ ╭─ 2 ────────────────────────╮               │
-│ ▌   A debugger and a tester… │ ┃ ■ debugger                 ┃ │ ■ tester                   │               │
-│                              │ ┃                            ┃ │                            │               │
-│   ○ Refactor Day             │ ┃ ────────────────────────── ┃ │ ────────────────────────── │               │
-│     ■ 1 agent                │ ┃ Finds the root cause of a  ┃ │ Writes a failing test for  │               │
-│     Keeps your agents and a… │ ┃ failure.                   ┃ │ a bug.                     │               │
-│                              │ ┃                            ┃ │                            │               │
-│   ● Solo Indie               │ ┃ model   [inherit]          ┃ │ model   [inherit]          │               │
-│     ■ ■ ■ 3 agents           │ ┃ effort  ····· —            ┃ │ effort  ····· —            │               │
-│     Planner, reviewer and t… │ ┃ access  ■■□□□ default      ┃ │ access  ■■□□□ default      │               │
-│                              │ ┃ tools   ‹Read› ‹Bash›      ┃ │ tools   ‹Read› ‹Bash›      │               │
-│                              │ ┃ context ⇄ shared           ┃ │ context ⇄ shared           │               │
-│                              │ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ╰────────────────────────────╯               │
+│ ▌   ■ ■ 2 agents             │ ╔═ ▶ 1 ══════════════════════╗ ╭─ 2 ────────────────────────╮               │
+│ ▌   A debugger and a tester… │ ║  debugger                  ║ │ ■ tester                   │               │
+│                              │ ║                            ║ │                            │               │
+│   ○ Refactor Day             │ ║ ────────────────────────── ║ │ ────────────────────────── │               │
+│     ■ 1 agent                │ ║ Finds the root cause of a  ║ │ Writes a failing test for  │               │
+│     Keeps your agents and a… │ ║ failure.                   ║ │ a bug.                     │               │
+│                              │ ║                            ║ │                            │               │
+│   ● Solo Indie               │ ║ model   [inherit]          ║ │ model   [inherit]          │               │
+│     ■ ■ ■ 3 agents           │ ║ effort  ····· —            ║ │ effort  ····· —            │               │
+│     Planner, reviewer and t… │ ║ access  ■■□□□ default      ║ │ access  ■■□□□ default      │               │
+│                              │ ║ tools   ‹Read› ‹Bash›      ║ │ tools   ‹Read› ‹Bash›      │               │
+│                              │ ║ context ⇄ shared           ║ │ context ⇄ shared           │               │
+│                              │ ╚════════════════════════════╝ ╰────────────────────────────╯               │
 │                              │  ▪ SQUAD  ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄ settings, cost and health of the whole preset   │
 │                              │ ┌─ SETTINGS ────────────────────────┐ ┌─ TOKENS · LIVE ───────────────────┐ │
 │                              │ │ Model        haiku                │ │ no session in this folder yet     │ │

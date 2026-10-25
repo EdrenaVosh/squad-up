@@ -12,7 +12,7 @@ import (
 )
 
 func TestARunningCheckShowsWhoHasAnsweredAndWhoIsStillBeingAsked(t *testing.T) {
-	m := newModelCheck(workspace.Workspace{})
+	m := newModelCheck(workspace.Workspace{}, false)
 	defer m.cancel()
 	m.Update(probeResultMsg{alias: "opus", res: models.ProbeResult{OK: true, ID: "claude-opus-5-5"}})
 	m.Update(probeResultMsg{alias: "fable", res: models.ProbeResult{Error: "claude -p failed: this model is not on your plan"}})
@@ -33,7 +33,7 @@ func TestARunningCheckShowsWhoHasAnsweredAndWhoIsStillBeingAsked(t *testing.T) {
 }
 
 func TestStoppingARunningCheckClosesItAndCancelsTheRequests(t *testing.T) {
-	m := newModelCheck(workspace.Workspace{})
+	m := newModelCheck(workspace.Workspace{}, false)
 
 	_, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyEscape})
 

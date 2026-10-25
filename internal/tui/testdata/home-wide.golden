@@ -15,19 +15,19 @@
 │ ▌ ○ Bug Hunt                                 │  ◆ AGENTS  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2 slots · in order   │
 │ ▌   ■ ■ 2 agents                             │ separate helpers · set a Team flow to link them                                                                                                       │
 │ ▌   A debugger and a tester for tracking do… │                                                                                                                                                       │
-│                                              │ ┏━ 1 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ ╭─ 2 ──────────────────────────────╮                                                                             │
-│   ○ Refactor Day                             │ ┃ ■ debugger                       ┃ │ ■ tester                         │                                                                             │
-│     ■ 1 agent                                │ ┃                                  ┃ │                                  │                                                                             │
-│     Keeps your agents and adds an architect  │ ┃ ──────────────────────────────── ┃ │ ──────────────────────────────── │                                                                             │
-│                                              │ ┃ Finds the root cause of a        ┃ │ Writes a failing test for a bug. │                                                                             │
-│   ● Solo Indie                               │ ┃ failure.                         ┃ │                                  │                                                                             │
-│     ■ ■ ■ 3 agents                           │ ┃                                  ┃ │                                  │                                                                             │
-│     Planner, reviewer and tester for one-pe… │ ┃ model   [inherit]                ┃ │ model   [inherit]                │                                                                             │
-│                                              │ ┃ effort  ····· —                  ┃ │ effort  ····· —                  │                                                                             │
-│                                              │ ┃ access  ■■□□□ default            ┃ │ access  ■■□□□ default            │                                                                             │
-│                                              │ ┃ tools   ‹Read› ‹Bash›            ┃ │ tools   ‹Read› ‹Bash›            │                                                                             │
-│                                              │ ┃ context ⇄ shared                 ┃ │ context ⇄ shared                 │                                                                             │
-│                                              │ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ╰──────────────────────────────────╯                                                                             │
+│                                              │ ╔═ ▶ 1 ════════════════════════════╗ ╭─ 2 ──────────────────────────────╮                                                                             │
+│   ○ Refactor Day                             │ ║  debugger                        ║ │ ■ tester                         │                                                                             │
+│     ■ 1 agent                                │ ║                                  ║ │                                  │                                                                             │
+│     Keeps your agents and adds an architect  │ ║ ──────────────────────────────── ║ │ ──────────────────────────────── │                                                                             │
+│                                              │ ║ Finds the root cause of a        ║ │ Writes a failing test for a bug. │                                                                             │
+│   ● Solo Indie                               │ ║ failure.                         ║ │                                  │                                                                             │
+│     ■ ■ ■ 3 agents                           │ ║                                  ║ │                                  │                                                                             │
+│     Planner, reviewer and tester for one-pe… │ ║ model   [inherit]                ║ │ model   [inherit]                │                                                                             │
+│                                              │ ║ effort  ····· —                  ║ │ effort  ····· —                  │                                                                             │
+│                                              │ ║ access  ■■□□□ default            ║ │ access  ■■□□□ default            │                                                                             │
+│                                              │ ║ tools   ‹Read› ‹Bash›            ║ │ tools   ‹Read› ‹Bash›            │                                                                             │
+│                                              │ ║ context ⇄ shared                 ║ │ context ⇄ shared                 │                                                                             │
+│                                              │ ╚══════════════════════════════════╝ ╰──────────────────────────────────╯                                                                             │
 │                                              │                                                                                                                                                       │
 │                                              │  ▪ SQUAD  ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄ settings, cost and health of the whole preset   │
 │                                              │                                                                                                                                                       │

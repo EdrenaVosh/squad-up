@@ -2,13 +2,13 @@
 │ PRESETS              │ ● Initial                                    ● ACTIVE │
 │                      │ your original setup · captured 2026-10-24             │
 │   ○ bug-hunt         │                                                       │
-│   ○ refactor-day     │ ┏━ 1 ━━━━━━━━━━━┓ ╭─ 2 ───────────╮ ╭─ 3 ───────────╮ │
-│   ● solo-indie       │ ┃ ■ docs-writer ┃ │ ■ reviewer    │ │ ■ tester      │ │
-│                      │ ┃ [inherit]     ┃ │ [inherit]     │ │ [inherit]     │ │
-│                      │ ┃ ····· —       ┃ │ ····· —       │ │ ····· —       │ │
-│                      │ ┃ ■■□□□ default ┃ │ ■■□□□ default │ │ ■■□□□ default │ │
-│                      │ ┃ 2 tools       ┃ │ 2 tools       │ │ 2 tools       │ │
-│                      │ ┗━━━━━━━━━━━━━━━┛ ╰───────────────╯ ╰───────────────╯ │
+│   ○ refactor-day     │ ╔═ ▶ 1 ═════════╗ ╭─ 2 ───────────╮ ╭─ 3 ───────────╮ │
+│   ● solo-indie       │ ║  docs-writer  ║ │ ■ reviewer    │ │ ■ tester      │ │
+│                      │ ║ [inherit]     ║ │ [inherit]     │ │ [inherit]     │ │
+│                      │ ║ ····· —       ║ │ ····· —       │ │ ····· —       │ │
+│                      │ ║ ■■□□□ default ║ │ ■■□□□ default │ │ ■■□□□ default │ │
+│                      │ ║ 2 tools       ║ │ 2 tools       │ │ 2 tools       │ │
+│                      │ ╚═══════════════╝ ╰───────────────╯ ╰───────────────╯ │
 │                      │                                                       │
 │                      │ Default model   opus         Main agent  —            │
 │                      │ Permissions    acceptEdits   Mode        replace      │

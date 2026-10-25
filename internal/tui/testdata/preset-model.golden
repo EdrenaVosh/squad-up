@@ -1,8 +1,5 @@
                                                                                 
                                                                                 
-                                                                                
-                                                                                
-                                                                                
    ╭─ Default model ────────────────────────────────────────────────────────╮   
    │                                                                        │   
    │   Not set     use my original setting                                  │   
@@ -14,11 +11,14 @@
    │   opus[1m]                                                             │   
    │   sonnet[1m]                                                           │   
    │   opusplan                                                             │   
+   │   Fable 5.1   claude-fable-5-1 · not checked                           │   
+   │   Fable 5     claude-fable-5 · not checked                             │   
+   │   Opus 5.5    claude-opus-5-5 · not checked                            │   
+   │   Opus 5      claude-opus-5 · not checked                              │   
+   │   Opus 4.6    claude-opus-4-6 · not checked                            │   
+   │   4 of 20                                                              │   
    │                                                                        │   
    ╰────────────────────────────────────────────────────────────────────────╯   
-                                                                                
-                                                                                
-                                                                                
                                                                                 
                                                                                 
   ↑↓  move   enter  pick   esc  cancel

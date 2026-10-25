@@ -5,6 +5,8 @@ import (
 	"image/color"
 	"strings"
 
+	"charm.land/lipgloss/v2"
+
 	"github.com/EdrenaVosh/squadup/internal/workspace"
 )
 
@@ -59,14 +61,28 @@ func agentTile(a workspace.AgentInfo, slot int, o tileOpts) []string {
 	border := fg(col)
 	corners := [6]string{"╭", "╮", "╰", "╯", "─", "│"}
 	if o.selected {
-		corners = [6]string{"┏", "┓", "┗", "┛", "━", "┃"}
-		border = border.Bold(true)
+		// The selected tile has a double border in a light, breathing version of
+		// its color, and its name on a bar of that color: it cannot be missed.
+		corners = [6]string{"╔", "╗", "╚", "╝", "═", "║"}
+		hi := blend(col, lipgloss.Color("#FFFFFF"), 0.55)
+		bright := hi
+		if o.frame > 0 {
+			bright = pulse(o.frame, blend(col, lipgloss.Color("#FFFFFF"), 0.2), hi)
+		}
+		border = fg(bright).Bold(true)
+	}
+	// nameChip draws the name of the selected agent as a bar of its color.
+	nameChip := func(name string, w int) string {
+		return lipgloss.NewStyle().Foreground(lipgloss.Color("#10151C")).Background(blend(col, lipgloss.Color("#FFFFFF"), 0.25)).Bold(true).Render(" " + truncate(name, w) + " ")
 	}
 	row := func(content string) string {
 		return border.Render(corners[5]) + " " + pad(content, inner-1) + border.Render(corners[5])
 	}
 
 	head := fmt.Sprintf("%s %d ", corners[4], slot)
+	if o.selected {
+		head = fmt.Sprintf("%s ▶ %d ", corners[4], slot)
+	}
 	tail := ""
 	if o.live && o.stage == 2 && !o.big {
 		tail = " " + miniMascot(o.frame, slot) + " "
@@ -93,10 +109,13 @@ func agentTile(a workspace.AgentInfo, slot int, o tileOpts) []string {
 		name = sAccent.Render(truncate(a.Name, inner-4))
 	}
 	nameRow := swatch(a.Color) + " " + name
+	if o.selected {
+		nameRow = nameChip(a.Name, inner-4)
+	}
 	if o.team && !o.big {
 		nameRow = swatch(a.Color) + " " + sBold.Render(truncate(a.Name, inner-6))
 		if o.selected {
-			nameRow = swatch(a.Color) + " " + sAccent.Render(truncate(a.Name, inner-6))
+			nameRow = nameChip(a.Name, inner-8)
 		}
 		mark := fg(cShared).Render("⇄")
 		if !a.Shared {
@@ -109,7 +128,7 @@ func agentTile(a workspace.AgentInfo, slot int, o tileOpts) []string {
 		m = mascot(o.frame, slot)
 		nameRow = pad(swatch(a.Color)+" "+truncate(sBold.Render(a.Name), inner-4-mascotW-2), inner-2-mascotW) + m[0] + " "
 		if o.selected {
-			nameRow = pad(swatch(a.Color)+" "+truncate(sAccent.Render(a.Name), inner-4-mascotW-2), inner-2-mascotW) + m[0] + " "
+			nameRow = pad(nameChip(a.Name, inner-6-mascotW-2), inner-2-mascotW) + m[0] + " "
 		}
 	}
 	lines = append(lines, row(nameRow))

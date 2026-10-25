@@ -30,25 +30,31 @@ type modelRow struct {
 }
 
 func (a *app) newModels() *cobra.Command {
-	var probe, asJSON bool
+	var probe, releases, asJSON bool
 	cmd := &cobra.Command{
 		Use:   "models",
 		Short: "Show which models you can use, and optionally test them",
 		Long: "Claude Code has no command that lists the models your account can use, so squad combines a built-in catalogue,\n" +
-			"the availableModels policy from your settings and, with --probe, one tiny request per model alias.",
+			"the availableModels policy from your settings and, with --probe, one tiny request per model alias.\n" +
+			"Aliases (sonnet, opus…) follow the newest release; a release can also be picked by its full ID, such as claude-sonnet-5-5,\n" +
+			"and --releases tests those too (each request carries Claude Code's start-up prompt, roughly 20k tokens, mostly cached).",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			ctx, cancel := context.WithTimeout(cmd.Context(), modelsDeadline)
 			defer cancel()
-			return a.runModels(ctx, probe, asJSON)
+			if releases {
+				probe = true
+			}
+			return a.runModels(ctx, probe, releases, asJSON)
 		},
 	}
-	cmd.Flags().BoolVar(&probe, "probe", false, "send one tiny request per model alias to find out what works (uses a few tokens)")
+	cmd.Flags().BoolVar(&probe, "probe", false, "send one small request per model alias to find out what works (each is roughly 20k tokens, mostly cached)")
+	cmd.Flags().BoolVar(&releases, "releases", false, "also test the older releases by their full ID (implies --probe)")
 	cmd.Flags().BoolVar(&asJSON, "json", false, "print machine-readable output")
 	return cmd
 }
 
-func (a *app) runModels(ctx context.Context, probe, asJSON bool) error {
+func (a *app) runModels(ctx context.Context, probe, releases, asJSON bool) error {
 	policy, notes := a.workspace().Policy()
 
 	var (
@@ -82,7 +88,10 @@ func (a *app) runModels(ctx context.Context, probe, asJSON bool) error {
 
 	if probe {
 		printf(a.io.Err, "Probing %s with one tiny request each…\n", strings.Join(models.ProbeAliases, ", "))
-		probed, err := a.workspace().ProbeModels(ctx)
+		if releases {
+			printf(a.io.Err, "…and then the older releases, by their full ID.\n")
+		}
+		probed, err := a.workspace().ProbeModelsEach(ctx, releases, nil)
 		switch {
 		case errors.Is(err, workspace.ErrNoClaude):
 			return &ExitError{Code: 1, Err: errors.New("cannot probe: claude was not found"), Fix: "install Claude Code (https://code.claude.com/docs) and check it with `squad doctor`"}
@@ -98,7 +107,7 @@ func (a *app) runModels(ctx context.Context, probe, asJSON bool) error {
 		cache = probed
 	}
 
-	results := models.Evaluate(models.Catalog(), policy, cache)
+	results := models.Evaluate(models.FullCatalog(), policy, cache)
 	rows := make([]modelRow, len(results))
 	for i, r := range results {
 		var usedBy []string
@@ -123,7 +132,7 @@ func (a *app) runModels(ctx context.Context, probe, asJSON bool) error {
 		notes = append(notes, tui.ModelOverride(m))
 	}
 	if cache == nil && !probe && found {
-		notes = append(notes, "Nothing has been probed yet. `squad models --probe` finds out which models your account can use (four tiny requests).")
+		notes = append(notes, "Nothing has been probed yet. `squad models --probe` finds out which models your account can use (four requests; --releases adds the older releases).")
 	}
 	for _, n := range notes {
 		printf(a.io.Err, "%s\n", n)

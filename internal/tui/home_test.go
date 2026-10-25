@@ -284,13 +284,13 @@ func TestHomeOnAMediumTerminal(t *testing.T) {
 func TestTheArrowKeysPickAnAgentAndAOpensItsEditor(t *testing.T) {
 	h := newHarness(t)
 	h.resize(160, 44)
-	h.contains("┏━ 1 ")
+	h.contains("╔═ ▶ 1 ")
 
 	h.press("right")
-	h.contains("┏━ 2 ", "model", "access")
+	h.contains("╔═ ▶ 2 ", "model", "access")
 	h.lacks("PROMPT")
 	h.press("left", "left") // wraps around
-	h.contains("┏━ 2 ")
+	h.contains("╔═ ▶ 2 ")
 	h.press("a")
 	h.contains("Agent tester")
 	h.press("esc", "esc")
@@ -322,7 +322,7 @@ func TestClickingATileSelectsItAndASecondClickEditsIt(t *testing.T) {
 		t.Fatalf("tile 2 not found:\n%s", h.view())
 	}
 	h.send(tea.MouseClickMsg{X: x, Y: y, Button: tea.MouseLeft})
-	h.contains("┏━ 2 ")
+	h.contains("╔═ ▶ 2 ")
 	h.send(tea.MouseClickMsg{X: x, Y: y, Button: tea.MouseLeft})
 	h.contains("Agent reviewer")
 }

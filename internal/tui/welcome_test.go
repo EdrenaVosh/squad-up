@@ -3,6 +3,7 @@ package tui_test
 import (
 	"testing"
 
+	"github.com/EdrenaVosh/squadup/internal/models"
 	"github.com/EdrenaVosh/squadup/internal/testutil"
 	"github.com/EdrenaVosh/squadup/internal/tui"
 )
@@ -79,27 +80,42 @@ func TestSkippingTheWelcomeGoesToTheMainScreen(t *testing.T) {
 	h.lacks("Welcome to squadup")
 }
 
-func TestWelcomeCanCheckTheModelsAfterConsent(t *testing.T) {
+func TestWelcomeCanCheckTheModelsAfterAskingWhatToCheck(t *testing.T) {
 	h := firstRun(t)
 	testutil.FakeClaude(t)
 
 	h.press("down", "down", "down", "enter")
-	h.contains("Check your models", "one tiny request", "a few tokens")
-	h.press("n")
+	h.contains("Check your models", "The four latest", "Every release", "roughly 20k tokens")
+	h.press("esc")
 	h.contains("Welcome to squadup")
 
-	h.press("enter", "y")
+	h.press("enter", "enter")
 
-	h.contains("Check your models", "Done", "fable", "opus", "sonnet", "haiku", "available", "of 4 available")
+	h.contains("Check your models", "Done", "fable", "opus", "sonnet", "haiku", "available", "4 of 4 available")
+	h.lacks("RELEASES")
 	h.goldenAt("model-check", 80, 24)
 	h.press("x") // any key closes it
 	h.contains("Welcome to squadup")
 }
 
+func TestEveryReleaseCanBeCheckedByItsFullID(t *testing.T) {
+	h := firstRun(t)
+	testutil.FakeClaude(t)
+	h.resize(100, 40)
+
+	h.press("down", "down", "down", "enter", "down", "enter")
+
+	h.contains("RELEASES", "Sonnet 5.5", "Sonnet 4.6", "Opus 4.6", "Haiku 4.5", "Fable 5.1", "claude-opus-4-6", "15 of 15 available")
+	cache, err := models.LoadCache(h.paths)
+	if err != nil || cache == nil || !cache.Results["claude-opus-4-6"].OK || !cache.Results["claude-sonnet-5-5"].OK {
+		t.Errorf("the answers were not kept: %+v, %v", cache, err)
+	}
+}
+
 func TestTheModelCheckShowsEachModelAsItAnswers(t *testing.T) {
 	h := firstRun(t)
 	testutil.FakeClaude(t)
-	h.press("down", "down", "down", "enter", "y")
+	h.press("down", "down", "down", "enter", "enter")
 
 	// the check has finished by the time the harness returns; every model has an answer
 	for _, alias := range []string{"fable", "opus", "sonnet", "haiku"} {
@@ -113,16 +129,16 @@ func TestTheMainScreenCanCheckTheModelsToo(t *testing.T) {
 	testutil.FakeClaude(t)
 
 	h.press("m")
-	h.contains("Check your models", "a few tokens")
-	h.press("y")
+	h.contains("Check your models", "The four latest")
+	h.press("enter")
 
-	h.contains("Done", "of 4 available")
+	h.contains("Done", "4 of 4 available")
 }
 
 func TestWelcomeSaysWhatIsMissingForTheModelCheck(t *testing.T) {
 	h := firstRun(t) // no claude on PATH
 
-	h.press("down", "down", "down", "enter", "y")
+	h.press("down", "down", "down", "enter", "enter")
 
 	h.contains("claude was not found", "Nothing was sent")
 }

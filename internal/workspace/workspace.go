@@ -339,7 +339,7 @@ func (w Workspace) CachedProbe(ctx context.Context) *models.Cache {
 // probe says the account cannot use.
 func (w Workspace) ModelWarnings(ctx context.Context, b *preset.Bundle) []string {
 	policy, _ := w.Policy()
-	results := models.Evaluate(models.Catalog(), policy, w.CachedProbe(ctx))
+	results := models.Evaluate(models.FullCatalog(), policy, w.CachedProbe(ctx))
 
 	unavailable := func(name string) (string, bool) {
 		for _, r := range results {
@@ -424,12 +424,14 @@ const probeTimeout = 30 * time.Second
 // ProbeModels sends one tiny request per model alias, stores the answers in
 // the cache and returns them. It needs claude to be installed and signed in.
 func (w Workspace) ProbeModels(ctx context.Context) (*models.Cache, error) {
-	return w.ProbeModelsEach(ctx, nil)
+	return w.ProbeModelsEach(ctx, false, nil)
 }
 
 // ProbeModelsEach is ProbeModels that tells each model's result as soon as it
-// is known.
-func (w Workspace) ProbeModelsEach(ctx context.Context, each func(alias string, res models.ProbeResult)) (*models.Cache, error) {
+// is known. With releases it goes on to the older releases that no alias
+// resolved to, each named by its full ID; an answer it already has for
+// another release of the same Claude Code version and account is kept.
+func (w Workspace) ProbeModelsEach(ctx context.Context, releases bool, each func(name string, res models.ProbeResult)) (*models.Cache, error) {
 	bin, err := claude.Find()
 	if err != nil {
 		return nil, ErrNoClaude
@@ -450,7 +452,47 @@ func (w Workspace) ProbeModelsEach(ctx context.Context, each func(alias string, 
 		ClaudeVersion: version,
 		AuthMethod:    auth.AuthMethod,
 		ProbedAt:      w.now().UTC(),
-		Results:       models.ProbeEach(ctx, client, models.ProbeAliases, probeTimeout, each),
+		Results:       map[string]models.ProbeResult{},
+	}
+	if old, _ := models.LoadCache(w.Paths); old != nil && old.Valid(version, auth.AuthMethod, w.now()) {
+		for name, res := range old.Results {
+			if !slices.Contains(models.ProbeAliases, name) {
+				cache.Results[name] = res
+			}
+		}
+	}
+	tell := func(name string, res models.ProbeResult) {
+		if each != nil {
+			each(name, res)
+		}
+	}
+
+	for alias, res := range models.ProbeEach(ctx, client, models.ProbeAliases, probeTimeout, tell) {
+		cache.Results[alias] = res
+	}
+	if releases {
+		resolved := map[string]bool{}
+		for _, alias := range models.ProbeAliases {
+			if res := cache.Results[alias]; res.OK {
+				resolved[res.ID] = true
+			}
+		}
+		var rest []string
+		for _, v := range models.Versions() {
+			if resolved[v.Name] { // an alias already ran on it: no request needed
+				res := models.ProbeResult{OK: true, ID: v.Name}
+				cache.Results[v.Name] = res
+				tell(v.Name, res)
+				continue
+			}
+			rest = append(rest, v.Name)
+		}
+		for id, res := range models.ProbeEach(ctx, client, rest, probeTimeout, tell) {
+			cache.Results[id] = res
+		}
+	}
+	if ctx.Err() != nil {
+		return nil, fmt.Errorf("the check was stopped: %w", ctx.Err())
 	}
 	if err := models.SaveCache(w.Paths, cache); err != nil {
 		return nil, fmt.Errorf("save the probe: %w", err)

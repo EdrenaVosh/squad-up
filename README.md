@@ -15,7 +15,7 @@ Presets of agent teams for [Claude Code](https://code.claude.com): switch them w
 | `squad restore` | Return to your original setup (Initial) |
 | `squad undo [--to <id>]` | Go back one step, or to a point from `squad log` |
 | `squad run <preset> [-- args]` | Start `claude` with a preset for one session, writing nothing to `~/.claude` (`--dry-run`) |
-| `squad models [--probe]` | Which models you can use: catalogue, your policy, and an optional probe |
+| `squad models [--probe] [--releases]` | Which models you can use: catalogue, your policy, and an optional probe; `--releases` also tests the older releases (sonnet 5, opus 4.6…) by their full ID |
 | `squad lint [preset]` | Check agents and presets, and estimate their cost in context (`--strict`, `--json`) |
 | `squad new [name]` | Create a preset: blank, or from `--from <preset\|initial\|current>` or `--template <id>` |
 | `squad clone <preset> <new>` · `squad rename` · `squad rm` | Copy, rename or delete a preset (Initial is never changed) |

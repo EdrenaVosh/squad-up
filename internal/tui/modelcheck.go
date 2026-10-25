@@ -25,25 +25,46 @@ type (
 // every one of them is getting on. The requests run in parallel and take a few
 // seconds, so the screen must say what is happening.
 type modelCheck struct {
-	ws      workspace.Workspace
-	results map[string]models.ProbeResult
-	done    bool
-	err     error
-	ch      chan tea.Msg
-	cancel  context.CancelFunc
-	ctx     context.Context
+	ws       workspace.Workspace
+	releases bool // also the older releases, by their full ID
+	results  map[string]models.ProbeResult
+	done     bool
+	err      error
+	ch       chan tea.Msg
+	cancel   context.CancelFunc
+	ctx      context.Context
 }
 
-func newModelCheck(ws workspace.Workspace) *modelCheck {
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
-	return &modelCheck{ws: ws, results: map[string]models.ProbeResult{}, ch: make(chan tea.Msg, len(models.ProbeAliases)+2), ctx: ctx, cancel: cancel}
+func newModelCheck(ws workspace.Workspace, releases bool) *modelCheck {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	size := len(models.ProbeAliases) + len(models.Versions()) + 2
+	return &modelCheck{ws: ws, releases: releases, results: map[string]models.ProbeResult{}, ch: make(chan tea.Msg, size), ctx: ctx, cancel: cancel}
+}
+
+// rows are the models the check asks about, with how each is shown.
+func (m *modelCheck) rows() []checkRow {
+	var out []checkRow
+	for _, alias := range models.ProbeAliases {
+		out = append(out, checkRow{name: alias, label: alias})
+	}
+	if m.releases {
+		for _, v := range models.Versions() {
+			out = append(out, checkRow{name: v.Name, label: v.Title, release: true})
+		}
+	}
+	return out
+}
+
+type checkRow struct {
+	name, label string
+	release     bool
 }
 
 // Init starts the requests and waits for the first answer.
 func (m *modelCheck) Init() tea.Cmd {
 	return func() tea.Msg {
 		go func() {
-			_, err := m.ws.ProbeModelsEach(m.ctx, func(alias string, res models.ProbeResult) {
+			_, err := m.ws.ProbeModelsEach(m.ctx, m.releases, func(alias string, res models.ProbeResult) {
 				m.ch <- probeResultMsg{alias: alias, res: res}
 			})
 			m.ch <- probeFinishedMsg{err: err}
@@ -103,10 +124,16 @@ func (m *modelCheck) View(c viewCtx) string {
 	}
 	add(head)
 	add("")
-	ok := 0
-	for _, alias := range models.ProbeAliases {
-		res, answered := m.results[alias]
-		label := pad(sBold.Render(alias), 9)
+	ok, rows := 0, m.rows()
+	released := false
+	for _, row := range rows {
+		if row.release && !released {
+			released = true
+			add("")
+			add(sMuted.Render("RELEASES  named by their full ID"))
+		}
+		res, answered := m.results[row.name]
+		label := pad(sBold.Render(row.label), 12)
 		switch {
 		case !answered && m.done:
 			add(label + sMuted.Render("no answer"))
@@ -116,16 +143,15 @@ func (m *modelCheck) View(c viewCtx) string {
 			ok++
 			add(label + sOK.Render("✓ available") + sMuted.Render("  "+res.ID))
 		default:
-			wrapped := wrapText(res.Error, w-9-2)
 			add(label + sErr.Render("✗ unavailable"))
-			for _, l := range wrapped {
-				add(pad("", 9) + sMuted.Render(l))
+			for _, l := range wrapText(res.Error, w-12-2) {
+				add(pad("", 12) + sMuted.Render(l))
 			}
 		}
 	}
 	if m.done {
 		add("")
-		add(fmt.Sprintf("%s of %d available. %s", sBold.Render(fmt.Sprintf("%d", ok)), len(models.ProbeAliases),
+		add(fmt.Sprintf("%s of %d available. %s", sBold.Render(fmt.Sprintf("%d", ok)), len(rows),
 			sMuted.Render("Models you cannot use are greyed out when you pick one, and the answer is kept for this version of Claude Code.")))
 	}
 	return modalSized(c, "Check your models", wrapLines(lines, w), choiceWidth(c))

@@ -8,6 +8,8 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
+
+	"github.com/EdrenaVosh/squadup/internal/models"
 )
 
 // ---- palette ----
@@ -100,7 +102,7 @@ func pill(text string, c color.Color) string {
 
 // modelPill is the pill of a model alias, tinted by its family.
 func modelPill(model string) string {
-	name := orDash(model, "inherit")
+	name := models.Pretty(orDash(model, "inherit"))
 	for family, c := range modelColors {
 		if strings.Contains(name, family) {
 			return pill(name, c)

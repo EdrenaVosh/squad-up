@@ -4,6 +4,7 @@ import (
 	"context"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -374,5 +375,74 @@ func TestEvaluateLetsPolicyOverrideAndExplain(t *testing.T) {
 	}
 	if got := find(results, "best"); got.Status != models.StatusUnavailable {
 		t.Errorf("best = %+v: neither fable nor opus is allowed", got)
+	}
+}
+
+// ---- versions ----
+
+func TestEveryDocumentedReleaseCanBePickedByItsFullID(t *testing.T) {
+	var ids []string
+	for _, v := range models.Versions() {
+		ids = append(ids, v.Name)
+		if !v.Agents || !v.Settings || !v.Version || v.Family == "" || v.Title == "" {
+			t.Errorf("%+v is incomplete", v)
+		}
+		if !models.ValidAgentModel(v.Name) {
+			t.Errorf("%s is not accepted in an agent", v.Name)
+		}
+	}
+	for _, want := range []string{"claude-sonnet-5-5", "claude-sonnet-5", "claude-opus-5-5", "claude-opus-4-6", "claude-haiku-5-5", "claude-fable-5-1"} {
+		if !slices.Contains(ids, want) {
+			t.Errorf("%s is missing from %v", want, ids)
+		}
+	}
+	if models.Pretty("claude-sonnet-5-5") != "sonnet 5.5" || models.Pretty("claude-opus-4-6") != "opus 4.6" || models.Pretty("claude-x-9") != "claude-x-9" {
+		t.Error("Pretty does not say releases the way a person does")
+	}
+	if len(models.FullCatalog()) != len(models.Catalog())+len(models.Versions()) {
+		t.Error("the full catalogue is the aliases and the releases")
+	}
+}
+
+func TestAReleaseIsVerifiedByAnAliasThatResolvedToIt(t *testing.T) {
+	cache := &models.Cache{Results: map[string]models.ProbeResult{
+		"sonnet": {OK: true, ID: "claude-sonnet-5-5"},
+		"opus":   {OK: true, ID: "claude-opus-5-5"},
+	}}
+
+	results := models.Evaluate(models.FullCatalog(), models.Policy{}, cache)
+
+	if got := find(results, "claude-sonnet-5-5"); got.Status != models.StatusVerified || got.ResolvedTo != "claude-sonnet-5-5" || !strings.Contains(got.Reason, "sonnet") {
+		t.Errorf("sonnet 5.5 = %+v: sonnet resolved to it", got)
+	}
+	if got := find(results, "claude-sonnet-4-6"); got.Status != models.StatusUnknown {
+		t.Errorf("sonnet 4.6 was not probed and no alias resolved to it: %+v", got)
+	}
+}
+
+func TestAProbeOfAReleaseSaysWhetherItCanBeUsed(t *testing.T) {
+	cache := &models.Cache{Results: map[string]models.ProbeResult{
+		"claude-opus-4-6":  {OK: true, ID: "claude-opus-4-6"},
+		"claude-sonnet-5":  {OK: false, Error: "not available on your plan"},
+		"claude-haiku-4-5": {OK: true, ID: "claude-haiku-4-5"},
+	}}
+
+	results := models.Evaluate(models.FullCatalog(), models.Policy{}, cache)
+
+	if got := find(results, "claude-opus-4-6"); got.Status != models.StatusVerified {
+		t.Errorf("opus 4.6 = %+v", got)
+	}
+	if got := find(results, "claude-sonnet-5"); got.Status != models.StatusUnavailable || !strings.Contains(got.Reason, "your plan") {
+		t.Errorf("sonnet 5 = %+v", got)
+	}
+}
+
+func TestAReleaseBlockedByThePolicyIsUnavailable(t *testing.T) {
+	policy := models.Policy{HasAvailable: true, Available: []string{"opus"}, Enforce: true}
+
+	results := models.Evaluate(models.FullCatalog(), policy, nil)
+
+	if got := find(results, "claude-sonnet-4-5"); got.Status == models.StatusVerified {
+		t.Errorf("sonnet 4.5 = %+v", got)
 	}
 }

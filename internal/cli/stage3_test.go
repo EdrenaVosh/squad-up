@@ -163,7 +163,7 @@ func TestAProbeIsForgottenWhenClaudeIsUpdated(t *testing.T) {
 
 	r := e.run("models")
 
-	if strings.Contains(r.stdout, "claude-opus-5-5") || !strings.Contains(r.stderr, "out of date") {
+	if strings.Contains(r.stdout, "Probed") || strings.Contains(r.stdout, "verified   claude-") || !strings.Contains(r.stderr, "out of date") {
 		t.Errorf("stdout:\n%s\nstderr:\n%s", r.stdout, r.stderr)
 	}
 }
@@ -542,5 +542,35 @@ func TestLintJSON(t *testing.T) {
 	}
 	if r.code != 2 || len(got.Targets) != 1 || got.Targets[0].Name != "bad" || got.Summary.Errors != 1 || got.Targets[0].Cost.SessionTokens == 0 {
 		t.Errorf("exit code %d, report %+v", r.code, got)
+	}
+}
+
+func TestModelsCanProbeEveryReleaseByItsFullID(t *testing.T) {
+	e := ready(t)
+	testutil.FakeClaude(t)
+
+	r := e.run("models", "--releases")
+
+	if r.code != 0 {
+		t.Fatalf("exit %d: %s", r.code, r.stderr)
+	}
+	for _, want := range []string{"claude-opus-4-6", "claude-sonnet-4-5", "claude-haiku-5-5"} {
+		line := ""
+		for _, l := range strings.Split(r.stdout, "\n") {
+			if strings.HasPrefix(l, want+" ") {
+				line = l
+			}
+		}
+		if !strings.Contains(line, "verified") {
+			t.Errorf("%s: %q", want, line)
+		}
+	}
+	if !strings.Contains(r.stderr, "older releases") {
+		t.Errorf("stderr: %s", r.stderr)
+	}
+
+	again := e.run("models", "--probe") // an aliases-only probe keeps what is known of the releases
+	if line := lineWith(again.stdout, "claude-opus-4-6 "); !strings.Contains(line, "verified") {
+		t.Errorf("the answer for opus 4.6 was lost: %q", line)
 	}
 }

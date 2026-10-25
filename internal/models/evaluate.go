@@ -51,6 +51,9 @@ func Evaluate(catalog []Entry, policy Policy, cache *Cache) []Result {
 			if b.Status == StatusVerified {
 				r.Status, r.Reason = StatusUnknown, "the 1M context window is not probed; it needs a plan that includes it"
 			}
+		case e.Version:
+			b := evalVersion(e.Name, policy, cache)
+			r.Status, r.ResolvedTo, r.Reason = b.Status, b.ResolvedTo, b.Reason
 		default:
 			b := base[e.Name]
 			r.Status, r.ResolvedTo, r.Reason = b.Status, b.ResolvedTo, b.Reason
@@ -87,6 +90,22 @@ func evalAlias(alias string, policy Policy, cache *Cache) Result {
 		r.Status = StatusUnknown
 		if verdict.Uncertain {
 			r.Reason = verdict.Reason
+		}
+	}
+	return r
+}
+
+// evalVersion is the status of a release named by its full ID. A probe of the
+// ID says it; so does an alias that resolved to this very ID, without a
+// request of its own.
+func evalVersion(id string, policy Policy, cache *Cache) Result {
+	r := evalAlias(id, policy, cache)
+	if r.Status != StatusUnknown && r.Status != StatusAllowed || cache == nil {
+		return r
+	}
+	for _, alias := range ProbeAliases {
+		if res, ok := cache.Results[alias]; ok && res.OK && res.ID == id {
+			return Result{Name: id, Status: StatusVerified, ResolvedTo: id, Reason: "what " + alias + " resolves to"}
 		}
 	}
 	return r

@@ -607,7 +607,7 @@ func modelOptions(ws workspace.Workspace, forAgent bool, current, unsetLabel, un
 	policy, _ := ws.Policy()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	results := models.Evaluate(models.Catalog(), policy, ws.CachedProbe(ctx))
+	results := models.Evaluate(models.FullCatalog(), policy, ws.CachedProbe(ctx))
 
 	var options []option
 	if !forAgent {
@@ -617,13 +617,32 @@ func modelOptions(ws workspace.Workspace, forAgent bool, current, unsetLabel, un
 		if (forAgent && !r.Agents) || (!forAgent && !r.Settings) || r.Name == "default" {
 			continue
 		}
-		o := option{label: r.Name, value: r.Name, note: statusNote(r)}
+		o := option{label: models.Title(r.Name), value: r.Name, note: statusNote(r)}
+		if isRelease(r.Name) {
+			o.note = releaseNote(r)
+		}
 		if r.Status == models.StatusUnavailable {
 			o.disabled, o.reason, o.note = true, r.Reason, ""
 		}
 		options = append(options, o)
 	}
 	return options, indexOfValue(options, current)
+}
+
+// isRelease reports whether a catalogue name is a release's full ID.
+func isRelease(name string) bool { return strings.HasPrefix(name, "claude-") }
+
+// releaseNote is what the picker says about a release: its ID, and whether it
+// is known to work.
+func releaseNote(r models.Result) string {
+	state := "not checked"
+	switch r.Status {
+	case models.StatusVerified:
+		state = "available"
+	case models.StatusAllowed:
+		state = "allowed by policy"
+	}
+	return r.Name + " · " + state
 }
 
 func statusNote(r models.Result) string {

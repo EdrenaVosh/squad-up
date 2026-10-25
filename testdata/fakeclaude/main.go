@@ -61,7 +61,11 @@ func probe(args []string) {
 		}
 	}
 	id := os.Getenv("FAKE_CLAUDE_ID_" + strings.ToUpper(model))
-	if id == "" {
+	switch {
+	case id != "":
+	case strings.HasPrefix(model, "claude-"): // a release named by its full ID answers as itself
+		id = model
+	default:
 		id = "claude-" + model + "-5-5"
 	}
 	usage := fmt.Sprintf("%q:{\"inputTokens\":9,\"outputTokens\":2}", id)

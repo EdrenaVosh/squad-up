@@ -7,10 +7,10 @@
    │                                                                        │   
    │ ✓ Done                                                                 │   
    │                                                                        │   
-   │ fable    ✓ available  claude-fable-5-5                                 │   
-   │ opus     ✓ available  claude-opus-5-5                                  │   
-   │ sonnet   ✓ available  claude-sonnet-5-5                                │   
-   │ haiku    ✓ available  claude-haiku-5-5                                 │   
+   │ fable       ✓ available  claude-fable-5-5                              │   
+   │ opus        ✓ available  claude-opus-5-5                               │   
+   │ sonnet      ✓ available  claude-sonnet-5-5                             │   
+   │ haiku       ✓ available  claude-haiku-5-5                              │   
    │                                                                        │   
    │ 4 of 4 available. Models you cannot use are greyed out when you pick   │   
    │ one, and the answer is kept for this version of Claude Code.           │   

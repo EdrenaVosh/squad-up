@@ -306,7 +306,7 @@ func TestChoosingTheModelOfAnAgent(t *testing.T) {
 	h.field(fModel)
 
 	h.press("enter")
-	h.contains("Model", "inherit", "fable", "haiku", "Other model ID…")
+	h.contains("Model", "inherit", "fable", "haiku", "Sonnet 5.5", "claude-sonnet-5-5 · not checked")
 	h.press("down", "enter") // sonnet -> haiku (inherit, fable, opus, sonnet, haiku)
 
 	if v, _ := h.agent("solo-indie", "reviewer").Get("model"); v != "haiku" {
@@ -329,9 +329,10 @@ func TestAnAgentCanUseAFullModelID(t *testing.T) {
 	h.press("enter") // wraps? stays on the first entry: inherit
 	h.field(fModel)
 	h.press("enter")
-	for i := 0; i < 8; i++ {
-		h.press("down")
+	for i := 0; i < 40; i++ {
+		h.press("down") // to the last entry
 	}
+	h.contains("Other model ID…")
 	h.press("enter")
 	h.contains("Model ID")
 	h.typeText("not a model")
@@ -344,6 +345,23 @@ func TestAnAgentCanUseAFullModelID(t *testing.T) {
 	if v, _ := h.agent("solo-indie", "reviewer").Get("model"); v != "claude-sonnet-4-5" {
 		t.Fatalf("model = %v", v)
 	}
+}
+
+func TestAnAgentCanUseASpecificRelease(t *testing.T) {
+	h := newHarness(t)
+	h.resize(140, 36)
+	h.openAgent("solo-indie", 1) // reviewer: sonnet
+	h.field(fModel)
+
+	h.press("enter")
+	h.contains("Sonnet 4.6", "claude-sonnet-4-6", "Opus 4.6", "Sonnet 5 ", "Haiku 4.5")
+	h.press("down", "down", "down", "down", "down", "down", "down", "down", "down") // sonnet -> Sonnet 4.6
+	h.press("enter")
+
+	if v, _ := h.agent("solo-indie", "reviewer").Get("model"); v != "claude-sonnet-4-6" {
+		t.Fatalf("model = %v, want claude-sonnet-4-6", v)
+	}
+	h.contains("sonnet 4.6") // the field says it the way a person does, not as the long ID
 }
 
 func TestEffortAndPermissionModeAreChosenFromLists(t *testing.T) {

@@ -8,6 +8,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 
 	"github.com/EdrenaVosh/squadup/internal/initial"
+	"github.com/EdrenaVosh/squadup/internal/models"
 	"github.com/EdrenaVosh/squadup/internal/workspace"
 )
 
@@ -85,12 +86,17 @@ func (w *welcomeScreen) cloneInitial() screen {
 	})
 }
 
-// checkModelsConfirm asks before the check, which spends a few tokens, and
-// then shows it running.
+// checkModelsConfirm asks what to check before it spends anything: the four
+// aliases, or every release as well. Each request carries Claude Code's normal
+// start-up prompt, so it is not as small as it sounds.
 func checkModelsConfirm(ws workspace.Workspace) screen {
-	body := []string{"This sends one tiny request for each of fable, opus,", "sonnet and haiku, and uses a few tokens of your plan."}
-	return newConfirm("Check your models", body, "Check", false, func() tea.Cmd {
-		return push(newModelCheck(ws))
+	cost := "each request carries Claude Code's own start-up prompt, roughly 20k tokens, mostly cached"
+	options := []option{
+		{label: "The four latest", value: "aliases", note: fmt.Sprintf("fable, opus, sonnet and haiku: 4 requests; %s", cost)},
+		{label: "Every release", value: "releases", note: fmt.Sprintf("also the older ones, such as sonnet 5 or opus 4.6, by their full ID: about %d requests; %s", len(models.Versions())-2, cost)},
+	}
+	return newChoice("Check your models", options, 0, func(o option) tea.Cmd {
+		return push(newModelCheck(ws, o.value == "releases"))
 	})
 }
 

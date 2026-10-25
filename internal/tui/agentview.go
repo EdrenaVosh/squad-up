@@ -62,7 +62,7 @@ func (e *agentEditor) inspector(w, h int, c viewCtx) []string {
 	lines := []string{head, " " + fg(cDim).Render(strings.Repeat("─", w-2)), ""}
 
 	room := max(h-len(lines), 1)
-	scrolls := e.preview || f.id == fPrompt
+	scrolls := e.preview || f.id == fPrompt || f.id == fModel
 	start := 0
 	if scrolls {
 		e.scroll = min(max(e.scroll, 0), max(len(body)-room, 0))
