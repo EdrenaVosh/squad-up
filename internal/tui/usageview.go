@@ -7,6 +7,7 @@ import (
 	"time"
 
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 
 	"github.com/EdrenaVosh/squadup/internal/usage"
 )
@@ -23,6 +24,10 @@ type usageScreen struct {
 func newUsageScreen(feed *usageFeed) *usageScreen { return &usageScreen{feed: feed} }
 
 func (s *usageScreen) Init() tea.Cmd { return nil }
+
+// maxSize is twice the window the other screens open in: the report has a list
+// and a table to show, and a big terminal has room for both to breathe.
+func (s *usageScreen) maxSize() (int, int) { return 2 * windowW, 2 * windowH }
 
 // current is the selected session, or the newest when that one is gone.
 func (s *usageScreen) current() *sessionView {
@@ -78,12 +83,22 @@ func (s *usageScreen) Hints() []hint {
 	return []hint{{"↑↓", "session"}, {"z", "count from now"}, {"esc", "back"}, {"?", "help"}}
 }
 
-// The columns of the table.
+// ucols are the widths of the columns of the table. A wide pane gets wider ones.
+type ucols struct{ name, state, runs, num int }
+
+func usageCols(w int) ucols {
+	if w >= 120 {
+		return ucols{name: 20, state: 16, runs: 6, num: 10}
+	}
+	return ucols{name: 14, state: 14, runs: 5, num: 7}
+}
+
+// table is the width of the table without the share bar.
+func (k ucols) table() int { return k.name + 2 + k.state + k.runs + k.num*3 + k.num + 1 }
+
 const (
-	uName, uState, uRuns, uNum = 14, 14, 5, 7
-	uTable                     = uName + 2 + uState + uRuns + uNum*3 + uNum + 1 // without the share bar
-	uListW                     = 38
-	uSideBySide                = uListW + 1 + uTable + 10 // the least inner width for the list beside the table
+	uListW      = 38
+	uSideBySide = uListW + 1 + 64 + 10 // the least inner width for the list beside the table
 )
 
 func (s *usageScreen) View(c viewCtx) string {
@@ -108,11 +123,9 @@ func (s *usageScreen) View(c viewCtx) string {
 	}
 
 	if inner >= uSideBySide {
-		left := s.sessionList(c, uListW, len(f.sessions)*3+2)
+		left := s.sessionList(c, uListW, c.h-3)
 		detail := s.detail(c, v, inner-uListW-1)
-		lines := panes(left, detail, uListW, inner)
-		h := min(c.h, max(len(lines)+3, 22))
-		return frame("Usage", c.shift(), right, lines, c.w, h, uListW)
+		return frame("Usage", c.shift(), right, panes(left, detail, uListW, inner), c.w, c.h, uListW)
 	}
 	// A narrow window: the sessions in a short list above the table.
 	list := s.sessionList(c, inner, 3*4)
@@ -190,16 +203,28 @@ func (s *usageScreen) detail(c viewCtx, v *sessionView, w int) []string {
 		}
 	}
 	add("")
-	add(" " + sMuted.Render(pad("AGENT", uName+2)+pad("STATE", uState)+pad("RUNS", uRuns)+pad("SENT", uNum)+pad("CACHED", uNum)+pad("OUT", uNum)+pad("TOTAL", uNum+1)+"SHARE"))
+	k := usageCols(w)
+	add(" " + sMuted.Render(pad("AGENT", k.name+2)+pad("STATE", k.state)+pad("RUNS", k.runs)+pad("SENT", k.num)+pad("CACHED", k.num)+pad("OUT", k.num)+pad("TOTAL", k.num+1)+"SHARE"))
 	add(" " + fg(cDim).Render(strings.Repeat("─", max(w-2, 0))))
-	barW := max(w-2-uTable-6, 6)
+	barW := max(w-2-k.table()-6, 6)
+	airy := c.h >= 44 // a tall window: a blank line between the agents
 	for i, a := range rep.Agents {
-		add(" " + agentRow(a, i, rep, f, barW, c))
+		add(" " + agentRow(a, i, rep, f, barW, c, k))
+		if airy {
+			add("")
+		}
 	}
 	add(" " + fg(cDim).Render(strings.Repeat("─", max(w-2, 0))))
-	add(" " + totalRow(rep, f, barW))
+	add(" " + totalRow(rep, f, barW, k))
 	add("")
-	add(" " + sMuted.Render(pad("CACHE HIT", uName+2)) + cacheBar(rep.Total, 16) + sMuted.Render(fmt.Sprintf("  %d%% of the input came from the cache", cachePercent(rep.Total))))
+	add(" " + sMuted.Render(pad("CACHE HIT", k.name+2)) + cacheBar(rep.Total, 16) + sMuted.Render(fmt.Sprintf("  %d%% of the input came from the cache", cachePercent(rep.Total))))
+	if c.h >= 44 {
+		add("")
+		add(" " + sBold.Render("Where the tokens went"))
+		for _, l := range kindBars(rep, c.usage, w-4) {
+			add(" " + l)
+		}
+	}
 	add("")
 	for _, l := range wrapStyled("SENT is fresh input plus cache writes; CACHED is read back from the cache (cheap, so it is not in TOTAL); TOTAL is SENT plus OUT, as Claude Code counts a run. The numbers come from the session's own transcripts, not from an estimate.", sMuted, w-3) {
 		add(" " + l)
@@ -258,9 +283,9 @@ func animFrame(c viewCtx) int {
 	return c.frame
 }
 
-func agentRow(a usage.Agent, i int, rep usage.Report, f *usageFeed, barW int, c viewCtx) string {
+func agentRow(a usage.Agent, i int, rep usage.Report, f *usageFeed, barW int, c viewCtx, k ucols) string {
 	tint := f.tint(a.Name)
-	name := fg(tint).Render("■") + " " + sBold.Render(truncate(a.Name, uName))
+	name := fg(tint).Render("■") + " " + sBold.Render(truncate(a.Name, k.name))
 	state := sMuted.Render("idle")
 	switch {
 	case a.Running > 0:
@@ -279,13 +304,13 @@ func agentRow(a usage.Agent, i int, rep usage.Report, f *usageFeed, barW int, c 
 	if rep.Total.Total() > 0 {
 		share = float64(t.Total()) / float64(rep.Total.Total())
 	}
-	return pad(name, uName+2) + pad(state, uState) + pad(runs, uRuns) +
-		pad(tokensShort(t.Input+t.CacheWrite), uNum) + pad(sMuted.Render(tokensShort(t.CacheRead)), uNum) + pad(tokensShort(t.Output), uNum) +
-		pad(sBold.Render(tokensShort(t.Total())), uNum+1) + shareBar(share, barW, tint) + sMuted.Render(fmt.Sprintf(" %3d%%", int(share*100+0.5)))
+	return pad(name, k.name+2) + pad(state, k.state) + pad(runs, k.runs) +
+		pad(tokensShort(t.Input+t.CacheWrite), k.num) + pad(sMuted.Render(tokensShort(t.CacheRead)), k.num) + pad(tokensShort(t.Output), k.num) +
+		pad(sBold.Render(tokensShort(t.Total())), k.num+1) + shareBar(share, barW, tint) + sMuted.Render(fmt.Sprintf(" %3d%%", int(share*100+0.5)))
 }
 
 // totalRow is the whole squad: the sums, and one bar made of every agent's share.
-func totalRow(rep usage.Report, f *usageFeed, barW int) string {
+func totalRow(rep usage.Report, f *usageFeed, barW int, k ucols) string {
 	t := rep.Total
 	var bar strings.Builder
 	used := 0
@@ -304,9 +329,9 @@ func totalRow(rep usage.Report, f *usageFeed, barW int) string {
 	if used < barW {
 		bar.WriteString(fg(cDim).Render(strings.Repeat("░", barW-used)))
 	}
-	return pad(sBold.Render("SQUAD"), uName+2) + pad("", uState) + pad(sMuted.Render(fmt.Sprintf("%d", subRuns(rep))), uRuns) +
-		pad(sBold.Render(tokensShort(t.Input+t.CacheWrite)), uNum) + pad(sMuted.Render(tokensShort(t.CacheRead)), uNum) + pad(sBold.Render(tokensShort(t.Output)), uNum) +
-		pad(fg(brandStops[0]).Bold(true).Render(tokensShort(t.Total())), uNum+1) + bar.String() + sMuted.Render(" 100%")
+	return pad(sBold.Render("SQUAD"), k.name+2) + pad("", k.state) + pad(sMuted.Render(fmt.Sprintf("%d", subRuns(rep))), k.runs) +
+		pad(sBold.Render(tokensShort(t.Input+t.CacheWrite)), k.num) + pad(sMuted.Render(tokensShort(t.CacheRead)), k.num) + pad(sBold.Render(tokensShort(t.Output)), k.num) +
+		pad(fg(brandStops[0]).Bold(true).Render(tokensShort(t.Total())), k.num+1) + bar.String() + sMuted.Render(" 100%")
 }
 
 func subRuns(rep usage.Report) int {
@@ -346,4 +371,39 @@ func shorten(s string, w int) string {
 		return s
 	}
 	return "…" + string(r[len(r)-w+1:])
+}
+
+// The colors of the three kinds of tokens.
+var kindColors = [3]color.Color{lipgloss.Color("#FFB000"), cShared, lipgloss.Color("#FF4D8D")}
+
+// kindBars draws, for each agent, one bar split into what it sent, what it read
+// from the cache and what it produced, all on the same scale, so that the agents
+// can be compared and the kinds told apart.
+func kindBars(rep usage.Report, f *usageFeed, w int) []string {
+	top := 1
+	for _, a := range rep.Agents {
+		t := a.Tokens
+		top = max(top, t.Input+t.CacheWrite+t.CacheRead+t.Output)
+	}
+	nameW := 14
+	barW := max(w-nameW-1, 10)
+	lines := []string{sMuted.Render(pad("", nameW+1)) + fg(kindColors[0]).Render("■ sent") + "   " + fg(kindColors[1]).Render("■ cached") + "   " + fg(kindColors[2]).Render("■ out")}
+	for _, a := range rep.Agents {
+		t := a.Tokens
+		parts := [3]int{t.Input + t.CacheWrite, t.CacheRead, t.Output}
+		var bar strings.Builder
+		used := 0
+		for i, n := range parts {
+			cells := n * barW / top
+			if n > 0 {
+				cells = max(cells, 1)
+			}
+			cells = min(cells, barW-used)
+			bar.WriteString(fg(kindColors[i]).Render(strings.Repeat("█", cells)))
+			used += cells
+		}
+		bar.WriteString(fg(cDim).Render(strings.Repeat("░", barW-used)))
+		lines = append(lines, pad(fg(f.tint(a.Name)).Render("■")+" "+truncate(a.Name, nameW-2), nameW+1)+bar.String())
+	}
+	return lines
 }

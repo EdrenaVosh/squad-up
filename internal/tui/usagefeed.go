@@ -13,7 +13,7 @@ import (
 const usageInterval = time.Second
 
 // maxSessions is how many sessions of a folder the feed follows.
-const maxSessions = 15
+const maxSessions = 25
 
 // activeWindow is how recently a session must have been written to for the
 // main screen to call it running.

@@ -86,6 +86,10 @@ type finisher interface{ finished() bool }
 // filled with empty space.
 type fullscreen interface{ fullscreen() bool }
 
+// sized is implemented by a screen that has a size of its own: the most it
+// grows to, in cells, when the terminal is bigger.
+type sized interface{ maxSize() (w, h int) }
+
 // The window the other screens open in, at most.
 const (
 	windowW = 120
@@ -346,6 +350,9 @@ func (a *App) View() tea.View {
 		maxW, maxH := windowW, windowH
 		if _, ok := a.top().(fullscreen); ok {
 			maxW, maxH = homeMaxW, homeMaxH
+		}
+		if sz, ok := a.top().(sized); ok {
+			maxW, maxH = sz.maxSize()
 		}
 		ctx.w, ctx.h = min(a.w, maxW), min(a.h-1, maxH)
 		ctx.ox, ctx.oy = (a.w-ctx.w)/2, (a.h-1-ctx.h)/2

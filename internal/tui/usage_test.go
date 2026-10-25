@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -261,4 +262,34 @@ func TestOnANarrowWindowTheSessionsAreAListAboveTheTable(t *testing.T) {
 
 	h.contains("SESSIONS", "Fix the login", "AGENT", "TOTAL")
 	h.fits(80, 24)
+}
+
+func TestOnABigTerminalTheUsageScreenIsTwiceTheSizeOfAWindow(t *testing.T) {
+	h := usageHarness(t)
+	h.resize(260, 80)
+	for i, id := range []string{"s1", "s2", "s3"} {
+		s := h.session(t, id)
+		s.ask(fixedNow.Add(-time.Duration(i+1)*time.Hour), fmt.Sprintf("Task number %d", i+1))
+		s.main(message("m1", 1, 1000*(i+1), 0, 100))
+		s.sub("a1", "reviewer", true, message("r1", 1, 500, 0, 50))
+		s.at(fixedNow.Add(-time.Duration(i) * time.Minute))
+	}
+	h.send(tui.UsageTickMsg())
+
+	h.press("u")
+
+	h.contains("Task number 1", "Task number 2", "Task number 3", "reviewer")
+	h.contains("Where the tokens went", "■ sent", "■ cached", "■ out") // a tall window has room for the chart
+	lines := strings.Split(h.view(), "\n")
+	width, height := 0, 0
+	for _, l := range lines {
+		if strings.HasPrefix(strings.TrimSpace(l), "╭") || strings.HasPrefix(strings.TrimSpace(l), "│") || strings.HasPrefix(strings.TrimSpace(l), "╰") {
+			width = max(width, len([]rune(strings.TrimSpace(l))))
+			height++
+		}
+	}
+	if width != 240 || height != 72 {
+		t.Errorf("the screen is %d×%d, want 240×72 (twice the 120×36 window)", width, height)
+	}
+	h.fits(260, 80)
 }
