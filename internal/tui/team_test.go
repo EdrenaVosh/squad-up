@@ -178,6 +178,6 @@ func TestThePanelsOfTheSquadWrapTheirText(t *testing.T) {
 	h := newHarness(t)
 	h.resize(160, 44)
 
-	h.contains("TOKENS · LIVE", "no session in this folder yet", "every agent says", "when to call it")
+	h.contains("TOKENS · LIVE", "no session in this folder yet", "start `squad run` here and every", "agent's tokens show up as it works")
 	h.lacks("ever…", "and…")
 }
