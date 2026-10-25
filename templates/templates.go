@@ -12,14 +12,14 @@ import (
 	"github.com/EdrenaVosh/squadup/internal/preset"
 )
 
-//go:embed all:solo-indie all:bug-hunt all:refactor-day all:ship-it all:read-only-audit
+//go:embed all:bug-hunters all:feature-creator
 var files embed.FS
 
 // ErrUnknown means no template has the given id.
 var ErrUnknown = errors.New("unknown template")
 
 // order is how the templates are listed.
-var order = []string{"solo-indie", "bug-hunt", "refactor-day", "ship-it", "read-only-audit"}
+var order = []string{"bug-hunters", "feature-creator"}
 
 // Template is a starter preset as shown in a list.
 type Template struct {

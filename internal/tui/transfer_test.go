@@ -270,37 +270,39 @@ func (h *harness) choose(label string) {
 	h.t.Fatalf("no option %q:\n%s", label, h.view())
 }
 
-func TestStartFromATemplateInTheCreateFlow(t *testing.T) {
+func TestTheTemplateIsTheFirstOptionOfTheCreateFlow(t *testing.T) {
 	h := newHarness(t)
+	h.resize(130, 40)
 
 	h.press("n")
-	h.typeText("my-audit")
+	h.typeText("my-bugs")
 	h.press("enter")
-	h.contains("A starter template")
-	h.choose("A starter template")
-	h.contains("Solo Indie", "Bug Hunt", "Refactor Day", "Ship It", "Read-only Audit")
-	h.choose("Read-only Audit")
+	h.contains("Use a template", "Bug Hunters or Feature Creator", "Blank preset")
+	h.press("enter") // the first option, already selected
+	h.contains("Bug Hunters", "Feature Creator", "debugger →", "→ tester", "planner →", "→ reviewer")
+	h.lacks("Solo Indie", "Ship It")
+	h.choose("Bug Hunters")
 
-	h.contains("my-audit", "AGENTS", "SLOT 1", "SLOT 2")
-	b := h.stored("my-audit")
-	if len(b.Agents) != 2 || b.Preset.Title != "Read-only Audit" {
-		t.Errorf("my-audit = %+v", b.Preset)
+	h.contains("my-bugs", "AGENTS", "SLOT 1", "SLOT 4", "debugger", "fixer", "reviewer", "tester")
+	b := h.stored("my-bugs")
+	if len(b.Agents) != 4 || b.Preset.Title != "Bug Hunters" || b.Preset.Flow == nil || !b.Preset.Flow.Loops() {
+		t.Errorf("my-bugs = %+v", b.Preset)
 	}
 }
 
 func TestWelcomeBrowsesTemplates(t *testing.T) {
 	h := firstRun(t)
 
-	h.contains("Browse starter templates")
+	h.contains("Browse starter templates", "Bug Hunters and Feature Creator")
 	h.press("down", "down", "enter")
-	h.contains("Solo Indie", "planner, reviewer, tester")
+	h.contains("Bug Hunters", "Feature Creator", "Four agents that find a bug's root cause", "Three agents that plan a feature")
 	h.golden("templates")
-	h.choose("Bug Hunt")
-	h.contains("Name the new preset", "bug-hunt")
+	h.choose("Feature Creator")
+	h.contains("Name the new preset", "feature-creator")
 	h.press("enter")
 
-	h.contains("bug-hunt", "AGENTS", "debugger")
-	if h.stored("bug-hunt").Preset.Title != "Bug Hunt" {
+	h.contains("feature-creator", "AGENTS", "planner", "executor")
+	if h.stored("feature-creator").Preset.Title != "Feature Creator" {
 		t.Error("the template was not stored")
 	}
 }

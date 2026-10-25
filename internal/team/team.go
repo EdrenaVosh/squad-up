@@ -126,11 +126,12 @@ func Compile(b preset.Bundle) ([]preset.AgentFile, error) {
 // independent and so are given nothing but the task. It is empty when there is
 // nothing to tell. The main agent itself is not a step.
 func Brief(b preset.Bundle) string {
-	var steps, independent []string
+	var steps, names, independent []string
 	for _, f := range b.Agents {
 		if b.Preset.Main != nil && f.Name == *b.Preset.Main {
 			continue
 		}
+		names = append(names, f.Name)
 		steps = append(steps, fmt.Sprintf("%d %s", len(steps)+1, f.Name))
 		if a, err := agentfile.Parse(f.Data); err == nil && Independent(a) {
 			independent = append(independent, "`"+f.Name+"`")
@@ -151,18 +152,22 @@ func Brief(b preset.Bundle) string {
 	}
 	if flow != nil && len(steps) >= 2 {
 		if flow.Loops() {
-			s.WriteString(loopText(flow))
+			s.WriteString(loopText(flow, names))
 		} else {
-			s.WriteString("Finish with a summary of at most 5 lines.\n")
+			s.WriteString("When the last step is done, finish with a summary of at most 5 lines.\n")
 		}
 	}
 	s.WriteString(leadClose)
 	return s.String()
 }
 
-func loopText(f *preset.Flow) string {
-	return fmt.Sprintf("Loop: after `%s` finishes, if it reports defects, give `%s` only those defects and run it, then run `%s` again. With no defects, finish with a summary of at most 5 lines. After %d rounds with defects left, stop and show the user what is still open.\n",
-		f.Gate, f.Fix, f.Gate, f.MaxRounds())
+func loopText(f *preset.Flow, names []string) string {
+	clean := "With no defects, finish with a summary of at most 5 lines."
+	if i := slices.Index(names, f.Gate); i >= 0 && i < len(names)-1 {
+		clean = fmt.Sprintf("With no defects, go on to the next step, `%s`; when the last step is done, finish with a summary of at most 5 lines.", names[i+1])
+	}
+	return fmt.Sprintf("Loop: after `%s` finishes, if it reports defects, give `%s` only those defects and run it, then run `%s` again. %s After %d rounds with defects left, stop and show the user what is still open.\n",
+		f.Gate, f.Fix, f.Gate, clean, f.MaxRounds())
 }
 
 // CanDelegate reports whether the agent's tools let it hand work to other

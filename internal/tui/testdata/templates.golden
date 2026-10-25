@@ -4,14 +4,14 @@
                                                                                 
                                                                                 
                                                                                 
-                                                                                
    ╭─ Starter templates ────────────────────────────────────────────────────╮   
    │                                                                        │   
-   │ ▌ Solo Indie       planner, reviewer, tester                           │   
-   │   Bug Hunt         debugger, tester                                    │   
-   │   Refactor Day     architect, refactorer, reviewer                     │   
-   │   Ship It          release-checker, changelog-writer                   │   
-   │   Read-only Audit  security-auditor, reviewer                          │   
+   │ ▌ Bug Hunters      Four agents that find a bug's root cause, fix it,   │   
+   │                    review the fix independently and test it (debugger  │   
+   │                    → fixer → reviewer → tester)                        │   
+   │   Feature Creator  Three agents that plan a feature, build it with     │   
+   │                    tests, and have it reviewed independently (planner  │   
+   │                    → executor → reviewer)                              │   
    │                                                                        │   
    ╰────────────────────────────────────────────────────────────────────────╯   
                                                                                 

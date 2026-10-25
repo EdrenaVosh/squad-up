@@ -36,7 +36,7 @@ func (w *welcomeScreen) finished() bool {
 var welcomeChoices = []struct{ label, note string }{
 	{"Start from my current setup", "an editable copy of what you have now"},
 	{"Create a first preset", "blank, or from your current setup"},
-	{"Browse starter templates", "five ready-made teams"},
+	{"Browse starter templates", "Bug Hunters and Feature Creator"},
 	{"Check which models I can use", "four tiny requests to Claude"},
 	{"Go to the main screen", "look around first"},
 }

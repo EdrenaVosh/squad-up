@@ -63,7 +63,7 @@ func TestCreateAFirstPreset(t *testing.T) {
 
 	h.press("down", "enter")
 	h.typeText("first")
-	h.press("enter", "enter")
+	h.press("enter", "down", "enter") // not the template, which is the first option: the blank preset
 
 	h.contains("first", "AGENTS")
 	h.press("esc")

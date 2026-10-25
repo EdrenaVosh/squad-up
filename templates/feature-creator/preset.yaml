@@ -1,0 +1,12 @@
+schema: 1
+name: feature-creator
+title: Feature Creator
+description: Three agents that plan a feature, build it with tests, and have it reviewed independently
+accent: cyan
+mode: replace
+main: null
+agents: [planner, executor, reviewer]
+flow:
+  gate: reviewer
+  fix: executor
+  rounds: 3

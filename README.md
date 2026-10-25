@@ -38,12 +38,12 @@ squadup is a small command-line tool and terminal interface that fixes those thi
 
 | | |
 | --- | --- |
-| **Switch teams in a second** | `squad use bug-hunt`, work, `squad use solo-indie`. Or try a preset for a single session without writing anything. |
+| **Switch teams in a second** | `squad use bug-hunters`, work, `squad use feature-creator`. Or try a preset for a single session without writing anything. |
 | **Never lose your setup** | The first run saves your current config as *Initial*. Every change is backed up, manual edits are detected and never overwritten without asking, and `squad restore` returns the original. |
 | **Teams that work as a team** | A main agent can hand work down the agents in order and run a **review loop**: the reviewer finds defects, the builder fixes them, until it is clean or the rounds run out. |
 | **Impartial agents** | Mark an agent **independent** and it is told to work from its task alone, and whoever calls it is told to give it nothing from other agents' reasoning. |
 | **See the tokens** | A live report of what the main session and each subagent spent, read from Claude Code's own transcripts. Nothing is estimated. |
-| **Share a team as one file** | Export a preset, send it, import it after a preview that flags anything risky. Five starter templates are built in. |
+| **Share a team as one file** | Export a preset, send it, import it after a preview that flags anything risky. Two ready-made teams are built in. |
 
 ## Install
 
@@ -90,7 +90,7 @@ Update later with `squad update`, which tells you the right command for the way 
 <details>
 <summary><b>Optional: the Claude Code plugin</b></summary>
 
-A small plugin adds `/squadup:squad` inside a Claude Code session: show the equipped preset, or switch with `/squadup:squad bug-hunt`. It only calls the `squad` tool, so squad must be installed.
+A small plugin adds `/squadup:squad` inside a Claude Code session: show the equipped preset, or switch with `/squadup:squad bug-hunters`. It only calls the `squad` tool, so squad must be installed.
 
 ```sh
 claude plugin marketplace add EdrenaVosh/squadup
@@ -110,25 +110,25 @@ Nothing is changed by that first run. squadup copies what it finds in `~/.claude
 Or do it from the command line:
 
 ```sh
-squad templates                          # five ready-made teams
-squad new mini --template refactor-day   # a copy you can edit
-squad lint mini                          # check it for mistakes
-squad use mini                           # equip it (shows what changes, backs up first)
-claude                                   # work as usual, with the team
-squad restore                            # back to exactly how it was
+squad templates                            # the two ready-made teams
+squad new bugs --template bug-hunters      # a copy you can edit
+squad lint bugs                            # check it for mistakes
+squad use bugs                             # equip it (shows what changes, backs up first)
+claude                                     # work as usual, with the team
+squad restore                              # back to exactly how it was
 ```
 
 Prefer not to touch `~/.claude` at all? Run a preset for one session:
 
 ```sh
-squad run mini                           # starts claude with the preset; nothing is written
-squad run mini -- --model opus           # everything after -- goes to claude
+squad run bugs                             # starts claude with the preset; nothing is written
+squad run bugs -- --model opus             # everything after -- goes to claude
 ```
 
 Pin a preset to a project and `squad run` needs no name there:
 
 ```sh
-cd my-project && squad pin mini && squad run
+cd my-project && squad pin bugs && squad run
 ```
 
 ## How it works
@@ -170,8 +170,8 @@ A preset holds the agents of a team and what goes with them: a default model, ef
 The agent editor shows every field of an agent file with a plain explanation of its values: name, description (with hints on how to make Claude call it), model, effort, permission mode, tools and disallowed tools as checkboxes, max turns, color, and the prompt. A prompt can be **written in the interface, edited in `$EDITOR`, or loaded from a Markdown file** (drop the file on the terminal, or type its path). Every change is saved at once, and `p` previews the file exactly as it will be written.
 
 ```sh
-squad edit mini reviewer                              # the editor of one agent
-squad edit mini reviewer --prompt-file review.md      # replace its prompt from a file, no interface
+squad edit bugs reviewer                              # the editor of one agent
+squad edit bugs reviewer --prompt-file review.md      # replace its prompt from a file, no interface
 ```
 
 ### The interface
@@ -185,10 +185,10 @@ Keys: arrows or the mouse select, `enter` opens, `e` equips (with a preview), `t
 Give a preset a **flow** and its main agent leads the team: work goes down the slots in order. With a **review loop** you name who *checks* (the gate) and who *fixes*, and a number of rounds (3 by default):
 
 ```sh
-squad flow mini --gate reviewer --fix builder --rounds 3
+squad flow bugs --gate reviewer --fix fixer --rounds 3
 ```
 
-After the gate runs, the main agent sends only its defects to the fixer and runs the gate again, until it is clean or the rounds are spent; then it stops and shows what is still open. The interface draws this as a diagram of the agents with an arc from the reviewer back to the builder.
+After the gate runs, the main agent sends only its defects to the fixer and runs the gate again, until it is clean or the rounds are spent; then it stops and shows what is still open. The interface draws this as a diagram of the agents with an arc from the reviewer back to the fixer.
 
 > **Honest note.** The order and the loop are instructions in the main agent's prompt, not code that squad runs: Claude Code runs the session. In practice a model follows them, but nothing forces it to. The reviewer and the fixer never call each other; the main agent carries every result between them.
 
@@ -197,7 +197,7 @@ After the gate runs, the main agent sends only its defects to the fixer and runs
 Some agents must not be swayed by what others reasoned: a code reviewer, an auditor, a second opinion. Switch **Independent** on for such an agent:
 
 ```sh
-squad edit mini reviewer --independent        # --independent=false undoes it
+squad edit bugs reviewer --independent        # --independent=false undoes it
 ```
 
 A subagent never sees the conversation, only the task its caller writes for it. So independence is done in three places, all in text: the agent's system prompt gets a short charter (work from the task and instructions, don't rely on or ask for other agents' conclusions, say what is missing instead of guessing, be impartial); its description tells whoever calls it to give only the task and instructions; and the main agent is told which agents are independent and to give them nothing from other agents' reasoning. Its tools, `CLAUDE.md` and repository access stay as they are, so it can still follow review rules kept in your repository if its prompt says where they are. Claude Code does not enforce any of this, and a model can ignore it.
@@ -219,11 +219,29 @@ Pick `sonnet` and you follow the newest Sonnet. Or pin a release by its full ID:
 ### Share a team
 
 ```sh
-squad export mini                       # mini.squad.json; --all for every preset, --gist for a secret gist (needs gh)
-squad import mini.squad.json            # or an https link, gist:<id>, or - for stdin
+squad export bugs                       # bugs.squad.json; --all for every preset, --gist for a secret gist (needs gh)
+squad import bugs.squad.json            # or an https link, gist:<id>, or - for stdin
 ```
 
-Import shows a **preview** first: the agents, the settings it would set, and warnings. It never equips what it imports, strips `hooks` and `mcpServers` from agents unless you pass `--allow-hooks`, and refuses a preset that skips permission prompts unless you pass `--accept-risks`. Export scans for things that look like secret keys and stops. Five starter templates ship with squad (`squad templates`): **solo-indie**, **bug-hunt**, **refactor-day**, **ship-it** and **read-only-audit**.
+Import shows a **preview** first: the agents, the settings it would set, and warnings. It never equips what it imports, strips `hooks` and `mcpServers` from agents unless you pass `--allow-hooks`, and refuses a preset that skips permission prompts unless you pass `--accept-risks`. Export scans for things that look like secret keys and stops. Two starter templates ship with squad (`squad templates`), and the first option of the *New preset* dialog is to start from one.
+
+### Starter templates
+
+Both are review loops with an independent reviewer, with prompts written to be unambiguous for Claude: what each agent receives, how it works, its rules, and the exact sections of its report.
+
+| | **Bug Hunters** | **Feature Creator** |
+| --- | --- | --- |
+| For | Finding and fixing a bug | Building a feature |
+| Agents, in order | **debugger** (Opus) finds the root cause and describes it, changes nothing → **fixer** (Sonnet) decides the fix and makes it, never touches tests → **reviewer** (Sonnet, ◈ independent) checks the fix for logic and architecture and sends critical defects back to the fixer → **tester** (Sonnet) runs the unit and integration tests, repairs tests the fix made outdated and adds a regression test | **planner** (Opus) studies the code and writes an ordered plan, no code → **executor** (Sonnet) implements the plan and covers it with tests → **reviewer** (Sonnet, ◈ independent) checks the code and sends critical defects back to the executor |
+| Review loop | reviewer ⇄ fixer, up to 3 rounds, then on to the tester | reviewer ⇄ executor, up to 3 rounds |
+
+```sh
+squad new bugs --template bug-hunters
+squad new feature --template feature-creator
+squad run bugs        # or squad use bugs, and then claude
+```
+
+Neither template has a main agent, so the flow reaches Claude Code through `squad run`; to equip one and keep the flow, give it a main agent in the preset screen.
 
 ### The rest
 
@@ -251,7 +269,7 @@ Import shows a **preview** first: the agents, the settings it would set, and war
 | `squad usage` | Tokens per agent for a session (`--watch`, `--json`, `--session`, `--dir`) |
 | `squad models` | Which models you can use (`--probe`, `--releases`, `--json`) |
 | `squad lint [preset]` | Check agents and presets (`--strict`, `--json`) |
-| `squad templates` | The five starter presets |
+| `squad templates` | The two starter presets |
 | `squad export [preset]` | Write a preset to `<name>.squad.json` (`-o -`, `--all`, `--gist`) |
 | `squad import <file\|https-link\|gist:id\|->` | Add a shared preset after a preview (`--as`, `--force`, `--allow-hooks`, `--accept-risks`) |
 | `squad card <agent>` | An agent as a card: role, model, tools, permission strength |

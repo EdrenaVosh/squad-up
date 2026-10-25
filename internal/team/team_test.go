@@ -199,3 +199,17 @@ func TestTheOldShareFieldIsNeverSentToClaudeCode(t *testing.T) {
 		t.Error("the old field must not make an agent independent")
 	}
 }
+
+func TestAfterTheGateTheLoopGoesOnToTheNextStep(t *testing.T) {
+	flow := &preset.Flow{Gate: "reviewer", Fix: "fixer"}
+
+	middle := team.Brief(bundle(flow, "", file("fixer", ""), file("reviewer", ""), file("tester", "")))
+	if !strings.Contains(middle, "go on to the next step, `tester`") {
+		t.Errorf("a gate with a step after it:\n%s", middle)
+	}
+
+	last := team.Brief(bundle(flow, "", file("fixer", ""), file("reviewer", "")))
+	if strings.Contains(last, "next step") || !strings.Contains(last, "With no defects, finish with a summary") {
+		t.Errorf("a gate that is the last step:\n%s", last)
+	}
+}

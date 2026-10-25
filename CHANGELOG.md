@@ -33,7 +33,11 @@ The first release.
   of which ones your account can use (`squad models`).
 - **Linter** for agents and presets (`squad lint`).
 - **Share presets:** `squad export` and `squad import` (file, https, secret
-  gist), with a security preview, five starter templates and `squad card`.
+  gist), with a security preview and `squad card`.
+- **Two starter templates**, *Bug Hunters* (debugger, fixer, an independent
+  reviewer, tester) and *Feature Creator* (planner, executor, an independent
+  reviewer), each with a review loop; starting from one is the first option of
+  the *New preset* dialog.
 - **Projects and Claude Code:** a `.squadup` file pins a preset to a project;
   `squad statusline` shows the active preset; a Claude Code plugin adds
   `/squadup:squad`.

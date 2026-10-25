@@ -554,7 +554,10 @@ func presetNameCheck(ws workspace.Workspace) func(string) error {
 // preset selected when the flow began, offered as a template.
 func newCreateFlow(ws workspace.Workspace, base *string) screen {
 	return newPrompt("New preset", "Lowercase letters, digits and dashes.", "", presetNameCheck(ws), func(name string) tea.Cmd {
-		options := []option{{label: "Blank preset", note: "no agents yet", value: "blank"}}
+		options := []option{
+			{label: StarterTemplate, note: "Bug Hunters or Feature Creator: a whole team, ready to use", value: "template"},
+			{label: "Blank preset", note: "no agents yet", value: "blank"},
+		}
 		if base != nil {
 			label := fmt.Sprintf("Copy of %q", *base)
 			if *base == "initial" {
@@ -563,8 +566,7 @@ func newCreateFlow(ws workspace.Workspace, base *string) screen {
 			options = append(options, option{label: label, value: "copy"})
 		}
 		options = append(options,
-			option{label: "My current Claude Code setup", note: "what is in ~/.claude now", value: "current"},
-			option{label: StarterTemplate, note: "five ready-made teams", value: "template"})
+			option{label: "My current Claude Code setup", note: "what is in ~/.claude now", value: "current"})
 		return push(newChoice("Start "+name+" from", options, 0, func(o option) tea.Cmd {
 			if o.value == "template" {
 				return push(newChoice("Template for "+name, templateOptions(), 0, func(t option) tea.Cmd {

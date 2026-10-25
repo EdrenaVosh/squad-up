@@ -335,7 +335,7 @@ func templateOptions() []option {
 	}
 	out := make([]option, len(list))
 	for i, t := range list {
-		out[i] = option{label: t.Title, note: strings.Join(t.Agents, ", "), value: t.ID}
+		out[i] = option{label: t.Title, note: t.Description + " (" + strings.Join(t.Agents, " → ") + ")", value: t.ID}
 	}
 	return out
 }

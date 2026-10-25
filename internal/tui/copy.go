@@ -126,5 +126,5 @@ const (
 	TemplatesTitle      = "Starter templates"
 	TemplateNameTitle   = "Name the new preset"
 	TemplateNameHelp    = "Lowercase letters, digits and dashes."
-	StarterTemplate     = "A starter template"
+	StarterTemplate     = "Use a template"
 )

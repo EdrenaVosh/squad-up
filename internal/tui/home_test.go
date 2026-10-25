@@ -115,8 +115,8 @@ func TestNewPresetFlowCreatesABlankPresetAndOpensIt(t *testing.T) {
 	h.contains("New preset")
 	h.typeText("fresh")
 	h.press("enter")
-	h.contains("Start fresh from", "Blank preset", `Copy of "bug-hunt"`, "My current Claude Code setup")
-	h.press("enter")
+	h.contains("Start fresh from", "Use a template", "Blank preset", `Copy of "bug-hunt"`, "My current Claude Code setup")
+	h.press("down", "enter") // the template is the first option; this is the blank preset
 
 	h.contains("fresh", "AGENTS", "add agent")
 	if !h.ws.Store().Exists("fresh") {
@@ -130,7 +130,7 @@ func TestNewPresetCanStartFromACopyOrTheCurrentSetup(t *testing.T) {
 	h := newHarness(t)
 	h.press("n")
 	h.typeText("copied")
-	h.press("enter", "down", "enter")
+	h.press("enter", "down", "down", "enter")
 	b, err := h.ws.Store().Load("copied")
 	if err != nil || len(b.Agents) != 2 || b.Preset.Main == nil {
 		t.Fatalf("copy of bug-hunt = %+v, %v", b, err)
@@ -139,7 +139,7 @@ func TestNewPresetCanStartFromACopyOrTheCurrentSetup(t *testing.T) {
 
 	h.press("n")
 	h.typeText("live")
-	h.press("enter", "down", "down", "enter")
+	h.press("enter", "down", "down", "down", "enter")
 	live, err := h.ws.Store().Load("live")
 	if err != nil || len(live.Agents) != 3 || live.Preset.Settings.Model != "opus" {
 		t.Fatalf("current setup = %+v, %v", live, err)
