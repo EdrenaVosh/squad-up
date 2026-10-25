@@ -10,9 +10,12 @@
 # bare "$" and nothing in the recording names your account or folders.
 #
 # The last command starts the real Claude Code with the preset. Claude keeps
-# its login in your real home, so that command gets your real HOME back (saved
-# in REAL_HOME before it is pointed into the sandbox); squad run writes nothing
-# to any Claude config. Be logged in to claude before recording.
+# its login in your real home, so while hidden the script defines a small
+# `squad` function that gives `squad run` your real HOME back (saved in
+# REAL_HOME before it is pointed into the sandbox); every other command stays in
+# the sandbox, and squad run writes nothing to any Claude config. What is typed
+# on screen is just `squad run bug-hunter`. Be logged in to claude before
+# recording.
 Output docs/assets/demo.gif
 
 Set Shell "bash"
@@ -27,6 +30,8 @@ Hide
 Type "export REAL_HOME=$HOME"
 Enter
 Type "export PATH=$PWD/bin:$PATH HOME=$PWD/.sandbox CLAUDE_CONFIG_DIR=$PWD/.sandbox/claude SQUAD_UP_HOME=$PWD/.sandbox/squad-up PS1='$ '"
+Enter
+Type `squad() { if [ "$1" = run ]; then env -u CLAUDE_CONFIG_DIR HOME=$REAL_HOME command squad "$@"; else command squad "$@"; fi; }`
 Enter
 Type "squad list > /dev/null && clear"
 Enter
@@ -58,7 +63,7 @@ Type "q"
 Sleep 1s
 
 # 5. Use the preset for this session with squad run
-Type "env -u CLAUDE_CONFIG_DIR HOME=$REAL_HOME squad run bug-hunter"
+Type "squad run bug-hunter"
 Sleep 1500ms
 Enter
 Sleep 8s
