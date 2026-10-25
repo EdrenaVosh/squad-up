@@ -1,13 +1,20 @@
 # Records docs/assets/demo.gif with vhs (https://github.com/charmbracelet/vhs):
-# a new preset from the Bug Hunter template, then equipped, then given back.
+# a new preset from the Bug Hunter template, then used from the shell with
+# `squad run`, and a check that its agents are really there.
 #
 #   brew install vhs
 #   make build && make sandbox-reset      # an empty sandbox: no presets yet
 #   vhs docs/demo.tape
 #
-# It runs against the sandbox, never against your real Claude config. HOME is
-# pointed into the sandbox, so every path on screen is written as ~/…, and the
-# prompt is a bare "$": nothing in the recording names your account or folders.
+# Everything runs on the sandbox, and HOME points into it, so every path on
+# screen is written as ~/… and the prompt is a bare "$": nothing in the
+# recording names your account or folders.
+#
+# One step needs the real Claude Code: the last command asks it (haiku, one
+# short question, a few cents) whether the agents of the preset are available.
+# Claude keeps its login in your real home, so that command gets your real HOME
+# back (saved in REAL_HOME before it is pointed into the sandbox); squad run
+# writes nothing to any Claude config. Be logged in to claude before recording.
 Output docs/assets/demo.gif
 
 Set Shell "bash"
@@ -19,6 +26,8 @@ Set TypingSpeed 70ms
 Set Theme "Catppuccin Mocha"
 
 Hide
+Type "export REAL_HOME=$HOME"
+Enter
 Type "export PATH=$PWD/bin:$PATH HOME=$PWD/.sandbox CLAUDE_CONFIG_DIR=$PWD/.sandbox/claude SQUADUP_HOME=$PWD/.sandbox/squadup PS1='$ '"
 Enter
 Type "squad list > /dev/null && clear"
@@ -62,31 +71,23 @@ Sleep 900ms
 Right
 Sleep 900ms
 Right
-Sleep 1200ms
+Sleep 2s
 
-# 6. Equip it: the screen shows exactly what would change, then y equips
-Type "e"
-Sleep 4s
-Type "y"
-Sleep 5s
-Escape
-Sleep 3500ms
-
-# 7. The team is equipped: the agents are at work (the orange mascots)
-Right
-Sleep 1500ms
-Right
-Sleep 2500ms
-
-# 8. Proof in the shell: its agents are now in the Claude config, and restore puts yours back
+# 6. Back to the shell: the preset is in the library
 Type "q"
-Sleep 600ms
-Type "ls $CLAUDE_CONFIG_DIR/agents"
+Sleep 800ms
+Type "squad list"
+Enter
+Sleep 2500ms
+Type "squad lint bug-hunter"
 Enter
 Sleep 3s
-Type "squad restore --yes"
+
+# 7. Use it for one session with squad run, and ask Claude whether its agents are there
+Type "clear"
 Enter
-Sleep 3s
-Type "ls $CLAUDE_CONFIG_DIR/agents"
+Sleep 500ms
+Type@6ms `env -u CLAUDE_CONFIG_DIR HOME=$REAL_HOME squad run bug-hunter -- -p "Are these subagents available to you: debugger, fixer, reviewer, tester? Answer with one line per name, like: name - yes or name - no. Nothing else." --model haiku --no-session-persistence`
+Sleep 1500ms
 Enter
-Sleep 3s
+Sleep 25s

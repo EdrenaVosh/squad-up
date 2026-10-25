@@ -1,8 +1,6 @@
 package tui_test
 
 import (
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -187,7 +185,7 @@ func TestAnAgentThatStillHasTheOldShareFieldIsNotWarnedAboutAndLosesItOnSave(t *
 }
 
 // The keys of docs/demo.tape, which cannot be recorded in a test: a new preset
-// from the first template, equipped, and shown with its agents at work.
+// from the first template, its agents looked at, and the interface left.
 func TestTheKeysOfTheDemoDoWhatTheScriptExpects(t *testing.T) {
 	h := newHarness(t)
 	h.resize(156, 48)
@@ -207,13 +205,11 @@ func TestTheKeysOfTheDemoDoWhatTheScriptExpects(t *testing.T) {
 	h.press("right", "right", "right")
 	h.contains("╔═ ▶ 4 ") // the fourth agent is selected
 
-	h.press("e")
-	h.contains("Equip bug-hunter", "debugger.md") // what would change is shown first
-	h.press("y")
-	h.contains("Squad ready", "▐▛███▜▌")
-	h.press("esc")
-	h.contains("EQUIPPED")
-	if _, err := os.Stat(filepath.Join(h.paths.ClaudeDir, "agents", "debugger.md")); err != nil {
-		t.Errorf("the agents were not written to the Claude config: %v", err)
+	h.press("q")
+	if !h.quit {
+		t.Error("q did not leave the interface")
+	}
+	if !h.ws.Store().Exists("bug-hunter") {
+		t.Error("the preset is not in the library")
 	}
 }

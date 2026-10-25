@@ -8,6 +8,8 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/EdrenaVosh/squadup/internal/testutil"
 )
 
 func TestFlowShowsSetsAndRemovesTheLoop(t *testing.T) {
@@ -254,5 +256,33 @@ func TestUsageListShowsTheSessionsWithTheirIDsAndFirstPrompts(t *testing.T) {
 	}
 	if j := e.run("usage", "--list", "--json"); !strings.Contains(j.stdout, `"id": "s1"`) || !strings.Contains(j.stdout, `"prompt": "Fix the login page"`) {
 		t.Errorf("json: %s", j.stdout)
+	}
+}
+
+// The shell part of docs/demo.tape: a preset from the Bug Hunter template, linted,
+// then started with squad run, whose claude is given all four agents.
+func TestTheBugHunterTemplateRunsWithItsFourAgents(t *testing.T) {
+	e := newEnv(t)
+	testutil.FakeClaude(t)
+	argsFile := filepath.Join(t.TempDir(), "args")
+	t.Setenv("FAKE_CLAUDE_ARGS_FILE", argsFile)
+
+	if r := e.run("new", "Bug Hunter", "--template", "bug-hunter"); r.code != 0 {
+		t.Fatalf("new: %d %s", r.code, r.stderr)
+	}
+	if r := e.run("lint", "bug-hunter"); r.code != 0 || !strings.Contains(r.stdout, "no problems") {
+		t.Errorf("lint: %d %q", r.code, r.stdout)
+	}
+
+	r := e.run("run", "bug-hunter", "--", "-p", "Are these subagents available to you?", "--model", "haiku", "--no-session-persistence")
+
+	if r.code != 0 {
+		t.Fatalf("run: %d %s", r.code, r.stderr)
+	}
+	args, _ := os.ReadFile(argsFile)
+	for _, want := range []string{"--agents", `"debugger"`, `"fixer"`, `"reviewer"`, `"tester"`, "--append-system-prompt", "--no-session-persistence", "haiku"} {
+		if !strings.Contains(string(args), want) {
+			t.Errorf("claude was started without %q:\n%s", want, args)
+		}
 	}
 }
