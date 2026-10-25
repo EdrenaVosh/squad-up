@@ -3,7 +3,7 @@
 │                      │ Planner, reviewer and tester for one-person apps      │
 │   ○ bug-hunt         │                                                       │
 │   ○ refactor-day     │ ╔═ ▶ 1 ══ ▐▛█▜▌ ╗ ╭─ 2 ──── ▐▛█▜▌ ╮ ╭─ 3 ──── ▐▛█▜▌ ╮ │
-│ ▌ ◉ solo-indie       │ ║  planner    ⇄ ║ │ ■ reviewer  ⇄ │ │ ■ tester    ⇄ │ │
+│ ▌ ◉ solo-indie       │ ║  planner      ║ │ ■ reviewer    │ │ ■ tester      │ │
 │                      │ ║  opus         ║ │  sonnet       │ │  haiku        │ │
 │                      │ ║ ▂▃▅·· high    ║ │ ▂▃▅·· high    │ │ ▂▃··· medium  │ │
 │                      │ ║ ■□□□□ plan    ║ │ ■■□□□ default │ │ ■■■□□ edits   │ │
@@ -12,7 +12,7 @@
 │                      │                                                       │
 │                      │ Default model   sonnet       Main agent  —            │
 │                      │ Permissions    acceptEdits   Mode        replace      │
-│                      │ Lint           ✓ clean · 2 notes                      │
+│                      │ Lint           ✓ clean                                │
 │                      │                                                       │
 │                      │                                                       │
 │                      │                                                       │

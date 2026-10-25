@@ -158,8 +158,8 @@ func TestTheFlowsOfTheTemplatesAddUp(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if isolated := !team.Shared(agent); isolated != (a.Name == "reviewer") {
-			t.Errorf("%s isolated = %v: only the independent reviewer works alone", a.Name, isolated)
+		if independent := team.Independent(agent); independent != (a.Name == "reviewer") {
+			t.Errorf("%s independent = %v: only the reviewer is independent", a.Name, independent)
 		}
 	}
 }

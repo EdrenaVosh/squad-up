@@ -12,11 +12,11 @@ import (
 
 func flowCard(flow *preset.Flow, main string) workspace.Card {
 	agents := []workspace.AgentInfo{
-		{Name: "planner", Color: "cyan", Shared: true},
-		{Name: "dev", Color: "green", Shared: true},
-		{Name: "reviewer", Color: "blue", Shared: false},
+		{Name: "planner", Color: "cyan"},
+		{Name: "dev", Color: "green"},
+		{Name: "reviewer", Color: "blue", Independent: true},
 	}
-	return workspace.Card{Agents: agents, Flow: flow, Main: main, Sharing: true}
+	return workspace.Card{Agents: agents, Flow: flow, Main: main, Team: true}
 }
 
 func plainRows(rows []string) []string {
@@ -35,7 +35,7 @@ func TestTheFlowDiagramShowsTheOrderAndTheLoop(t *testing.T) {
 	if len(rows) != 3 {
 		t.Fatalf("rows = %q", rows)
 	}
-	if !strings.Contains(rows[0], "◆ planner ──▶ ■ dev ──▶ ■ reviewer⊘") {
+	if !strings.Contains(rows[0], "◆ planner ──▶ ■ dev ──▶ ■ reviewer◈") {
 		t.Errorf("order row = %q", rows[0])
 	}
 	at := func(s, sub string) int { return len([]rune(s[:strings.Index(s, sub)])) } // in cells, not bytes

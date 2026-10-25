@@ -234,13 +234,13 @@ func (a *app) newRm() *cobra.Command {
 func (a *app) newEdit() *cobra.Command {
 	var raw bool
 	var promptFile string
-	var share, isolate bool
+	var independent bool
 	cmd := &cobra.Command{
 		Use:   "edit <preset> [agent]",
 		Short: "Edit a preset or one of its agents",
 		Long:  "Opens the editor of the terminal interface. With --raw the file (preset.yaml, or the agent's .md) opens in $VISUAL or $EDITOR instead, and the result is checked afterwards.",
 		Args:  cobra.RangeArgs(1, 2),
-		RunE: func(_ *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			name := args[0]
 			if name == "initial" {
 				return libraryError(workspace.ErrProtected, cloneInitialFix)
@@ -260,8 +260,8 @@ func (a *app) newEdit() *cobra.Command {
 			if promptFile != "" {
 				return a.setPromptFromFile(name, args[1:], promptFile)
 			}
-			if share || isolate {
-				return a.setShared(name, args[1:], share)
+			if cmd.Flags().Changed("independent") {
+				return a.setIndependent(name, args[1:], independent)
 			}
 			if !raw {
 				return a.editInterface(name, args[1:])
@@ -281,9 +281,7 @@ func (a *app) newEdit() *cobra.Command {
 		},
 	}
 	cmd.Flags().BoolVar(&raw, "raw", false, "open the file in $EDITOR instead of the terminal interface")
-	cmd.Flags().BoolVar(&share, "share", false, "let the agent read and write the squad's shared notes (the default)")
-	cmd.Flags().BoolVar(&isolate, "isolate", false, "keep the agent out of the shared notes, e.g. for an independent code review")
-	cmd.MarkFlagsMutuallyExclusive("share", "isolate")
+	cmd.Flags().BoolVar(&independent, "independent", false, "make the agent independent (--independent=false undoes it): it judges without CLAUDE.md or knowing how the work was made, e.g. a code reviewer")
 	cmd.Flags().StringVar(&promptFile, "prompt-file", "", "replace the agent's prompt with the text of this Markdown file")
 	return cmd
 }
@@ -343,20 +341,20 @@ func (a *app) setPromptFromFile(preset string, agent []string, path string) erro
 	return nil
 }
 
-func (a *app) setShared(preset string, agent []string, shared bool) error {
+func (a *app) setIndependent(preset string, agent []string, independent bool) error {
 	if len(agent) != 1 {
-		return &ExitError{Code: 2, Err: errors.New("--share and --isolate need the agent they apply to"), Fix: "use `squad edit <preset> <agent> --isolate`"}
+		return &ExitError{Code: 2, Err: errors.New("--independent needs the agent it applies to"), Fix: "use `squad edit <preset> <agent> --independent`"}
 	}
-	if err := a.workspace().SetShared(preset, agent[0], shared); err != nil {
+	if err := a.workspace().SetIndependent(preset, agent[0], independent); err != nil {
 		if errors.Is(err, workspace.ErrNoAgent) {
 			return &ExitError{Code: 1, Err: err, Fix: "`squad lint " + preset + "` shows the agents of the preset"}
 		}
 		return libraryError(err, cloneInitialFix)
 	}
-	if shared {
-		printf(a.io.Out, "%s shares the squad's notes.\n", agent[0])
+	if independent {
+		printf(a.io.Out, "%s is independent: it does not load CLAUDE.md, it is told to judge by the task and the code alone, and the main agent is told to give it nothing else.\n", agent[0])
 	} else {
-		printf(a.io.Out, "%s works in isolation: it neither reads nor writes the notes, and the main agent hands it only the task.\n", agent[0])
+		printf(a.io.Out, "%s is an ordinary agent again.\n", agent[0])
 	}
 	return nil
 }

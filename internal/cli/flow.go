@@ -19,7 +19,7 @@ func (a *app) newFlow() *cobra.Command {
 		Short: "Show or set how a preset's agents work as a team, and the review loop",
 		Long: "A flow makes the agents a team: the main agent hands work down the slots in order. With --gate and --fix the agent\n" +
 			"named by --gate checks the result and the one named by --fix gets its defects back, for up to --rounds rounds (3 by default).\n" +
-			"Without flags the flow is shown. Agents share a tiny notes file in the project (.squad/notes.md); `squad edit --isolate` opts one out.",
+			"Without flags the flow is shown. `squad edit <preset> <agent> --independent` makes a reviewer judge alone.",
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			name := args[0]

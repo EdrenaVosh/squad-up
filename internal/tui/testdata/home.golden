@@ -3,7 +3,7 @@
 │                      │ A debugger and a tester for tracking down a failure   │
 │ ▌ ○ bug-hunt         │                                                       │
 │   ○ refactor-day     │ ╔═ ▶ 1 ═════════╗ ╭─ 2 ───────────╮                   │
-│   ● solo-indie       │ ║  debugg…    ⇄ ║ │ ■ tester    ⇄ │                   │
+│   ● solo-indie       │ ║  debugg…      ║ │ ■ tester      │                   │
 │                      │ ║ [inherit]     ║ │ [inherit]     │                   │
 │                      │ ║ ····· —       ║ │ ····· —       │                   │
 │                      │ ║ ■■□□□ default ║ │ ■■□□□ default │                   │

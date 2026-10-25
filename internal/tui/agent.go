@@ -29,7 +29,7 @@ type fieldID int
 const (
 	fName fieldID = iota
 	fDescription
-	fShare
+	fIndependent
 	fModel
 	fEffort
 	fPermission
@@ -44,7 +44,7 @@ var agentFields = []struct {
 	id    fieldID
 	label string
 }{
-	{fName, "Name"}, {fDescription, "Description"}, {fShare, "Shared context"}, {fModel, "Model"}, {fEffort, "Effort"},
+	{fName, "Name"}, {fDescription, "Description"}, {fIndependent, "Independent"}, {fModel, "Model"}, {fEffort, "Effort"},
 	{fPermission, "Permission mode"}, {fTools, "Tools"}, {fDisallowed, "Disallowed tools"},
 	{fMaxTurns, "Max turns"}, {fColor, "Color"}, {fPrompt, "Prompt"},
 }
@@ -157,8 +157,8 @@ func (e *agentEditor) key(m tea.KeyPressMsg) (screen, tea.Cmd) {
 	case "enter", "right", "l":
 		return e, e.edit(agentFields[e.cursor].id)
 	case "space", " ":
-		if agentFields[e.cursor].id == fShare {
-			return e, e.edit(fShare)
+		if agentFields[e.cursor].id == fIndependent {
+			return e, e.edit(fIndependent)
 		}
 	}
 	return e, nil
@@ -174,16 +174,16 @@ func (e *agentEditor) edit(id fieldID) tea.Cmd {
 			e.agent.Set("description", v)
 			return e.persist()
 		}))
-	case fShare:
-		shared := !team.Shared(e.agent)
-		team.SetShared(e.agent, shared)
+	case fIndependent:
+		on := !team.Independent(e.agent)
+		team.SetIndependent(e.agent, on)
 		if cmd := e.persist(); cmd != nil {
 			return cmd
 		}
-		if shared {
-			return flash(e.agent.Name() + " shares the squad's notes")
+		if on {
+			return flash(e.agent.Name() + " is independent: no CLAUDE.md, and the main agent hands it only the task")
 		}
-		return flash(e.agent.Name() + " works in isolation: no notes, only the task")
+		return flash(e.agent.Name() + " is an ordinary agent again")
 	case fModel:
 		return push(e.modelChoice())
 	case fEffort:
@@ -428,19 +428,8 @@ func (e *agentEditor) info() workspace.AgentInfo {
 	return workspace.AgentInfo{
 		Name: e.agent.Name(), Model: e.str("model"), Effort: e.str("effort"), PermissionMode: e.str("permissionMode"),
 		Color: e.str("color"), Tools: len(e.toolList("tools")), ToolNames: e.toolList("tools"), Role: e.agent.Role(),
-		Shared: team.Shared(e.agent), Notes: notesAccess(e.agent),
+		Independent: team.Independent(e.agent),
 	}
-}
-
-// notesAccess is what the agent's tools allow of the notes.
-func notesAccess(a *agentfile.Agent) string {
-	switch read, write := team.Access(a); {
-	case !read:
-		return workspace.NotesNone
-	case !write:
-		return workspace.NotesRead
-	}
-	return workspace.NotesWrite
 }
 
 // together reports whether the preset has two agents or more, the least for
@@ -470,12 +459,8 @@ func (e *agentEditor) valueOf(id fieldID) string {
 	case fDescription:
 		first, _, _ := strings.Cut(e.agent.Description(), "\n")
 		return first
-	case fShare:
-		v := sharePill(team.Shared(e.agent))
-		if !e.together() {
-			v += sMuted.Render(" alone")
-		}
-		return v
+	case fIndependent:
+		return independentPill(team.Independent(e.agent))
 	case fModel:
 		return modelPill(e.str("model"))
 	case fEffort:

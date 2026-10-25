@@ -27,16 +27,8 @@ type AgentInfo struct {
 	Role           string // the first sentence of its description
 	Description    string
 	Prompt         string // the system prompt, trimmed
-	Shared         bool   // shares the squad's notes (the default); false when isolated
-	Notes          string // what its tools allow of the notes: NotesWrite, NotesRead or NotesNone
+	Independent    bool   // judges without knowing how the work was made (squadIndependent)
 }
-
-// What an agent can do with the squad's notes, given its tools.
-const (
-	NotesWrite = "write"
-	NotesRead  = "read"
-	NotesNone  = "none"
-)
 
 // Card is everything the terminal interface shows about one preset.
 type Card struct {
@@ -48,7 +40,7 @@ type Card struct {
 	Permissions string // "acceptEdits · 4 allow · 1 ask · 2 deny", or "" when not set
 	Agents      []AgentInfo
 	Flow        *preset.Flow   // how the agents work as a team; nil when they do not
-	Sharing     bool           // whether the notes are in use: a stored preset of two agents or more
+	Team        bool           // the preset has two agents or more, so what each is to the others matters
 	Findings    []lint.Finding // errors and warnings; notes are only counted
 	Errors      int
 	Warnings    int
@@ -100,9 +92,9 @@ func (w Workspace) fillPreset(c *Card) error {
 	}
 	c.Permissions = p.Settings.Permissions.Summary()
 	c.Flow = p.Flow
-	c.Sharing = len(p.Agents) >= 2
+	c.Team = len(p.Agents) >= 2
 	for _, name := range p.Agents {
-		info := AgentInfo{Name: name, Shared: true, Notes: NotesWrite}
+		info := AgentInfo{Name: name}
 		if data, err := os.ReadFile(filepath.Join(w.Paths.PresetDir(c.Name), "agents", name+".md")); err == nil {
 			info = agentInfo(name, data)
 		}
@@ -143,18 +135,12 @@ func (w Workspace) fillInitial(c *Card) error {
 }
 
 func agentInfo(name string, data []byte) AgentInfo {
-	info := AgentInfo{Name: name, Shared: true, Notes: NotesWrite}
+	info := AgentInfo{Name: name}
 	a, err := agentfile.Parse(data)
 	if err != nil {
 		return info
 	}
-	info.Shared = team.Shared(a)
-	switch read, write := team.Access(a); {
-	case !read:
-		info.Notes = NotesNone
-	case !write:
-		info.Notes = NotesRead
-	}
+	info.Independent = team.Independent(a)
 	get := func(key string) string {
 		if v, ok := a.Get(key); ok && v != nil {
 			return fmt.Sprint(v)

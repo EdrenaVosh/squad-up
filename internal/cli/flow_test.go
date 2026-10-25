@@ -67,63 +67,31 @@ func TestFlowRefusesWhatDoesNotAddUp(t *testing.T) {
 	}
 }
 
-func TestEditCanIsolateAnAgent(t *testing.T) {
+func TestEditCanMakeAnAgentIndependent(t *testing.T) {
 	e := newEnv(t)
 	e.addPresets()
 
-	if r := e.run("edit", "solo", "reviewer", "--isolate"); r.code != 0 || !strings.Contains(r.stdout, "isolation") {
-		t.Fatalf("isolate: %d %s %s", r.code, r.stdout, r.stderr)
+	if r := e.run("edit", "solo", "reviewer", "--independent"); r.code != 0 || !strings.Contains(r.stdout, "independent") {
+		t.Fatalf("independent: %d %s %s", r.code, r.stdout, r.stderr)
 	}
 	md, _ := os.ReadFile(filepath.Join(e.home, "presets", "solo", "agents", "reviewer.md"))
-	if !strings.Contains(string(md), "squadShare: false") {
+	if !strings.Contains(string(md), "squadIndependent: true") {
 		t.Errorf("reviewer.md:\n%s", md)
 	}
 
-	if r := e.run("edit", "solo", "reviewer", "--share"); r.code != 0 || !strings.Contains(r.stdout, "shares") {
-		t.Fatalf("share: %d %s", r.code, r.stderr)
+	if r := e.run("edit", "solo", "reviewer", "--independent=false"); r.code != 0 || !strings.Contains(r.stdout, "ordinary") {
+		t.Fatalf("undo: %d %s", r.code, r.stderr)
 	}
 	md, _ = os.ReadFile(filepath.Join(e.home, "presets", "solo", "agents", "reviewer.md"))
-	if strings.Contains(string(md), "squadShare") {
-		t.Errorf("sharing is the default and must not be written:\n%s", md)
+	if strings.Contains(string(md), "squadIndependent") {
+		t.Errorf("the default must not be written:\n%s", md)
 	}
 
-	if r := e.run("edit", "solo", "--isolate"); r.code != 2 {
+	if r := e.run("edit", "solo", "--independent"); r.code != 2 {
 		t.Errorf("no agent: %d", r.code)
 	}
-	if r := e.run("edit", "solo", "ghost", "--isolate"); r.code == 0 {
+	if r := e.run("edit", "solo", "ghost", "--independent"); r.code == 0 {
 		t.Error("an unknown agent was accepted")
-	}
-}
-
-func TestNotesShowsAndClearsTheSharedFile(t *testing.T) {
-	e := newEnv(t)
-	dir := t.TempDir()
-	t.Chdir(dir)
-
-	if r := e.run("notes"); r.code != 0 || !strings.Contains(r.stdout, "No notes here yet") {
-		t.Fatalf("empty: %d %q", r.code, r.stdout)
-	}
-
-	if err := os.MkdirAll(".squad", 0o755); err != nil {
-		t.Fatal(err)
-	}
-	notes := "goal: ship it\nD auth: bcrypt\n! sec: no rotation @a.go:1 →dev\n"
-	if err := os.WriteFile(".squad/notes.md", []byte(notes), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	r := e.run("notes")
-	if r.code != 0 || !strings.Contains(r.stdout, "D auth: bcrypt") || !strings.Contains(r.stderr, "3 lines") || !strings.Contains(r.stderr, "1 open") {
-		t.Errorf("show: %d %q %q", r.code, r.stdout, r.stderr)
-	}
-
-	if r := e.run("notes", "--clear"); r.code != 0 || !strings.Contains(r.stdout, "Cleared") {
-		t.Errorf("clear: %d %q", r.code, r.stdout)
-	}
-	if _, err := os.Stat(filepath.Join(dir, ".squad")); err == nil {
-		t.Error("the empty .squad folder was left behind")
-	}
-	if r := e.run("notes", "--clear"); r.code != 0 || !strings.Contains(r.stdout, "nothing to clear") {
-		t.Errorf("clear again: %d %q", r.code, r.stdout)
 	}
 }
 
@@ -237,5 +205,24 @@ func TestExportSaysTheWholePathOfTheFile(t *testing.T) {
 	}
 	if !strings.Contains(r.stdout, string(filepath.Separator)) || !filepath.IsAbs(strings.TrimSuffix(strings.TrimSpace(r.stdout[strings.LastIndex(r.stdout, " to ")+4:]), ".")) {
 		t.Errorf("the path is not whole: %q", r.stdout)
+	}
+}
+
+func TestADryRunShowsTheSquadBrief(t *testing.T) {
+	e := newEnv(t)
+	e.addPresets()
+	if r := e.run("flow", "solo", "--gate", "reviewer", "--fix", "planner"); r.code != 0 {
+		t.Fatal(r.stderr)
+	}
+	if r := e.run("edit", "solo", "reviewer", "--independent"); r.code != 0 {
+		t.Fatal(r.stderr)
+	}
+
+	r := e.run("run", "solo", "--dry-run")
+
+	for _, want := range []string{"--append-system-prompt", "Squad brief", "Independent: `reviewer`", "1 planner → 2 reviewer", "omitClaudeMd"} {
+		if !strings.Contains(r.stdout, want) {
+			t.Errorf("stdout lacks %q:\n%s", want, r.stdout)
+		}
 	}
 }

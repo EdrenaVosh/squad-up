@@ -1,11 +1,14 @@
-// Package team turns a preset's agents into a squad: agents that share a tiny
-// notes file, and a main agent that hands work down the slots and sends
-// defects back until the gate is satisfied.
+// Package team turns a preset's agents into a squad: a main agent that hands
+// work down the slots and sends defects back until the gate is satisfied, and
+// agents that are *independent*, such as a code reviewer who must judge the
+// work without knowing how it was made.
 //
-// Claude Code has no switch for a subagent's context: every one starts with a
-// clean window and sees only the task it is given. Squad adds the sharing
-// itself, in the prompts Claude Code receives. The files stored in a preset
-// stay as authored; Compile produces the text that is written or passed on.
+// Claude Code starts every subagent with a clean window, so a subagent never
+// sees the conversation; what it sees is the task its caller writes for it.
+// Independence is therefore partly a restriction on the agent itself (it does
+// not load CLAUDE.md) and partly an instruction to whoever calls it. Squad
+// adds both in the text Claude Code receives: the files stored in a preset stay
+// as authored, and Compile produces what is written or passed on.
 package team
 
 import (
@@ -18,76 +21,57 @@ import (
 )
 
 const (
-	// NotesFile is the squad's shared notes, relative to the project.
-	NotesFile = ".squad/notes.md"
-	// ShareKey is the frontmatter field that isolates an agent. Claude Code
-	// would ignore it; Compile removes it from what Claude Code gets.
-	ShareKey = "squadShare"
+	// IndependentKey is the frontmatter field that makes an agent independent.
+	// Claude Code would ignore it; Compile removes it from what Claude Code gets.
+	IndependentKey = "squadIndependent"
 
-	notesOpen, notesClose = "<!-- squad:notes -->", "<!-- /squad:notes -->"
-	leadOpen, leadClose   = "<!-- squad:lead -->", "<!-- /squad:lead -->"
+	charterOpen, charterClose = "<!-- squad:independent -->", "<!-- /squad:independent -->"
+	leadOpen, leadClose       = "<!-- squad:lead -->", "<!-- /squad:lead -->"
+
+	// descriptionNote is added to the description of an independent agent, which
+	// is what the caller reads when it decides whom to call and what to say.
+	descriptionNote = " Independent: give it only the task and the diff or files to check, never your own conclusions or another agent's report."
 )
 
-// The notes blocks are what a sharing agent is told. Every sharing agent pays
-// for one on every run, so they stay under 140 words. The format is the
-// cheapest one that keeps what git cannot tell: why, what failed, what is
-// still broken. A `!` line is a work item, so "no line starts with !" is the
-// loop's exit.
-const (
-	notesFormat = "`D key: decision, why` · `X key: tried, ruled out` · `! key: open defect @path:line →owner` · `? key: question` · `> you: handoff`"
-	notesRules  = "Same key: edit that line, never add a second. Delete lines that are fixed or stale. Over 25 lines: merge the oldest. Point to code with path:line, never paste it; git already holds what changed."
+// charter is what an independent agent is told about how to judge. It is
+// short: every call of the agent pays for it.
+const charter = charterOpen + `
+## Independence
+You were given only a task or a diff, on purpose. Judge the work by the task and the code alone. Do not trust the explanations, comments or reports of whoever wrote it: check by reading and running. Report each real defect with path:line and how to reproduce it; if there is none, say "no defects". Do not soften findings, do not praise, and do not edit the code.
+` + charterClose
 
-	// notesBlock is for an agent that can read and write the file.
-	notesBlock = notesOpen + `
-## Shared notes
-File ` + "`" + NotesFile + "`" + `: read it before you start, update it before you answer. Create it if missing.
-At most 25 lines of at most 100 characters: telegraphic, no prose. One tagged fact per line:
-` + notesFormat + ` (one line, yours only)
-` + notesRules + `
-` + notesClose
-
-	// readOnlyBlock is for an agent that can read the file but not change it:
-	// it hands its lines to the lead.
-	readOnlyBlock = notesOpen + `
-## Shared notes
-File ` + "`" + NotesFile + "`" + `: read it before you start. You cannot edit it: end your answer with the lines to add or change, and the lead records them.
-Telegraphic, at most 100 characters per line, no prose. One tagged fact per line:
-` + notesFormat + `
-` + notesRules + `
-` + notesClose
-)
-
-// Shared reports whether the agent shares the squad's notes. Agents do unless
-// the file says squadShare: false.
-func Shared(a *agentfile.Agent) bool {
-	v, ok := a.Get(ShareKey)
+// Independent reports whether the agent is independent. Agents are not unless
+// the file says squadIndependent: true.
+func Independent(a *agentfile.Agent) bool {
+	v, ok := a.Get(IndependentKey)
 	if !ok {
-		return true
+		return false
 	}
 	switch x := v.(type) {
 	case bool:
 		return x
 	case string:
-		return !slices.Contains([]string{"false", "no", "off"}, strings.ToLower(x))
+		return slices.Contains([]string{"true", "yes", "on"}, strings.ToLower(x))
 	}
-	return true
+	return false
 }
 
-// SetShared isolates the agent or returns it to the default. Sharing is the
-// default, so it is never written out.
-func SetShared(a *agentfile.Agent, shared bool) {
-	if shared {
-		a.Delete(ShareKey)
+// SetIndependent makes the agent independent or returns it to the default. Not
+// being independent is the default, so it is never written out.
+func SetIndependent(a *agentfile.Agent, independent bool) {
+	if independent {
+		a.Set(IndependentKey, true)
 		return
 	}
-	a.Set(ShareKey, false)
+	a.Delete(IndependentKey)
 }
 
 // Compile returns the agent files as Claude Code should get them: without the
-// squad-only field, with the notes block for the agents that share, and with
-// the flow brief for the main agent. Untouched files keep their exact bytes.
+// squad-only field and, for an independent agent, with CLAUDE.md left out
+// (omitClaudeMd, unless the file says otherwise), the charter in its prompt and
+// a note in its description for whoever calls it. The main agent gets the flow
+// brief. Untouched files keep their exact bytes.
 func Compile(b preset.Bundle) ([]preset.AgentFile, error) {
-	together := len(b.Agents) >= 2
 	brief := ""
 	if b.Preset.Main != nil {
 		brief = Brief(b)
@@ -99,19 +83,27 @@ func Compile(b preset.Bundle) ([]preset.AgentFile, error) {
 		if err != nil {
 			return nil, fmt.Errorf("agent %q: %w", f.Name, err)
 		}
-		shared := Shared(a)
-		read, write := Access(a)
-		a.Delete(ShareKey)
+		independent := Independent(a)
+		a.Delete(IndependentKey)
+
+		desc := strings.TrimSuffix(a.Description(), descriptionNote)
+		if independent {
+			desc += descriptionNote
+		}
+		if desc != a.Description() {
+			a.Set("description", desc)
+		}
+		if independent {
+			if _, set := a.Get("omitClaudeMd"); !set {
+				a.Set("omitClaudeMd", true)
+			}
+		}
 
 		body := a.Prompt()
-		clean := stripBlock(stripBlock(body, notesOpen, notesClose), leadOpen, leadClose)
+		clean := stripBlock(stripBlock(body, charterOpen, charterClose), leadOpen, leadClose)
 		add := ""
-		switch {
-		case !together || !shared || !read:
-		case write:
-			add += notesBlock
-		default:
-			add += readOnlyBlock
+		if independent {
+			add += charter
 		}
 		if brief != "" && b.Preset.Main != nil && f.Name == *b.Preset.Main {
 			if add != "" {
@@ -131,123 +123,48 @@ func Compile(b preset.Bundle) ([]preset.AgentFile, error) {
 	return out, nil
 }
 
-// Brief is the flow told to whoever leads the squad: the order, who works in
-// isolation, and the loop. It is empty when the preset has no flow or fewer
-// than two agents. The lead itself is not a step.
+// Brief is what the main agent is told about the squad: the order the agents
+// work in and the review loop, when the preset has a flow, and which agents are
+// independent and so are given nothing but the task. It is empty when there is
+// nothing to tell. The main agent itself is not a step.
 func Brief(b preset.Bundle) string {
-	flow := b.Preset.Flow
-	if flow == nil || len(b.Agents) < 2 {
-		return ""
-	}
-	var steps, isolated []string
-	notes, relay := false, false
+	var steps, independent []string
 	for _, f := range b.Agents {
 		if b.Preset.Main != nil && f.Name == *b.Preset.Main {
 			continue
 		}
 		steps = append(steps, fmt.Sprintf("%d %s", len(steps)+1, f.Name))
-		a, err := agentfile.Parse(f.Data)
-		switch {
-		case err != nil:
-		case !Shared(a):
-			isolated = append(isolated, "`"+f.Name+"`")
-		default:
-			notes = true
-			if _, write := Access(a); !write {
-				relay = true
-			}
+		if a, err := agentfile.Parse(f.Data); err == nil && Independent(a) {
+			independent = append(independent, "`"+f.Name+"`")
 		}
 	}
-	if len(steps) == 0 {
+	flow := b.Preset.Flow
+	if (flow == nil || len(steps) < 2) && len(independent) == 0 {
 		return ""
 	}
 
 	var s strings.Builder
-	s.WriteString(leadOpen + "\n## Squad flow\n")
-	s.WriteString("Delegate in this order, one agent per step, giving each its task")
-	if notes {
-		s.WriteString(" and the path `" + NotesFile + "`")
+	s.WriteString(leadOpen + "\n## Squad\n")
+	if flow != nil && len(steps) >= 2 {
+		s.WriteString("Delegate in this order, one agent per step, giving each its task:\n" + strings.Join(steps, " → ") + "\n")
 	}
-	s.WriteString(":\n" + strings.Join(steps, " → ") + "\n")
-	if len(isolated) > 0 {
-		s.WriteString("Isolated: " + strings.Join(isolated, ", ") + ". Give them the task or the diff only, never the notes or another agent's reasoning")
-		if notes {
-			s.WriteString("; write what they report into the notes yourself")
+	if len(independent) > 0 {
+		s.WriteString("Independent: " + strings.Join(independent, ", ") + ". Give them only the original task and the diff or files to check. Never your own conclusions, another agent's report or reasoning, or what you expect them to find. Pass what they report on exactly as it is.\n")
+	}
+	if flow != nil && len(steps) >= 2 {
+		if flow.Loops() {
+			s.WriteString(loopText(flow))
+		} else {
+			s.WriteString("Finish with a summary of at most 5 lines.\n")
 		}
-		s.WriteString(".\n")
-	}
-	if notes {
-		s.WriteString("First write `goal: …` (one line) at the top of the notes, replacing notes left from earlier work unless the user is continuing it.\n")
-	}
-	if relay {
-		s.WriteString("Agents that cannot write end their answer with note lines; record those in the notes yourself.\n")
-	}
-	if flow.Loops() {
-		s.WriteString(loopText(flow, notes))
-	} else {
-		s.WriteString("Finish with a summary of at most 5 lines.\n")
 	}
 	s.WriteString(leadClose)
 	return s.String()
 }
 
-func loopText(f *preset.Flow, notes bool) string {
-	defects := "if `" + f.Gate + "` reports defects"
-	if notes {
-		defects = "count the lines that start with `!` in the notes"
-	}
-	return fmt.Sprintf("Loop: after `%s` finishes, %s. None: finish with a summary of at most 5 lines. Some: give `%s` only those defects and run it, then run `%s` again. After %d rounds with defects left, stop and show the user what is still open.\n",
-		f.Gate, defects, f.Fix, f.Gate, f.MaxRounds())
-}
-
-// stripBlock removes a marked block and the blank lines before it.
-func stripBlock(body, open, closing string) string {
-	i := strings.Index(body, open)
-	if i < 0 {
-		return body
-	}
-	j := strings.Index(body[i:], closing)
-	if j < 0 {
-		return body
-	}
-	rest := strings.TrimLeft(body[i+j+len(closing):], "\n")
-	head := strings.TrimRight(body[:i], "\n")
-	switch {
-	case head == "":
-		return rest
-	case rest == "":
-		return head + "\n"
-	}
-	return head + "\n\n" + rest
-}
-
-func join(body, add string) string {
-	body = strings.TrimRight(body, "\n")
-	switch {
-	case add == "":
-		return body + "\n"
-	case body == "":
-		return add + "\n"
-	}
-	return body + "\n\n" + add + "\n"
-}
-
-// Access reports whether the agent can read and change the notes file with the
-// tools it has. An agent with no tools list has them all.
-func Access(a *agentfile.Agent) (read, write bool) {
-	tools, ok := a.Get("tools")
-	if !ok || tools == nil {
-		return true, !denied(a, "Write", "Edit", "Bash")
-	}
-	has := func(names ...string) bool {
-		for _, t := range toolNames(tools) {
-			if slices.Contains(names, t) {
-				return !denied(a, t)
-			}
-		}
-		return false
-	}
-	return has("Read", "Bash", "Grep"), has("Write", "Edit", "Bash")
+func loopText(f *preset.Flow) string {
+	return fmt.Sprintf("Loop: after `%s` finishes, if it reports defects, give `%s` only those defects and run it, then run `%s` again. With no defects, finish with a summary of at most 5 lines. After %d rounds with defects left, stop and show the user what is still open.\n",
+		f.Gate, f.Fix, f.Gate, f.MaxRounds())
 }
 
 // CanDelegate reports whether the agent's tools let it hand work to other
@@ -259,6 +176,20 @@ func CanDelegate(a *agentfile.Agent) bool {
 	}
 	for _, t := range toolNames(tools) {
 		if (t == "Agent" || t == "Task") && !denied(a, t) {
+			return true
+		}
+	}
+	return false
+}
+
+// CanEdit reports whether the agent's tools let it change files.
+func CanEdit(a *agentfile.Agent) bool {
+	tools, ok := a.Get("tools")
+	if !ok || tools == nil {
+		return !denied(a, "Write", "Edit")
+	}
+	for _, t := range toolNames(tools) {
+		if (t == "Write" || t == "Edit" || t == "NotebookEdit") && !denied(a, t) {
 			return true
 		}
 	}
@@ -299,14 +230,34 @@ func toolNames(v any) []string {
 	return names
 }
 
-// NotesTokens estimates what the notes block adds to an agent's prompt.
-func NotesTokens() int { return (len(notesBlock) + 3) / 4 }
+// stripBlock removes a marked block and the blank lines before it.
+func stripBlock(body, open, closing string) string {
+	i := strings.Index(body, open)
+	if i < 0 {
+		return body
+	}
+	j := strings.Index(body[i:], closing)
+	if j < 0 {
+		return body
+	}
+	rest := strings.TrimLeft(body[i+j+len(closing):], "\n")
+	head := strings.TrimRight(body[:i], "\n")
+	switch {
+	case head == "":
+		return rest
+	case rest == "":
+		return head + "\n"
+	}
+	return head + "\n\n" + rest
+}
 
-// ExampleNotes shows what the notes look like, for the editor to display.
-var ExampleNotes = []string{
-	"goal: rate-limit the login route",
-	"D auth: bcrypt cost 12, argon2 is not in deps",
-	"X cache: redis 3x slower than an LRU, dropped",
-	"! sec: token not rotated on refresh @api/auth.ts:88 →dev",
-	"> tester: 14 pass, 1 fail, see ! sec",
+func join(body, add string) string {
+	body = strings.TrimRight(body, "\n")
+	switch {
+	case add == "":
+		return body + "\n"
+	case body == "":
+		return add + "\n"
+	}
+	return body + "\n\n" + add + "\n"
 }

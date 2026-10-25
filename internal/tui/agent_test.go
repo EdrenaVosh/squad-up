@@ -48,7 +48,7 @@ func (h *harness) field(n int) {
 const (
 	fName = iota
 	fDescription
-	fShare
+	fIndependent
 	fModel
 	fEffort
 	fPermission

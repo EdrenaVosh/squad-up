@@ -3,7 +3,7 @@
 │                                                 │ ────────────────────────────────────────────────────────────────────────────────────── │
 │ ▌ Name              planner                     │                                                                                        │
 │   Description       Breaks a task into steps. U…│ planner                                                                                │
-│   Shared context     ⇄ shared                   │                                                                                        │
+│   Independent       ◇ normal                    │                                                                                        │
 │   Model              opus                       │ The name Claude sees, and the name of the file. Lowercase letters, digits and dashes,  │
 │   Effort            ▂▃▅·· high                  │ up to 64 characters; it must be unique in the preset.                                  │
 │   Permission mode   ■□□□□ plan                  │                                                                                        │
@@ -24,7 +24,7 @@
 │  │ effort  ▂▃▅·· high                 │         │                                                                                        │
 │  │ access  ■□□□□ plan                 │         │                                                                                        │
 │  │ tools   ‹Read› ‹Grep› ‹Glob›       │         │                                                                                        │
-│  │ context ⇄ shared                   │         │                                                                                        │
+│  │ stance  normal                     │         │                                                                                        │
 │  ╰────────────────────────────────────╯         │                                                                                        │
 │                                                 │                                                                                        │
 │ CHECKS                                          │                                                                                        │

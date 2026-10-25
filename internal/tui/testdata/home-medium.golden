@@ -17,7 +17,7 @@
 │     ■ ■ ■ 3 agents           │ ║ effort  ····· —            ║ │ effort  ····· —            │               │
 │     Planner, reviewer and t… │ ║ access  ■■□□□ default      ║ │ access  ■■□□□ default      │               │
 │                              │ ║ tools   ‹Read› ‹Bash›      ║ │ tools   ‹Read› ‹Bash›      │               │
-│                              │ ║ context ⇄ shared           ║ │ context ⇄ shared           │               │
+│                              │ ║ stance  normal             ║ │ stance  normal             │               │
 │                              │ ╚════════════════════════════╝ ╰────────────────────────────╯               │
 │                              │  ▪ SQUAD  ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄ settings, cost and health of the whole preset   │
 │                              │ ┌─ SETTINGS ────────────────────────┐ ┌─ TOKENS · LIVE ───────────────────┐ │

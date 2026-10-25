@@ -90,7 +90,7 @@ func (e *agentEditor) fieldHint(id fieldID) string {
 		return "enter · rename"
 	case fTools, fDisallowed:
 		return "enter · check tools"
-	case fShare:
+	case fIndependent:
 		return "enter or space · switch"
 	}
 	return "enter · change"
@@ -104,8 +104,8 @@ func (e *agentEditor) fieldBody(id fieldID, w int) []string {
 			wrapAll(sMuted.Render("The name Claude sees, and the name of the file. Lowercase letters, digits and dashes, up to 64 characters; it must be unique in the preset."), w)...)
 	case fDescription:
 		return e.descriptionBody(w)
-	case fShare:
-		return e.shareBody(w)
+	case fIndependent:
+		return e.independentBody(w)
 	case fModel:
 		return e.modelBody()
 	case fEffort:
@@ -148,69 +148,53 @@ func (e *agentEditor) descriptionBody(w int) []string {
 	return out
 }
 
-// shareBody is the switch for the agent's context, what each side means, what
-// this agent can do with the notes, and what they cost.
-func (e *agentEditor) shareBody(w int) []string {
-	shared := team.Shared(e.agent)
-	on, off := sMuted.Render("○ shared"), sMuted.Render("○ isolated")
-	if shared {
-		on = sharePill(true)
+// independentBody is the switch for independence, what each side means, what
+// it really locks and what it only asks for.
+func (e *agentEditor) independentBody(w int) []string {
+	on := team.Independent(e.agent)
+	normal, indep := sMuted.Render("○ normal"), sMuted.Render("○ independent")
+	if on {
+		indep = independentPill(true)
 	} else {
-		off = sharePill(false)
+		normal = sBold.Render("● normal")
 	}
-	out := []string{on + "   " + off, ""}
+	out := []string{normal + "   " + indep, ""}
 
 	choiceLine := func(selected bool, name, text string) string {
 		mark := "  "
 		if selected {
 			mark = selBar() + " "
 		}
-		return mark + pad(sBold.Render(name), 11) + sMuted.Render(text)
+		return mark + pad(sBold.Render(name), 13) + sMuted.Render(text)
 	}
 	out = append(out,
-		choiceLine(shared, "Shared", "reads "+team.NotesFile+" first and leaves what it learned last"),
-		choiceLine(!shared, "Isolated", "sees only the task it is given: for an independent review"),
+		choiceLine(!on, "Normal", "knows what Claude Code tells every agent: CLAUDE.md, and whatever the main agent chooses to say"),
+		choiceLine(on, "Independent", "judges the work on its own: for a code review that must not be swayed by how the code was made"),
 		"")
 
-	switch read, write := team.Access(e.agent); {
-	case !e.together():
-		out = append(out, sMuted.Render("Alone in this preset there is no one to share with. It starts to matter at two agents."))
-	case !shared:
-		out = append(out, sWarn.Render("⊘")+" It neither reads nor writes the notes, and the main agent hands it the task or the diff only.")
-	case !read:
-		out = append(out, sWarn.Render("!")+" Its tools cannot read files, so it gets no notes. Check Read in Tools.")
-	case !write:
-		out = append(out, sWarn.Render("!")+" Its tools can read but not write: it reads the notes and hands its own lines to the main agent.")
-	default:
-		out = append(out, sOK.Render("✓")+" It can read and write the notes.")
+	if !on {
+		return append(out, wrapAll(sMuted.Render("Switch it on for a reviewer. Nothing else about the agent changes."), w)...)
 	}
-	if shared && e.together() {
-		out = append(out, sMuted.Render(fmt.Sprintf("Costs about %d tokens in its prompt, plus the notes themselves (kept to 25 short lines).", team.NotesTokens())))
-	}
-	out = append(out, "", sMuted.Render("What the notes look like"))
-	for _, l := range team.ExampleNotes {
-		out = append(out, "  "+highlightNote(truncate(l, w-4)))
-	}
-	return append(out, "", sMuted.Render("Why this format: only what git cannot tell — decisions and why, what failed, what is still broken. Fixed items are deleted, so no ! line means the work is clean."))
-}
 
-// highlightNote colors the tag of a line of the notes.
-func highlightNote(l string) string {
-	tag, rest, ok := strings.Cut(l, " ")
-	if !ok {
-		return l
+	out = append(out, sBold.Render("Locked by Claude Code"))
+	out = append(out, "  "+sOK.Render("✓")+" it does not load CLAUDE.md (omitClaudeMd), so none of the project's own instructions reach it")
+	out = append(out, "")
+	out = append(out, sBold.Render("Only asked for in text"))
+	out = append(out, "  "+sWarn.Render("·")+" its prompt gets a short charter: judge by the task and the code, trust nothing it is told, report defects with path:line, never edit")
+	out = append(out, "  "+sWarn.Render("·")+" its description tells whoever calls it to give only the task and the diff")
+	out = append(out, "  "+sWarn.Render("·")+" the main agent is told the same; a model can still ignore it")
+	out = append(out, "")
+	if team.CanEdit(e.agent) {
+		out = append(out, sWarn.Render("!")+" Its tools can change files: it could edit the code it reviews. Give it Read, Grep, Glob and Bash only.")
+	} else {
+		out = append(out, sOK.Render("✓")+" Its tools cannot change files.")
 	}
-	switch tag {
-	case "D":
-		return sOK.Render(tag) + " " + rest
-	case "X":
-		return sMuted.Render(tag) + " " + sMuted.Render(rest)
-	case "!":
-		return sErr.Render(tag) + " " + rest
-	case ">":
-		return fg(cShared).Render(tag) + " " + rest
+	out = append(out, "", sMuted.Render("It can still read the whole repository, and any file its tools allow: to give it review rules, say in its prompt which folder to read, for example docs/review-rules/."))
+	var lines []string
+	for _, l := range out {
+		lines = append(lines, wrapLoose(l, w)...)
 	}
-	return sBold.Render(tag) + " " + rest
+	return lines
 }
 
 func (e *agentEditor) modelBody() []string {

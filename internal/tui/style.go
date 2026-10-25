@@ -111,26 +111,27 @@ func modelPill(model string) string {
 	return sMuted.Render("[" + name + "]")
 }
 
-// Sharing the squad's notes is teal, working in isolation is amber.
+// cShared is the teal of the cache; cIndependent is the amber of an agent that
+// judges alone.
 var (
-	cShared   = lipgloss.Color("#2DD4BF")
-	cIsolated = lipgloss.Color("#E5A50A")
+	cShared      = lipgloss.Color("#2DD4BF")
+	cIndependent = lipgloss.Color("#E5A50A")
 )
 
-// sharePill is the state of an agent's context as a colored pill.
-func sharePill(shared bool) string {
-	if shared {
-		return lipgloss.NewStyle().Foreground(lipgloss.Color("#06201C")).Background(cShared).Bold(true).Render(" ⇄ shared ")
+// independentPill is the state of an agent's independence as a colored pill.
+func independentPill(on bool) string {
+	if on {
+		return lipgloss.NewStyle().Foreground(lipgloss.Color("#2A1B00")).Background(cIndependent).Bold(true).Render(" ◈ independent ")
 	}
-	return lipgloss.NewStyle().Foreground(lipgloss.Color("#2A1B00")).Background(cIsolated).Bold(true).Render(" ⊘ isolated ")
+	return sMuted.Render("◇ normal")
 }
 
-// shareChip is the short mark of an agent's context for a tile.
-func shareChip(shared bool) string {
-	if shared {
-		return fg(cShared).Render("⇄ shared")
+// independentChip is the short mark of an agent's independence for a tile.
+func independentChip(on bool) string {
+	if on {
+		return fg(cIndependent).Bold(true).Render("◈ independent")
 	}
-	return fg(cIsolated).Render("⊘ isolated")
+	return sMuted.Render("normal")
 }
 
 // effortSteps is how many bars an effort level lights up, out of 5.

@@ -451,18 +451,18 @@ func TestDescribeSummarisesAPresetForAPreview(t *testing.T) {
 	}
 }
 
-func TestTheFlowAndAnAgentsIsolationTravelWithThePreset(t *testing.T) {
+func TestTheFlowAndAnAgentsIndependenceTravelWithThePreset(t *testing.T) {
 	b := sampleBundle()
 	b.Preset.Flow = &preset.Flow{Gate: "reviewer", Fix: "planner", Rounds: 2}
-	b.Agents[1].Data = []byte(strings.Replace(reviewerAgent, "name: reviewer\n", "name: reviewer\nsquadShare: false\n", 1))
+	b.Agents[1].Data = []byte(strings.Replace(reviewerAgent, "name: reviewer\n", "name: reviewer\nsquadIndependent: true\n", 1))
 
 	got := parseOne(t, b, Options{})
 
 	if f := got.Bundle.Preset.Flow; f == nil || f.Gate != "reviewer" || f.Fix != "planner" || f.Rounds != 2 {
 		t.Errorf("flow = %+v", f)
 	}
-	if !strings.Contains(string(got.Bundle.Agents[1].Data), "squadShare: false") {
-		t.Errorf("the isolation was lost:\n%s", got.Bundle.Agents[1].Data)
+	if !strings.Contains(string(got.Bundle.Agents[1].Data), "squadIndependent: true") {
+		t.Errorf("independence was lost:\n%s", got.Bundle.Agents[1].Data)
 	}
 }
 

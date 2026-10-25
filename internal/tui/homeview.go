@@ -303,7 +303,7 @@ func (h *home) detail(w, rows, headerRows, listW int, c viewCtx) []string {
 	ph := min(max(rows-len(head)-region-2, panelH), 14)
 	showPanels := rows-len(head)-region-1 >= panelH
 
-	opts := rosterOpts{frames: frames, frame: c.frame, selected: h.agent, live: live, big: true, team: card.Sharing}
+	opts := rosterOpts{frames: frames, frame: c.frame, selected: h.agent, live: live, big: true, team: card.Team}
 	roster, rects, _ := rosterLines(card.Agents, w-2, region, opts)
 	for _, r := range rects {
 		h.tiles = append(h.tiles, tileHit{

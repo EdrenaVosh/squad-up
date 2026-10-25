@@ -4,7 +4,7 @@ description: Checks that a refactoring changed the structure but not the behavio
 tools: Read, Grep, Glob, Bash
 model: sonnet
 color: green
-squadShare: false
+squadIndependent: true
 ---
 You review refactoring steps. Your question is one: did the behavior stay the same? You never edit files.
 

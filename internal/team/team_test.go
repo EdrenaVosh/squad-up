@@ -37,67 +37,77 @@ func compile(t *testing.T, b preset.Bundle) map[string]string {
 	return got
 }
 
-func TestAgentsShareTheNotesByDefault(t *testing.T) {
-	got := compile(t, bundle(nil, "", file("dev", ""), file("tester", "")))
+func TestAnAgentIsNotIndependentUnlessItSays(t *testing.T) {
+	b := bundle(nil, "", file("dev", ""), file("reviewer", ""))
+
+	got := compile(t, b)
 
 	for name, data := range got {
-		if !strings.Contains(data, team.NotesFile) || !strings.Contains(data, "<!-- squad:notes -->") {
-			t.Errorf("%s does not get the notes block:\n%s", name, data)
-		}
-		if !strings.HasPrefix(data, "---\nname: "+name) || !strings.Contains(data, "You are "+name+".") {
-			t.Errorf("%s lost its own text:\n%s", name, data)
+		if data != string(b.Agents[map[string]int{"dev": 0, "reviewer": 1}[name]].Data) {
+			t.Errorf("%s changed although nothing was asked:\n%s", name, data)
 		}
 	}
 }
 
-func TestAnIsolatedAgentGetsNoNotesAndNoSquadKey(t *testing.T) {
-	got := compile(t, bundle(nil, "", file("dev", ""), file("reviewer", "squadShare: false\n")))
+func TestAnIndependentAgentGetsNoClaudeMdAndAnInstructionToJudgeAlone(t *testing.T) {
+	got := compile(t, bundle(nil, "", file("dev", ""), file("reviewer", "squadIndependent: true\n")))
 
-	if strings.Contains(got["reviewer"], "squad:notes") || strings.Contains(got["reviewer"], team.ShareKey) {
-		t.Errorf("reviewer:\n%s", got["reviewer"])
+	r := got["reviewer"]
+	if strings.Contains(r, team.IndependentKey) {
+		t.Errorf("the squad-only field reached Claude Code:\n%s", r)
 	}
-	if !strings.Contains(got["dev"], "squad:notes") {
-		t.Errorf("dev:\n%s", got["dev"])
-	}
-}
-
-func TestALoneAgentHasNobodyToShareWith(t *testing.T) {
-	b := bundle(nil, "", file("dev", "squadShare: false\n"))
-	got := compile(t, b)
-	if strings.Contains(got["dev"], "squad:notes") || strings.Contains(got["dev"], team.ShareKey) {
-		t.Errorf("dev:\n%s", got["dev"])
-	}
-
-	b = bundle(nil, "", file("dev", ""))
-	if got := compile(t, b); got["dev"] != string(b.Agents[0].Data) {
-		t.Errorf("an untouched agent changed:\n%s", got["dev"])
-	}
-}
-
-func TestCompilingTwiceChangesNothing(t *testing.T) {
-	b := bundle(&preset.Flow{Gate: "tester", Fix: "dev"}, "lead", file("lead", ""), file("dev", ""), file("tester", ""))
-	first, err := team.Compile(b)
-	if err != nil {
-		t.Fatal(err)
-	}
-	again, err := team.Compile(preset.Bundle{Preset: b.Preset, Agents: first})
-	if err != nil {
-		t.Fatal(err)
-	}
-	for i := range first {
-		if string(first[i].Data) != string(again[i].Data) {
-			t.Errorf("%s changed on the second pass:\n%s\n---\n%s", first[i].Name, first[i].Data, again[i].Data)
+	for _, want := range []string{"omitClaudeMd: true", "<!-- squad:independent -->", "do not edit the code", "Independent: give it only the task", "You are reviewer."} {
+		if !strings.Contains(r, want) {
+			t.Errorf("reviewer lacks %q:\n%s", want, r)
 		}
 	}
+	if strings.Contains(got["dev"], "squad:independent") || strings.Contains(got["dev"], "omitClaudeMd") {
+		t.Errorf("a normal agent was touched:\n%s", got["dev"])
+	}
 }
 
-func TestTheLeadGetsTheFlowAndTheLoop(t *testing.T) {
+func TestTheDescriptionTellsTheCallerHowToCallIt(t *testing.T) {
+	a := mustParse(t, compile(t, bundle(nil, "", file("reviewer", "squadIndependent: true\n")))["reviewer"])
+
+	if d := a.Description(); !strings.HasPrefix(d, "Does reviewer work") || !strings.Contains(d, "never your own conclusions") {
+		t.Errorf("description = %q", d)
+	}
+}
+
+func TestAnExplicitOmitClaudeMdIsRespected(t *testing.T) {
+	got := compile(t, bundle(nil, "", file("reviewer", "squadIndependent: true\nomitClaudeMd: false\n")))
+
+	if !strings.Contains(got["reviewer"], "omitClaudeMd: false") {
+		t.Errorf("the author's choice was overridden:\n%s", got["reviewer"])
+	}
+}
+
+func TestCompilingIsRepeatableAndNeverDoublesABlock(t *testing.T) {
+	b := bundle(&preset.Flow{Gate: "reviewer", Fix: "dev"}, "lead", file("lead", ""), file("dev", ""), file("reviewer", "squadIndependent: true\n"))
+	first, second := compile(t, b), compile(t, b)
+	for name := range first {
+		if first[name] != second[name] {
+			t.Errorf("%s differs between two compiles:\n%s\n---\n%s", name, first[name], second[name])
+		}
+	}
+
+	// a stored file that already holds a block (pasted by hand, or copied from a
+	// compiled file) gets one block, not two
+	pasted := file("reviewer", "squadIndependent: true\n")
+	pasted.Data = append(pasted.Data, []byte("\n<!-- squad:independent -->\nold text\n<!-- /squad:independent -->\n")...)
+	got := compile(t, bundle(nil, "", file("dev", ""), pasted))["reviewer"]
+	if strings.Count(got, "<!-- squad:independent -->") != 1 || strings.Contains(got, "old text") {
+		t.Errorf("reviewer:\n%s", got)
+	}
+}
+
+func TestTheLeadGetsTheFlowTheLoopAndWhoIsIndependent(t *testing.T) {
 	flow := &preset.Flow{Gate: "reviewer", Fix: "dev", Rounds: 2}
-	b := bundle(flow, "lead", file("lead", ""), file("dev", ""), file("reviewer", "squadShare: false\n"))
+	b := bundle(flow, "lead", file("lead", ""), file("dev", ""), file("reviewer", "squadIndependent: true\n"))
 	got := compile(t, b)
 
 	lead := got["lead"]
-	for _, want := range []string{"<!-- squad:lead -->", "1 dev → 2 reviewer", "Isolated", "reviewer", "`dev`", "After 2 rounds"} {
+	for _, want := range []string{"<!-- squad:lead -->", "1 dev → 2 reviewer", "Independent: `reviewer`", "Give them only the original task", "Never your own conclusions", "After 2 rounds"} {
 		if !strings.Contains(lead, want) {
 			t.Errorf("lead lacks %q:\n%s", want, lead)
 		}
@@ -107,94 +117,80 @@ func TestTheLeadGetsTheFlowAndTheLoop(t *testing.T) {
 	}
 }
 
-func TestTheBriefWithoutALoopOrNotes(t *testing.T) {
-	b := bundle(&preset.Flow{}, "lead", file("lead", "squadShare: false\n"), file("dev", "squadShare: false\n"))
-	lead := compile(t, b)["lead"]
+func TestTheBriefWithoutAFlowStillSaysWhoIsIndependent(t *testing.T) {
+	brief := team.Brief(bundle(nil, "", file("dev", ""), file("reviewer", "squadIndependent: true\n")))
 
-	if strings.Contains(lead, "Loop") || strings.Contains(lead, team.NotesFile) {
-		t.Errorf("unexpected loop or notes:\n%s", lead)
+	if !strings.Contains(brief, "Independent: `reviewer`") || strings.Contains(brief, "Delegate in this order") || strings.Contains(brief, "Loop") {
+		t.Errorf("brief:\n%s", brief)
 	}
-	if !strings.Contains(lead, "1 dev") {
-		t.Errorf("no order:\n%s", lead)
+}
+
+func TestNothingToTellMeansNoBrief(t *testing.T) {
+	if got := team.Brief(bundle(nil, "", file("dev", ""), file("tester", ""))); got != "" {
+		t.Errorf("a preset with no flow and nobody independent got a brief:\n%s", got)
+	}
+	if got := team.Brief(bundle(&preset.Flow{}, "", file("dev", ""))); got != "" {
+		t.Errorf("one agent got a brief:\n%s", got)
 	}
 }
 
 func TestBriefForARunWithoutAMainAgent(t *testing.T) {
-	b := bundle(&preset.Flow{Gate: "tester", Fix: "dev"}, "", file("dev", ""), file("tester", ""))
-
-	brief := team.Brief(b)
+	brief := team.Brief(bundle(&preset.Flow{Gate: "tester", Fix: "dev"}, "", file("dev", ""), file("tester", "")))
 
 	if !strings.Contains(brief, "1 dev → 2 tester") || !strings.Contains(brief, "After 3 rounds") {
 		t.Errorf("brief:\n%s", brief)
 	}
-	if team.Brief(bundle(nil, "", file("dev", ""), file("tester", ""))) != "" {
-		t.Error("a preset without a flow got a brief")
-	}
-	if team.Brief(bundle(&preset.Flow{}, "", file("dev", ""))) != "" {
-		t.Error("one agent got a brief")
-	}
 }
 
-func TestSharedAndSetShared(t *testing.T) {
-	a, err := agentfile.Parse(file("dev", "").Data)
-	if err != nil {
-		t.Fatal(err)
+func TestIndependentAndSetIndependent(t *testing.T) {
+	a := mustParse(t, string(file("dev", "").Data))
+	if team.Independent(a) {
+		t.Fatal("agents are not independent by default")
 	}
-	if !team.Shared(a) {
-		t.Fatal("agents share by default")
-	}
-	team.SetShared(a, false)
-	if team.Shared(a) {
-		t.Fatal("SetShared(false) did not isolate")
+	team.SetIndependent(a, true)
+	if !team.Independent(a) {
+		t.Fatal("SetIndependent(true) did nothing")
 	}
 	data, _ := a.Marshal()
-	if !strings.Contains(string(data), "squadShare: false") {
-		t.Errorf("isolation not written:\n%s", data)
+	if !strings.Contains(string(data), "squadIndependent: true") {
+		t.Errorf("not written:\n%s", data)
 	}
-	team.SetShared(a, true)
+	team.SetIndependent(a, false)
 	data, _ = a.Marshal()
-	if strings.Contains(string(data), team.ShareKey) {
+	if strings.Contains(string(data), team.IndependentKey) {
 		t.Errorf("the default is written out:\n%s", data)
 	}
 }
 
-func TestTheNotesBlockIsSmall(t *testing.T) {
-	got := compile(t, bundle(nil, "", file("dev", ""), file("tester", "")))
-	block := got["dev"][strings.Index(got["dev"], "<!-- squad:notes -->"):]
-
-	if words := len(strings.Fields(block)); words > 140 {
-		t.Errorf("the notes block is %d words; it is paid for by every agent on every run", words)
+func TestWhatTheToolsAllow(t *testing.T) {
+	cases := map[string]struct{ edit, delegate bool }{
+		"":                               {true, true},
+		"tools: Read, Grep\n":            {false, false},
+		"tools: Read, Edit, Agent\n":     {true, true},
+		"disallowedTools: Write, Edit\n": {false, true},
+		"tools: Read, Write\ndisallowedTools: Write\n": {false, false},
+	}
+	for extra, want := range cases {
+		a := mustParse(t, string(file("x", extra).Data))
+		if team.CanEdit(a) != want.edit || team.CanDelegate(a) != want.delegate {
+			t.Errorf("%q: edit %v delegate %v, want %+v", extra, team.CanEdit(a), team.CanDelegate(a), want)
+		}
 	}
 }
 
-func TestAnAgentThatCannotWriteHandsItsLinesToTheLead(t *testing.T) {
-	flow := &preset.Flow{Gate: "reviewer", Fix: "dev"}
-	b := bundle(flow, "lead", file("lead", ""), file("dev", ""), file("reviewer", "tools: Read, Grep, Glob\n"))
-	got := compile(t, b)
-
-	if !strings.Contains(got["reviewer"], "You cannot edit it") || strings.Contains(got["reviewer"], "update it before") {
-		t.Errorf("reviewer:\n%s", got["reviewer"])
-	}
-	if !strings.Contains(got["lead"], "cannot write end their answer") {
-		t.Errorf("the lead is not told to record their lines:\n%s", got["lead"])
+func TestTheCharterIsShort(t *testing.T) {
+	r := compile(t, bundle(nil, "", file("reviewer", "squadIndependent: true\n")))["reviewer"]
+	block := r[strings.Index(r, "<!-- squad:independent -->"):]
+	if words := len(strings.Fields(block)); words > 100 {
+		t.Errorf("the charter is %d words; every call of the agent pays for it", words)
 	}
 }
 
-func TestAnAgentThatCannotReadGetsNothing(t *testing.T) {
-	got := compile(t, bundle(nil, "", file("dev", ""), file("writer", "tools: Write\n")))
-
-	if strings.Contains(got["writer"], "squad:notes") {
-		t.Errorf("writer:\n%s", got["writer"])
+func mustParse(t *testing.T, data string) *agentfile.Agent {
+	t.Helper()
+	a, err := agentfile.Parse([]byte(data))
+	if err != nil {
+		t.Fatal(err)
 	}
-}
-
-func TestDisallowedToolsTakeAccessAway(t *testing.T) {
-	got := compile(t, bundle(nil, "", file("dev", ""), file("ro", "disallowedTools: Write, Edit, Bash\n")))
-
-	if !strings.Contains(got["ro"], "You cannot edit it") {
-		t.Errorf("ro:\n%s", got["ro"])
-	}
-	if !strings.Contains(got["dev"], "update it before") {
-		t.Errorf("dev:\n%s", got["dev"])
-	}
+	return a
 }

@@ -3,10 +3,10 @@
 │ saved in /var/folders/dv/j2x09c7s6ml91zftpg6wps9c0000gn/T/TestPresetScreenA… │
 │                                                                              │
 │ AGENTS                                                                       │
-│   SLOT    AGENT           MODEL     EFFORT       ACCESS        CONTEXT       │
-│ ▌ SLOT 1  ■ planner        opus     ▂▃▅·· high   ■□□□□ plan    ⇄ shared      │
-│   SLOT 2  ■ reviewer       sonnet   ▂▃▅·· high   ■■□□□ default ⇄ shared      │
-│   SLOT 3  ■ tester         haiku    ▂▃··· medium ■■■□□ edits   ⇄ shared      │
+│   SLOT    AGENT           MODEL     EFFORT       ACCESS        STANCE       …│
+│ ▌ SLOT 1  ■ planner        opus     ▂▃▅·· high   ■□□□□ plan    normal       …│
+│   SLOT 2  ■ reviewer       sonnet   ▂▃▅·· high   ■■□□□ default normal       …│
+│   SLOT 3  ■ tester         haiku    ▂▃··· medium ■■■□□ edits   normal       …│
 │   + add agent                                                                │
 │                                                                              │
 │ SETTINGS                                                                     │
@@ -17,7 +17,7 @@
 │   Team flow       off — separate helpers                                     │
 │   Mode            replace — your own agents are removed while equipped       │
 │                                                                              │
-│ LINT  ✓ clean · 2 notes                                                      │
+│ LINT  ✓ clean                                                                │
 │                                                                              │
 │                                                                              │
 ╰──────────────────────────────────────────────────────────────────────────────╯

@@ -106,6 +106,9 @@ func (a *app) printRunPlan(spec runner.Spec, extra []string) {
 	if spec.Main != "" {
 		parts = append(parts, "--agent", spec.Main)
 	}
+	if spec.Append != "" {
+		parts = append(parts, "--append-system-prompt", "'<the squad brief below>'")
+	}
 	parts = append(parts, extra...)
 	printf(a.io.Out, "Would run:\n  %s\n", strings.Join(parts, " "))
 
@@ -115,6 +118,9 @@ func (a *app) printRunPlan(spec runner.Spec, extra []string) {
 			pretty.WriteString(spec.AgentsJSON)
 		}
 		printf(a.io.Out, "\nAgents (--agents):\n%s\n", pretty.String())
+	}
+	if spec.Append != "" {
+		printf(a.io.Out, "\nSquad brief (--append-system-prompt):\n%s\n", spec.Append)
 	}
 	printf(a.io.Out, "\nSettings (--settings):\n%s", spec.SettingsJSON)
 }

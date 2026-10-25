@@ -117,9 +117,9 @@ func agentTile(a workspace.AgentInfo, slot int, o tileOpts) []string {
 		if o.selected {
 			nameRow = nameChip(a.Name, inner-8)
 		}
-		mark := fg(cShared).Render("⇄")
-		if !a.Shared {
-			mark = fg(cIsolated).Render("⊘")
+		mark := " "
+		if a.Independent {
+			mark = fg(cIndependent).Bold(true).Render("◈")
 		}
 		nameRow = pad(nameRow, inner-3) + mark
 	}
@@ -175,7 +175,7 @@ func bigTileBody(a workspace.AgentInfo, inner int, row func(string) string, team
 		labeled("access", permissionStrength(a.PermissionMode)),
 		labeled("tools", toolsLine(a, inner-10)))
 	if team {
-		out = append(out, labeled("context", shareChip(a.Shared)))
+		out = append(out, labeled("stance", independentChip(a.Independent)))
 	}
 	return out
 }

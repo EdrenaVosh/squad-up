@@ -1,7 +1,7 @@
 ╭─ Agent planner ──────────────────────────────────────── solo-indie · slot 1 ─╮
 │ ▌ Name              planner                                                  │
 │   Description       Breaks a task into steps. Use before starting any large …│
-│   Shared context     ⇄ shared                                                │
+│   Independent       ◇ normal                                                 │
 │   Model              opus                                                    │
 │   Effort            ▂▃▅·· high                                               │
 │   Permission mode   ■□□□□ plan                                               │

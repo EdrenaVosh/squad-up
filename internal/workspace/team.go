@@ -8,9 +8,9 @@ import (
 	"github.com/EdrenaVosh/squadup/internal/team"
 )
 
-// SetShared makes one agent of a stored preset share the squad's notes, or
-// work in isolation.
-func (w Workspace) SetShared(presetName, agent string, shared bool) error {
+// SetIndependent makes one agent of a stored preset independent (it judges
+// without knowing how the work was made), or an ordinary agent again.
+func (w Workspace) SetIndependent(presetName, agent string, independent bool) error {
 	if presetName == "initial" {
 		return ErrProtected
 	}
@@ -26,7 +26,7 @@ func (w Workspace) SetShared(presetName, agent string, shared bool) error {
 		if err != nil {
 			return fmt.Errorf("agent %s: %w", agent, err)
 		}
-		team.SetShared(a, shared)
+		team.SetIndependent(a, independent)
 		data, err := a.Marshal()
 		if err != nil {
 			return err

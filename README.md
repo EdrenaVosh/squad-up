@@ -26,7 +26,6 @@ Presets of agent teams for [Claude Code](https://code.claude.com): switch them w
 | `squad card <agent>` | An agent as a card: role, model, tools, permission strength (`--preset`) |
 | `squad flow <preset>` | Show or set how the agents work as a team: `--order`, or `--gate <agent> --fix <agent> [--rounds n]` for a review loop, `--off` |
 | `squad usage` | The tokens each agent of a Claude Code session has spent, read from its own transcripts (`--watch` follows it live in the interface, `--json`, `--session`, `--dir`) |
-| `squad notes` | Show the squad's shared notes of this project (`--clear` starts the next task fresh) |
 | `squad pin <preset>` | Pin a preset to this project (a `.squadup` file with its name; `--clear` removes it). `squad run` with no name then uses the nearest one |
 | `squad statusline enable\|disable\|status` | Show ◆ and the equipped preset in the Claude Code status line; your own line keeps running first |
 | `squad log` | Operations that changed your config, newest first |
@@ -37,15 +36,11 @@ Presets of agent teams for [Claude Code](https://code.claude.com): switch them w
 
 Run `squad` in a terminal. Arrow keys or the mouse select, `enter` opens, `e` equips (with a preview), `t` tries a preset for one session, `n` creates, `i` imports, `x` exports, `?` helps. The interface animates; set `SQUADUP_NO_ANIM=1` to keep it still. `NO_COLOR`, `CI`, a dumb terminal or a pipe get plain text instead.
 
-## Squads: shared notes, a flow and a review loop
+## Squads: independent agents, a flow and a review loop
 
-Claude Code starts every subagent with a clean window: it sees only the task the main agent gives it. squadup adds the rest in the prompts it hands to Claude Code (your stored files stay as you wrote them).
-
-- **Shared context.** Each agent has a switch, *Shared context*, on by default (`enter` or `space` in the agent editor; `squad edit <preset> <agent> --isolate` / `--share`). A sharing agent reads `.squad/notes.md` first and leaves what it learned last. An isolated agent neither reads nor writes it, and the main agent is told to hand it the task or the diff only, which is what an independent code review wants. It takes two agents for any of this to matter.
-- **The notes are tiny on purpose.** At most 25 lines of 100 characters, one tagged fact per line: `D` decision and why, `X` tried and ruled out, `!` open defect with `path:line` and an owner, `?` question, `>` a one-line handoff. Code is never pasted and nothing git already holds is repeated; fixed items are deleted. The instruction costs an agent about 130 tokens. `squad notes` shows the file, `squad notes --clear` starts fresh.
-- **A flow** makes the agents a team: the main agent hands work down the slots in order. In the preset screen, *Team flow* offers *In order* and *Review loop*: pick who checks (the gate) and who fixes. The gate runs last; the main agent then counts the `!` lines, sends only those to the fixer, and runs the gate again, up to the number of rounds you set (3 by default), then stops and shows what is still open.
-- **Where it runs.** The flow is told to the main agent of the preset. With no main agent, `squad run` passes it to Claude Code on the command line; an equipped preset needs a main agent to carry it (the notes work either way).
-- **A read-only agent** (tools without Write, Edit or Bash) can read the notes but not change them, so it ends its answer with the lines to add and the main agent records them.
+- **Independent agents.** An agent can be marked *Independent* (a switch in the agent editor, `enter` or `space`; `squad edit <preset> <agent> --independent`, `--independent=false` undoes it). It is made for a code reviewer who must judge the work without knowing how it was made. In Claude Code a subagent never sees the conversation, only the task its caller writes, so independence has two parts. **Claude Code locks** one of them: the agent does not load `CLAUDE.md` (`omitClaudeMd`). The rest is **asked for in text**: the agent gets a short charter (judge by the task and the code, trust no explanation, report defects with `path:line`, never edit), its description tells whoever calls it to give only the task and the diff, and the main agent is told the same. A model can still ignore the text. The linter warns when an independent agent's tools can change files. It can still read any file its tools allow, so to give it review rules, name their folder in its prompt.
+- **A flow** makes the agents a team: the main agent hands work down the slots in order. In the preset screen, *Team flow* offers *In order* and *Review loop*: pick who checks (the gate) and who fixes. The gate runs last; the main agent sends only its defects to the fixer and runs the gate again, up to the number of rounds you set (3 by default), then stops and shows what is still open. The reviewer and the fixer never call each other: the main agent carries every result between them. The order and the loop are instructions to the main agent, not something squad enforces in code.
+- **Where it runs.** The flow is told to the main agent of the preset. With no main agent, `squad run` passes it to Claude Code on the command line; an equipped preset needs a main agent to carry it. An independent agent's own settings and description work either way.
 
 ## Tokens, live
 

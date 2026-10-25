@@ -368,16 +368,16 @@ func (p *presetScreen) View(c viewCtx) string {
 
 // The columns of the agents table.
 const (
-	colSlot, colAgent, colModel, colEffort, colAccess, colContext = 8, 16, 10, 13, 14, 11
-	roleMin                                                       = 24 // the least width worth a Role column
+	colSlot, colAgent, colModel, colEffort, colAccess, colStance = 8, 16, 10, 13, 14, 15
+	roleMin                                                      = 24 // the least width worth a Role column
 )
 
 // roleRoom is how much room is left for the Role column, when the table has
 // the Context column or not.
 func (p *presetScreen) roleRoom(inner int) int {
 	used := 3 + colSlot + colAgent + colModel + colEffort + colAccess
-	if p.card.Sharing {
-		used += colContext
+	if p.card.Team {
+		used += colStance
 	}
 	return inner - used - 1
 }
@@ -385,8 +385,8 @@ func (p *presetScreen) roleRoom(inner int) int {
 // agentHeader names the columns of the agents table.
 func (p *presetScreen) agentHeader(inner int) string {
 	head := pad("SLOT", colSlot) + pad("AGENT", colAgent) + pad("MODEL", colModel) + pad("EFFORT", colEffort) + pad("ACCESS", colAccess)
-	if p.card.Sharing {
-		head += pad("CONTEXT", colContext)
+	if p.card.Team {
+		head += pad("STANCE", colStance)
 	}
 	if p.roleRoom(inner) >= roleMin {
 		head += "ROLE"
@@ -399,8 +399,8 @@ func (p *presetScreen) slotLine(i int, a workspace.AgentInfo, inner int) string 
 	text := pad(sMuted.Render(fmt.Sprintf("SLOT %d", i+1)), colSlot) +
 		pad(swatch(a.Color)+" "+sBold.Render(truncate(a.Name, colAgent-2)), colAgent) +
 		pad(modelPill(a.Model), colModel) + pad(effortBars(a.Effort), colEffort) + pad(permissionStrength(a.PermissionMode), colAccess)
-	if p.card.Sharing {
-		text += pad(shareChip(a.Shared), colContext)
+	if p.card.Team {
+		text += pad(independentChip(a.Independent), colStance)
 	}
 	if room := p.roleRoom(inner); room >= roleMin {
 		text += sMuted.Render(truncate(a.Role, room))

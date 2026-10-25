@@ -36,7 +36,7 @@ func sectionBand(label, note string, w, shift int, agents bool) string {
 func flowStrip(c workspace.Card, w int) string {
 	switch {
 	case c.Initial:
-		return " " + sMuted.Render("your original agents, exactly as they were: no flow, no shared notes")
+		return " " + sMuted.Render("your original agents, exactly as they were: no flow, nothing added")
 	case len(c.Agents) < 2:
 		return " " + sMuted.Render("one agent: nothing to hand over")
 	case c.Flow == nil:
@@ -49,8 +49,8 @@ func flowStrip(c workspace.Card, w int) string {
 			continue
 		}
 		step := swatch(a.Color) + " " + a.Name
-		if c.Sharing && !a.Shared {
-			step += fg(cIsolated).Render("⊘")
+		if a.Independent {
+			step += fg(cIndependent).Bold(true).Render("◈")
 		}
 		steps = append(steps, step)
 	}
@@ -94,8 +94,8 @@ func flowDiagram(c workspace.Card, w, frame int, anim bool) []string {
 			continue
 		}
 		text, width := swatch(a.Color)+" "+a.Name, 2+lipglossWidth(a.Name)
-		if c.Sharing && !a.Shared {
-			text += fg(cIsolated).Render("⊘")
+		if a.Independent {
+			text += fg(cIndependent).Bold(true).Render("◈")
 			width++
 		}
 		index[a.Name] = len(nodes)

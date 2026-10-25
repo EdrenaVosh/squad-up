@@ -5,49 +5,57 @@ import (
 	"testing"
 
 	"github.com/EdrenaVosh/squadup/internal/preset"
+	"github.com/EdrenaVosh/squadup/internal/testutil"
 )
 
-func TestTheSharedContextSwitch(t *testing.T) {
+func TestTheIndependentSwitch(t *testing.T) {
 	h := newHarness(t)
-	h.resize(140, 36)
-	h.openAgent("solo-indie", 0)
+	h.resize(140, 40)
+	h.openAgent("solo-indie", 1) // reviewer: tools Read, Grep
 
-	h.field(fShare)
-	h.contains("Shared context", "⇄ shared", "reads .squad/notes.md first", "sees only the task it is given", "What the notes look like")
-	h.contains("read but not write") // the planner's tools cannot write the file
+	h.field(fIndependent)
+	h.contains("Independent", "◇ normal", "Normal", "judges the work on its own")
 
 	h.press("enter")
-	h.contains("⊘ isolated", "neither reads nor writes the notes")
-	if got := string(h.stored("solo-indie").Agents[0].Data); !strings.Contains(got, "squadShare: false") {
-		t.Errorf("the isolation was not stored:\n%s", got)
+	h.contains("◈ independent", "Locked by Claude Code", "omitClaudeMd", "Only asked for in text", "Its tools cannot change files")
+	if got := string(h.stored("solo-indie").Agents[1].Data); !strings.Contains(got, "squadIndependent: true") {
+		t.Errorf("independence was not stored:\n%s", got)
 	}
 
 	h.press("space")
-	h.contains("⇄ shared")
-	if got := string(h.stored("solo-indie").Agents[0].Data); strings.Contains(got, "squadShare") {
+	h.contains("◇ normal")
+	if got := string(h.stored("solo-indie").Agents[1].Data); strings.Contains(got, "squadIndependent") {
 		t.Errorf("the default must not be written:\n%s", got)
 	}
 }
 
-func TestAnAgentAloneHasNobodyToShareWith(t *testing.T) {
+func TestTheSwitchWarnsWhenAnIndependentAgentCanEditCode(t *testing.T) {
 	h := newHarness(t)
-	h.resize(140, 36)
-	h.openAgent("refactor-day", 0)
+	testutil.WriteFiles(t, h.paths.PresetDir("solo-indie"), map[string]string{
+		"agents/tester.md": agentFile("tester", "Writes and runs tests. Use when a change needs coverage.", "", "Test it."), // no tools list: every tool
+	})
+	h.resize(140, 40)
+	h.openAgent("solo-indie", 2)
 
-	h.field(fShare)
+	h.field(fIndependent)
+	h.press("enter")
 
-	h.contains("alone", "no one to share with")
+	h.contains("◈ independent", "Its tools can change files", "edit the code it reviews")
 }
 
-func TestTilesSayWhoSharesTheNotes(t *testing.T) {
+func TestTilesAndTheTableSayWhoIsIndependent(t *testing.T) {
 	h := newHarness(t)
 	h.resize(160, 44)
+	if err := h.ws.SetIndependent("bug-hunt", "tester", true); err != nil {
+		t.Fatal(err)
+	}
 
+	h.goTo("solo-indie")
 	h.goTo("bug-hunt")
-	h.contains("context ⇄ shared")
+	h.contains("stance  normal", "stance  ◈ independent")
 
 	h.goTo("refactor-day")
-	h.lacks("context ")
+	h.lacks("stance")
 }
 
 func TestAgentsAndTheSquadLookDifferent(t *testing.T) {
@@ -116,7 +124,7 @@ func TestOrderOnlyFlowWarnsWhenNoMainAgentCarriesIt(t *testing.T) {
 func TestTheAgentsTableHasAHeaderAndRoomForTheRole(t *testing.T) {
 	h := newHarness(t)
 	h.open("solo-indie")
-	h.contains("SLOT", "AGENT", "MODEL", "EFFORT", "ACCESS", "CONTEXT")
+	h.contains("SLOT", "AGENT", "MODEL", "EFFORT", "ACCESS", "STANCE")
 	h.lacks("ROLE") // no room at 80 columns
 
 	h.resize(140, 40)

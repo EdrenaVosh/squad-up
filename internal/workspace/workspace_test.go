@@ -365,9 +365,9 @@ func TestCardDescribesAPreset(t *testing.T) {
 	}
 	want := []workspace.AgentInfo{
 		{Name: "alpha", Model: "sonnet", Effort: "low", PermissionMode: "plan", Color: "cyan", Tools: 1, ToolNames: []string{"Read"},
-			Role: "alpha agent.", Description: "alpha agent. Use when alpha is needed.", Prompt: "Body of alpha.", Shared: true, Notes: workspace.NotesRead},
+			Role: "alpha agent.", Description: "alpha agent. Use when alpha is needed.", Prompt: "Body of alpha."},
 		{Name: "beta", Tools: 1, ToolNames: []string{"Read"},
-			Role: "beta agent.", Description: "beta agent. Use when beta is needed.", Prompt: "Body of beta.", Shared: true, Notes: workspace.NotesRead},
+			Role: "beta agent.", Description: "beta agent. Use when beta is needed.", Prompt: "Body of beta."},
 	}
 	if !reflect.DeepEqual(c.Agents, want) {
 		t.Errorf("agents = %+v, want %+v", c.Agents, want)
@@ -651,9 +651,9 @@ func TestFindAgentLooksInTheNamedPresetThenTheEquippedOneThenEverywhere(t *testi
 	}
 }
 
-func TestTheCardTellsWhoSharesTheNotesAndWhatTheFlowIs(t *testing.T) {
+func TestTheCardTellsWhoIsIndependentAndWhatTheFlowIs(t *testing.T) {
 	ws := setup(t)
-	if err := ws.SetShared("solo", "tester", false); err != nil {
+	if err := ws.SetIndependent("solo", "tester", true); err != nil {
 		t.Fatal(err)
 	}
 	if err := ws.SetFlow("solo", &preset.Flow{Gate: "tester", Fix: "planner"}); err != nil {
@@ -665,14 +665,21 @@ func TestTheCardTellsWhoSharesTheNotesAndWhatTheFlowIs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !c.Sharing || c.Flow == nil || !c.Flow.Loops() {
-		t.Errorf("sharing %v, flow %+v", c.Sharing, c.Flow)
+	if !c.Team || c.Flow == nil || !c.Flow.Loops() {
+		t.Errorf("team %v, flow %+v", c.Team, c.Flow)
 	}
-	shared := map[string]bool{}
+	independent := map[string]bool{}
 	for _, a := range c.Agents {
-		shared[a.Name] = a.Shared
+		independent[a.Name] = a.Independent
 	}
-	if shared["tester"] || !shared["planner"] {
-		t.Errorf("shared = %v", shared)
+	if !independent["tester"] || independent["planner"] {
+		t.Errorf("independent = %v", independent)
+	}
+
+	if err := ws.SetIndependent("solo", "tester", false); err != nil {
+		t.Fatal(err)
+	}
+	if c, _ = ws.Card("solo"); c.Agents[1].Independent {
+		t.Error("the default must come back")
 	}
 }
