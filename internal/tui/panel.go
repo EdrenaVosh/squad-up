@@ -108,11 +108,12 @@ func costPanel(c workspace.Card, w, h int) []string {
 func healthPanel(c workspace.Card, w, h int) []string {
 	lines := []string{lintWord(c)}
 	for i, f := range c.Findings {
-		if i == h-4 {
+		wrapped := findingLines(f.Level, f.Message, f.Fix, w-4)
+		if len(lines)+len(wrapped) > h-3 {
 			lines = append(lines, sMuted.Render(fmt.Sprintf("… +%d more", len(c.Findings)-i)))
 			break
 		}
-		lines = append(lines, truncate(findingMark(f.Level)+" "+f.Message, w-4))
+		lines = append(lines, wrapped...)
 	}
 	if len(c.Findings) == 0 {
 		lines = append(lines, sMuted.Render("every agent says what it does and when to call it"))

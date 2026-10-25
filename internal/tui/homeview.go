@@ -285,9 +285,12 @@ func (h *home) detail(w, rows, headerRows, listW int, c viewCtx) []string {
 	if h.air {
 		head = append(head, "")
 	}
-	head = append(head,
-		sectionBand("AGENTS", plural(len(card.Agents), "slot")+" · in order", w-2, c.shift(), true),
-		flowStrip(card, w-2))
+	head = append(head, sectionBand("AGENTS", plural(len(card.Agents), "slot")+" · in order", w-2, c.shift(), true))
+	if diagram := flowDiagram(card, w-2, c.frame, c.anim); h.air && diagram != nil {
+		head = append(head, diagram...)
+	} else {
+		head = append(head, flowStrip(card, w-2))
+	}
 	if h.air {
 		head = append(head, "")
 	}

@@ -538,7 +538,9 @@ func (e *agentEditor) checkLines(w int) []string {
 			break
 		}
 		shown++
-		lines = append(lines, "   "+findingMark(f.Level)+" "+truncate(f.Message, w-6))
+		for _, l := range findingLines(f.Level, f.Message, f.Fix, w-6) {
+			lines = append(lines, "   "+l)
+		}
 	}
 	if shown == 0 {
 		lines = append(lines, "   "+sOK.Render("✓ nothing to fix"))

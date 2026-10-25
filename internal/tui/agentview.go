@@ -138,10 +138,7 @@ func (e *agentEditor) descriptionBody(w int) []string {
 	tips := 0
 	for _, f := range e.report.Findings {
 		if f.Rule == "short-description" || f.Rule == "no-trigger" || f.Rule == "similar-description" {
-			out = append(out, findingMark(f.Level)+" "+f.Message)
-			if f.Fix != "" {
-				out = append(out, "    "+sMuted.Render("→ "+f.Fix))
-			}
+			out = append(out, findingLines(f.Level, f.Message, f.Fix, w)...)
 			tips++
 		}
 	}

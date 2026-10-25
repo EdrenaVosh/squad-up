@@ -342,12 +342,21 @@ func (p *presetScreen) View(c viewCtx) string {
 	add("")
 	add(" " + sMuted.Render("LINT  ") + lintWord(p.card) + sMuted.Render(fmt.Sprintf("  ·  ~%d tokens/session for names and descriptions", p.card.SessionTokens)))
 	shown := 0
-	for _, f := range p.report.Findings {
+	findings := slices.Clone(p.report.Findings)
+	severity := map[lint.Level]int{lint.LevelError: 2, lint.LevelWarn: 1}
+	slices.SortStableFunc(findings, func(a, b lint.Finding) int { return severity[b.Level] - severity[a.Level] }) // errors first
+	for _, f := range findings {
 		if f.Level == lint.LevelInfo || shown == 3 {
 			continue
 		}
 		shown++
-		add("   " + findingMark(f.Level) + " " + truncate(f.Message, inner-6))
+		fix := f.Fix
+		if c.h < 30 {
+			fix = "" // no room for the hint
+		}
+		for _, l := range findingLines(f.Level, f.Message, fix, inner-6) {
+			add("   " + l)
+		}
 	}
 	return c.box(title, right, lines, 0)
 }
@@ -546,6 +555,30 @@ func modeWords(mode string) string {
 		return "extend " + sMuted.Render("— your own agents stay")
 	}
 	return "—"
+}
+
+// findingLines is a finding as a mark and its message wrapped to w cells, the
+// lines after the first indented under the text; a fix is added as a muted
+// line that starts with an arrow. Nothing is cut off.
+func findingLines(level lint.Level, message, fix string, w int) []string {
+	var out []string
+	for i, l := range wrapText(message, max(w-2, 8)) {
+		if i == 0 {
+			out = append(out, findingMark(level)+" "+l)
+		} else {
+			out = append(out, "  "+l)
+		}
+	}
+	if fix != "" {
+		for i, l := range wrapText(fix, max(w-4, 8)) {
+			if i == 0 {
+				out = append(out, "  "+sMuted.Render("→ "+l))
+			} else {
+				out = append(out, "    "+sMuted.Render(l))
+			}
+		}
+	}
+	return out
 }
 
 func findingMark(l lint.Level) string {

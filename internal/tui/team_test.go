@@ -70,7 +70,7 @@ func TestTheFlowShowsAsALeadAnOrderAndALoop(t *testing.T) {
 	h.goTo("solo-indie")
 	h.goTo("bug-hunt")
 
-	h.contains("◆ debugger", "tester", "↺", "tester finds defects → debugger fixes · up to 2")
+	h.contains("◆ debugger", "tester", "↺ tester finds defects · up to 2", "▲") // the diagram of the flow
 }
 
 func TestTeamFlowIsChosenFromTheList(t *testing.T) {
@@ -149,4 +149,16 @@ func TestTheMascotsComeToTheEquipCelebration(t *testing.T) {
 	h.press("e", "enter")
 
 	h.contains("Squad ready", "▐▛███▜▌")
+}
+
+func TestTheChecksOfAnAgentWrapInsteadOfBeingCutOff(t *testing.T) {
+	h := newHarness(t)
+	h.resize(80, 24)
+	h.openAgent("solo-indie", 1)
+
+	h.field(fPermission)
+	h.press("enter", "down", "down", "down", "down", "enter") // bypassPermissions
+
+	h.contains("CHECKS", "permissionMode bypassPermissions", "without asking", "→ use acceptEdits or default")
+	h.lacks("without ask…")
 }
