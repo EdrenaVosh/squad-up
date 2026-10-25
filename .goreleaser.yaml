@@ -6,6 +6,8 @@ before:
   hooks:
     - go mod tidy
 
+# Two names for one program: `squad` is the command, `squadup` is the same thing
+# under the name of the project, for a shell where `squad` is taken.
 builds:
   - id: squad
     main: ./cmd/squad
@@ -14,19 +16,32 @@ builds:
       - CGO_ENABLED=0
     goos: [darwin, linux, windows]
     goarch: [amd64, arm64]
-    ldflags:
+    ldflags: &ldflags
       - -s -w
       - -X github.com/EdrenaVosh/squadup/internal/version.Version={{ .Version }}
       - -X github.com/EdrenaVosh/squadup/internal/version.Commit={{ .ShortCommit }}
       - -X github.com/EdrenaVosh/squadup/internal/version.Date={{ .Date }}
+  - id: squadup
+    main: ./cmd/squad
+    binary: squadup
+    env:
+      - CGO_ENABLED=0
+    goos: [darwin, linux, windows]
+    goarch: [amd64, arm64]
+    ldflags: *ldflags
 
 archives:
-  - id: squad
+  - id: squadup
+    ids: [squad, squadup]
     formats: [tar.gz]
     name_template: "squadup_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     format_overrides:
       - goos: windows
         formats: [zip]
+    files:
+      - LICENSE
+      - README.md
+      - CHANGELOG.md
 
 checksum:
   name_template: checksums.txt
@@ -37,6 +52,22 @@ release:
   github:
     owner: EdrenaVosh
     name: squadup
+
+# `brew install EdrenaVosh/tap/squadup`. GoReleaser's own advice for a
+# precompiled binary is a cask (`brews` is deprecated). The cask is pushed to the
+# homebrew-tap repository by the release workflow; a snapshot build only writes
+# it into dist/.
+homebrew_casks:
+  - name: squadup
+    ids: [squadup]
+    binaries: [squad, squadup]
+    repository:
+      owner: EdrenaVosh
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    homepage: https://github.com/EdrenaVosh/squadup
+    description: Switch Claude Code agent teams with one command
+    license: MIT
 
 changelog:
   sort: asc
