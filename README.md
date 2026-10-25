@@ -13,12 +13,9 @@ watch every agent's tokens live, and share the whole team as one file.
 ![Go](https://img.shields.io/badge/go-1.27-00ADD8?logo=go&logoColor=white)
 ![Platforms](https://img.shields.io/badge/macOS%20·%20Linux%20·%20Windows-lightgrey)
 
-[Install](#install) · [Quick start](#quick-start) · [How it works](#how-it-works) · [Features](#features) · [Commands](#commands) · [Safety](#safety-and-privacy) · [FAQ](#faq)
+[Install](#install) · [How to use](#how-to-use) · [How it works](#how-it-works) · [Features](#features) · [Commands](#commands) · [Safety](#safety-and-privacy) · [FAQ](#faq)
 
-<!--
-  Record the demo with `vhs docs/demo.tape` (see the file), then uncomment:
-  <img src="docs/assets/demo.gif" alt="squad-up in the terminal" width="900">
--->
+<img src="docs/assets/demo.gif" alt="squad-up in the terminal: a new preset from the Bug Hunter template, then squad run" width="900">
 
 </div>
 
@@ -99,37 +96,102 @@ claude plugin install squad-up@squad-up
 
 </details>
 
-## Quick start
+## How to use
 
-```sh
-squad                          # first run: saves your setup as Initial, then opens the interface
+Five commands cover almost everything:
+
+```text
+squad               open the interface: build and edit teams of agents
+squad run <preset>  start Claude Code with a team, for this session only
+squad pin <preset>  pick a team for a project folder, so `squad run` needs no name
+squad export        share a team as one file (and `squad import` to take one)
+squad usage --watch see how many tokens each agent spends, live
 ```
 
-Nothing is changed by that first run. squad-up copies what it finds in `~/.claude` (agents and a few settings) into `~/.squad-up` and says so. From the welcome screen create a first preset from your current setup, from a starter template, or from scratch.
-
-Or do it from the command line:
+### 1. Open the interface
 
 ```sh
-squad templates                            # the two ready-made teams
-squad new bugs --template bug-hunter      # a copy you can edit
-squad lint bugs                            # check it for mistakes
-squad use bugs                             # equip it (shows what changes, backs up first)
-claude                                     # work as usual, with the team
-squad restore                              # back to exactly how it was
+squad
 ```
 
-Prefer not to touch `~/.claude` at all? Run a preset for one session:
+On the first run squad-up saves your current setup (the agents and a few settings from `~/.claude`) as **Initial**, a read-only preset you can always return to, and says so. Nothing is changed. Then the main screen opens: presets on the left, the agents of the selected one on the right.
+
+- Press `n` to create a preset. The first option is **a starter template** ([Bug Hunter or Feature Creator](#starter-templates)); the others are a blank preset or a copy of a preset (or of your original setup). The name is free text.
+- Press `enter` to open a preset and `a` to edit the selected agent: model, effort, tools, permissions, the description that tells Claude when to call it, and its prompt.
+- Press `?` anywhere for the keys. The mouse works too.
+
+### 2. Make the team yours
+
+- **Prompts from files.** An agent's prompt can be typed in the interface, edited in `$EDITOR` (`o`), or **loaded from a Markdown file** (`f`: type or drop the file's path). From the shell: `squad edit bugs reviewer --prompt-file review.md`. Keep your prompts in your repository, review them like code, and load them into any preset.
+- **Order and review loop.** `squad flow bugs --gate reviewer --fix fixer` makes the main agent hand work down the agents in order and send the reviewer's defects back to the fixer ([details](#team-flow-and-the-review-loop)).
+- **An impartial reviewer.** `squad edit bugs reviewer --independent` ([details](#independent-agents)).
+- **Check your work.** `squad lint bugs` finds the mistakes that make an agent useless.
+
+### 3. Start Claude Code with the team
 
 ```sh
-squad run bugs                             # starts claude with the preset; nothing is written
-squad run bugs -- --model opus             # everything after -- goes to claude
+squad run bugs                  # starts claude with the preset; nothing is written to ~/.claude
+squad run bugs -- --model opus  # everything after -- goes to claude as it is
+squad run bugs --dry-run        # show what would be started, and stop
 ```
 
-Pin a preset to a project and `squad run` needs no name there:
+`squad run` is the safe way to use a preset: it hands the team to one `claude` session on the command line and leaves your config alone. Your own agents from `~/.claude/agents` stay available next to the team's. When the session ends it prints what each agent spent.
+
+If you want the team in **every** session until you switch, equip it instead:
 
 ```sh
-cd my-project && squad pin bugs && squad run
+squad use bugs                  # shows what changes, backs up first, then writes ~/.claude
+claude                          # work as usual
+squad use feature-creator       # another team
+squad restore                   # back to exactly how it was (Initial)
 ```
+
+| | `squad run` | `squad use` |
+| --- | --- | --- |
+| Applies to | one session | every session, until you switch |
+| Writes to `~/.claude` | never | yes: backup, lock and manifest first |
+| Two sessions with different teams | yes | no: one preset is equipped |
+| Undo | just close the session | `squad undo` or `squad restore` |
+
+### 4. Many presets, many sessions: pin one to each project
+
+When you keep several presets and work in several projects, or run several Claude Code sessions at once, give each folder its own:
+
+```sh
+cd ~/code/api    && squad pin bugs        # writes a .squad-up file with the preset's name
+cd ~/code/mobile && squad pin feature-creator
+
+cd ~/code/api    && squad run             # starts claude with "bugs"
+cd ~/code/mobile && squad run             # starts claude with "feature-creator", in another terminal if you like
+```
+
+`squad run` with no name uses the nearest `.squad-up` file above the current folder, so it works from any subfolder. A name on the command line wins over the pin. The file holds only a name, so it is safe to commit: your colleagues get the same choice, and each person's own library decides what the name means. `squad status` says when the pin differs from what is equipped, and `squad pin --clear` removes it.
+
+Sessions started with `squad run` do not share anything and do not touch `~/.claude`, so presets never fight each other. Each session's tokens are counted separately in `squad usage --watch`.
+
+### 5. Share a team
+
+```sh
+squad export bugs               # writes bugs.squad.json; --all for every preset, --gist for a secret gist
+squad import bugs.squad.json    # a file, an https link, gist:<id>, or - for stdin
+squad import bugs.squad.json --as bugs-v2    # under another name
+```
+
+Import shows a **preview** first (the agents, the settings it would set, any warnings) and only stores the preset; equipping stays your decision. Hooks and MCP servers inside imported agents are stripped unless you pass `--allow-hooks`. Export scans for strings that look like API keys and stops, and never includes `env`. More in [Share a team](#share-a-team).
+
+### 6. See where the tokens go
+
+```sh
+squad usage --watch             # the live screen (or press u in the interface)
+squad usage                     # one table for the newest session of this folder
+squad usage --list              # all sessions of the folder, with ids
+```
+
+Per agent: runs, tokens sent, read from the cache, produced, the share of the squad. The numbers come from Claude Code's own transcripts, not from an estimate. More in [Live tokens](#live-tokens-session-by-session).
+
+### If something looks wrong
+
+`squad doctor` checks that `claude` is found and logged in, `squad status` shows what is equipped and whether files were edited by hand, `squad log` lists every change to your config, and `squad undo` or `squad restore` takes it back.
 
 ## How it works
 
@@ -255,37 +317,64 @@ Neither template has a main agent, so the flow reaches Claude Code through `squa
 
 ## Commands
 
+`squad` is the main name; `squad-up` is the same program. `squad <command> --help` has every detail.
+
+### Everyday
+
 | Command | What it does |
 | --- | --- |
 | `squad` | Open the terminal interface |
-| `squad list` | Presets; the equipped one is marked, Initial is last |
-| `squad status` | Equipped preset, manual edits, the `claude` in use |
-| `squad use <preset>` | Equip a preset (`--dry-run`, `--yes`, `--force`, `--save-edits`, `--discard-edits`) |
+| `squad run [preset] [-- claude args]` | Start `claude` with a preset for one session; writes nothing to `~/.claude`. Without a name it uses the pinned preset. `--dry-run` shows what would start. Everything after `--` goes to `claude` |
+| `squad use <preset>` | Equip a preset into `~/.claude`. `--dry-run` previews, `--force` overwrites files squad did not write (after a backup), `--save-edits` / `--discard-edits` decide what happens to your manual edits |
 | `squad restore` | Return to your original setup (Initial) |
-| `squad undo [--to <id>]` | Go back one step, or to a point from `squad log` |
-| `squad run [preset] [-- args]` | Start `claude` with a preset for one session; writes nothing to `~/.claude` (`--dry-run`) |
-| `squad new [name]` | Create a preset: blank, or from `--from <preset\|initial\|current>` or `--template <id>` |
-| `squad clone <preset> <new>` · `rename` · `rm` | Copy, rename or delete a preset (Initial is never changed) |
-| `squad edit <preset> [agent]` | Edit in the interface (`--raw`: in `$EDITOR`; `--prompt-file <file.md>`; `--independent[=false]`) |
-| `squad flow <preset>` | Show or set the team flow: `--order`, or `--gate <agent> --fix <agent> [--rounds n]`, `--off` |
-| `squad usage` | Tokens per agent for a session (`--watch` opens the live screen of all sessions; `--list`, `--session <id>`, `--dir`, `--json`) |
-| `squad models` | Which models you can use (`--probe`, `--releases`, `--json`) |
-| `squad lint [preset]` | Check agents and presets (`--strict`, `--json`) |
+| `squad undo [--to <id>]` | Go back one step, or to a point from `squad log` (takes the same flags as `use`) |
+| `squad pin <preset>` | Pin a preset to this folder (writes `.squad-up`); `--clear` removes it |
+| `squad usage` | Tokens per agent for a session. `--watch` opens the live screen with all sessions, `--list` lists them, `--session <id>` picks one, `--dir <folder>` reads another folder, `--json` for scripts |
+
+### Presets
+
+| Command | What it does |
+| --- | --- |
+| `squad list` (`ls`) | Presets; the equipped one is marked, Initial is last (`--json`) |
+| `squad new [name]` | Create a preset: blank, or from `--template <id>`, or `--from <preset\|initial\|current>`; also `--title`, `--description`, `--mode replace\|extend` |
 | `squad templates` | The two starter presets |
-| `squad export [preset]` | Write a preset to `<name>.squad.json` (`-o -`, `--all`, `--gist`) |
-| `squad import <file\|https-link\|gist:id\|->` | Add a shared preset after a preview (`--as`, `--force`, `--allow-hooks`, `--accept-risks`) |
-| `squad card <agent>` | An agent as a card: role, model, tools, permission strength |
+| `squad clone <preset> <new>` | Copy a preset (or Initial) |
+| `squad rename <preset> <new>` | Rename a preset |
+| `squad rm <preset>` | Delete a preset; Initial is never deleted, the equipped one only with `--force` |
 | `squad capture <name>` | Save the current Claude Code setup as a preset |
-| `squad pin <preset>` | Pin a preset to this project (`--clear`) |
-| `squad statusline enable\|disable\|status` | Show the equipped preset in Claude Code's status line |
-| `squad log` | Operations that changed your config, newest first |
-| `squad initial [--recapture]` | Show your original setup, or capture it again |
+| `squad initial` | Show your original setup; `--recapture` replaces it with the current one (the old one is kept in backups) |
+
+### Agents and teams
+
+| Command | What it does |
+| --- | --- |
+| `squad edit <preset> [agent]` | Open the editor. `--raw` edits the file in `$EDITOR`; `--prompt-file <file.md>` replaces the agent's prompt with a file; `--independent[=false]` toggles independence |
+| `squad flow <preset>` | Show or set how the agents work as a team: `--order`, or `--gate <agent> --fix <agent> [--rounds n]` for a review loop (3 rounds by default, at most 9), or `--off` |
+| `squad card <agent>` | An agent as a card: role, model, tools, how freely it may act (`--preset`) |
+| `squad lint [preset]` | Check agents and presets for mistakes and estimate their cost in context; no name checks everything, `initial` checks your original agents. Exit code 2 means errors (`--strict`: warnings too; `--json`) |
+| `squad models` | Which models you can use. `--probe` asks for each alias, `--releases` also for older releases by full ID (a real request each, about 20k tokens, mostly cached); `--json` |
+
+### Share
+
+| Command | What it does |
+| --- | --- |
+| `squad export [preset]` | Write a preset to `<name>.squad.json`. `-o <file>` or `-o -` for stdout, `--all` for every preset in one file, `--gist` for a secret gist (needs `gh`) |
+| `squad import <file \| https-link \| gist:id \| ->` | Add a shared preset after a preview. `--as <name>`, `--force` replaces one with the same name, `--allow-hooks` keeps hooks and MCP servers, `--accept-risks` accepts presets that turn permission prompts off |
+
+### Info and housekeeping
+
+| Command | What it does |
+| --- | --- |
+| `squad status` | The equipped preset, manual edits, a pin that differs, the `claude` in use (`--json`) |
+| `squad log` | Operations that changed your config, newest first (`--json`) |
 | `squad doctor` | Check that Claude Code is installed and logged in |
-| `squad update` | Show how to update squad |
+| `squad statusline enable\|disable\|status` | Show `◆ <preset>` in Claude Code's status line; your own line keeps running first |
+| `squad update` | Show the command that updates this copy of squad; it downloads nothing |
+| `squad completion bash\|zsh\|fish\|powershell` | Shell completion script |
 
-`squad <command> --help` has the details. Global flags: `--claude-dir`, `--home`, `--no-color`, `-y/--yes`.
+**Global flags:** `--claude-dir` (Claude Code's config folder), `--home` (squad-up's data folder), `--no-color`, `-y/--yes` (skip confirmations; never counts as consent to risky imports), `-v/--version`, `-h/--help`.
 
-**Environment:** `CLAUDE_CONFIG_DIR` (where Claude Code's config lives, default `~/.claude`), `SQUAD_UP_HOME` (where presets live, default `~/.squad-up`), `SQUAD_UP_NO_ANIM=1`, `NO_COLOR`.
+**Environment:** `CLAUDE_CONFIG_DIR` (default `~/.claude`), `SQUAD_UP_HOME` (default `~/.squad-up`), `SQUAD_UP_NO_ANIM=1` (a still interface), `NO_COLOR`.
 
 ## Safety and privacy
 
