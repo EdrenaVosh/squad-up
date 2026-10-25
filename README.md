@@ -49,7 +49,7 @@ Claude Code starts every subagent with a clean window: it sees only the task the
 
 ## Tokens, live
 
-`squad usage --watch` (or `u` on the main screen) opens a live report of what each agent of the newest Claude Code session in the folder has spent: the main session and every subagent run, with its state (a working mascot while it runs), runs, tokens sent, read from the cache, produced, the total, its share of the squad, a sparkline of the pace and the cache hit rate. `z` starts counting from now, which measures one task. The main screen has the same numbers as a *TOKENS · LIVE* panel, and `squad run` prints the table when claude exits.
+`squad usage --watch` (or `u` on the main screen) opens a live report of what each agent of the newest Claude Code session in the folder has spent: the main session and every subagent run, with its state (a working mascot while it runs), runs, tokens sent, read from the cache, produced, the total, its share of the squad and the cache hit rate. `z` starts counting from now, which measures one task. The main screen has the same numbers as a *TOKENS · LIVE* panel, and `squad run` prints the table when claude exits.
 
 The numbers are not estimated: Claude Code records the API's own token counts for every message, and squadup reads them from `~/.claude/projects/<project>/<session>.jsonl` and `<session>/subagents/agent-<id>.jsonl`. Like Claude Code's own count, TOTAL is fresh input plus cache writes plus output; cache reads, which cost a fraction, are shown beside it.
 

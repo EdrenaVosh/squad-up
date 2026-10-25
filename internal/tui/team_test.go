@@ -162,3 +162,22 @@ func TestTheChecksOfAnAgentWrapInsteadOfBeingCutOff(t *testing.T) {
 	h.contains("CHECKS", "permissionMode bypassPermissions", "without asking", "→ use acceptEdits or default")
 	h.lacks("without ask…")
 }
+
+func TestALongErrorInADialogIsWrappedNotCutOff(t *testing.T) {
+	h := newHarness(t)
+
+	h.press("n")
+	h.typeText("Cube creator")
+	h.press("enter")
+
+	h.contains("preset names use lowercase letters", "and have up to 64 characters")
+	h.lacks("…")
+}
+
+func TestThePanelsOfTheSquadWrapTheirText(t *testing.T) {
+	h := newHarness(t)
+	h.resize(160, 44)
+
+	h.contains("TOKENS · LIVE", "no session in this folder yet", "every agent says", "when to call it")
+	h.lacks("ever…", "and…")
+}

@@ -33,11 +33,11 @@
 │                                              │                                                                                                                                                       │
 │                                              │ ┌─ SETTINGS ───────────────────────┐ ┌─ TOKENS · LIVE ──────────────────┐ ┌─ IF YOU EQUIP IT · e ────────────┐ ┌─ HEALTH ───────────────────────────┐ │
 │                                              │ │ Model        haiku               │ │ no session in this folder yet    │ │ + debugger.md                    │ │ ✓ clean                            │ │
-│                                              │ │ Effort      ····· —              │ │                                  │ │ − docs-writer.md                 │ │ every agent says what it does and… │ │
-│                                              │ │ Permissions —                    │ │ start `squad run` here and ever… │ │ − reviewer.md                    │ │                                    │ │
-│                                              │ │ Main agent  debugger             │ │                                  │ │ − team/tester.md                 │ │                                    │ │
-│                                              │ │ Mode        replace              │ │                                  │ │ + tester.md                      │ │                                    │ │
-│                                              │ │ Rules                            │ │                                  │ │ ~ model: "opus" → "haiku"        │ │                                    │ │
+│                                              │ │ Effort      ····· —              │ │                                  │ │ − docs-writer.md                 │ │ every agent says what it does and  │ │
+│                                              │ │ Permissions —                    │ │ start `squad run` here and every │ │ − reviewer.md                    │ │ when to call it                    │ │
+│                                              │ │ Main agent  debugger             │ │ agent's tokens show up as it     │ │ − team/tester.md                 │ │                                    │ │
+│                                              │ │ Mode        replace              │ │ works                            │ │ + tester.md                      │ │                                    │ │
+│                                              │ │ Rules       —                    │ │                                  │ │ ~ model: "opus" → "haiku"        │ │                                    │ │
 │                                              │ │                                  │ │                                  │ │ + agent: "debugger"              │ │                                    │ │
 │                                              │ │                                  │ │                                  │ │                                  │ │                                    │ │
 │ ──────────────────────────────────────────── │ │                                  │ │                                  │ │                                  │ │                                    │ │

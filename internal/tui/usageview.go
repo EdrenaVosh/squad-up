@@ -84,8 +84,6 @@ func (s *usageScreen) View(c viewCtx) string {
 	add(" " + fg(cDim).Render(strings.Repeat("─", max(inner-2, 0))))
 	add(" " + totalRow(rep, f, barW))
 	add("")
-	add(" " + sMuted.Render(pad("PACE", uName+2)) + fg(brandStops[0]).Render(strings.TrimLeft(sparkline(f.history, min(60, inner-40)), " ")) +
-		sMuted.Render(fmt.Sprintf("  %s tokens in the last minute", tokensShort(f.perMinute()))))
 	add(" " + sMuted.Render(pad("CACHE HIT", uName+2)) + cacheBar(rep.Total, 20) + sMuted.Render(fmt.Sprintf("  %d%% of the input was read from the cache", cachePercent(rep.Total))))
 	add("")
 	for _, l := range wrapText(sMuted.Render("SENT is fresh input plus what was written to the cache; CACHED is what was read back from it (cheap, so it is left out of TOTAL). TOTAL is SENT plus OUT, the way Claude Code counts a run. Numbers come from the session's own transcripts, not from an estimate."), inner-2) {

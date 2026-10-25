@@ -17,12 +17,12 @@
           │ ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────── │          
           │ SQUAD                            2     40k     47k     1.2k    42k      ██████████████████████████████████████ 100%  │          
           │                                                                                                                      │          
-          │ PACE              █·  42k tokens in the last minute                                                                  │          
           │ CACHE HIT         ███████████░░░░░░░░░  53% of the input was read from the cache                                     │          
           │                                                                                                                      │          
           │ SENT is fresh input plus what was written to the cache; CACHED is what was read back from it (cheap, so it is left   │          
           │ out of TOTAL). TOTAL is SENT plus OUT, the way Claude Code counts a run. Numbers come from the session's own         │          
           │ transcripts, not from an estimate.                                                                                   │          
+          │                                                                                                                      │          
           │                                                                                                                      │          
           │                                                                                                                      │          
           │                                                                                                                      │          

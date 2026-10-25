@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"charm.land/lipgloss/v2"
+
 	"github.com/charmbracelet/x/ansi"
 
 	"github.com/EdrenaVosh/squadup/internal/apply"
@@ -23,6 +25,25 @@ func panel(title string, lines []string, w, h int) []string {
 		out = append(out, edge.Render("│")+" "+l+" "+edge.Render("│"))
 	}
 	return append(out, edge.Render("└"+strings.Repeat("─", inner)+"┘"))
+}
+
+// wrapStyled wraps plain text to w cells and gives every line the style, so a
+// long message is read in full instead of ending in an ellipsis.
+func wrapStyled(text string, style lipgloss.Style, w int) []string {
+	var out []string
+	for _, l := range wrapText(text, max(w, 8)) {
+		out = append(out, style.Render(l))
+	}
+	return out
+}
+
+// wrapLoose keeps a line that fits as it is, and wraps one that does not (its
+// colors are dropped to a muted one, which is better than a lost ending).
+func wrapLoose(line string, w int) []string {
+	if lipglossWidth(line) <= w {
+		return []string{line}
+	}
+	return wrapStyled(ansi.Strip(line), sMuted, w)
 }
 
 // sideBySide joins blocks of lines of the same height with a gap.
@@ -60,14 +81,21 @@ func settingsPanel(c workspace.Card, w, h int) []string {
 		perms = permissionStrength(mode)
 	}
 	_, rules, _ := strings.Cut(c.Permissions, " · ")
-	return panel("SETTINGS", []string{
+	lines := []string{
 		row("Model", modelOrDash(c.Model)),
 		row("Effort", effortBars(c.Effort)),
 		row("Permissions", perms),
 		row("Main agent", orDash(c.Main, "—")),
 		row("Mode", orDash(c.Mode, "—")),
-		row("Rules", sMuted.Render(rules)),
-	}, w, h)
+	}
+	for i, l := range wrapStyled(orDash(rules, "—"), sMuted, w-4-12) { // the rest of the rules under the first
+		if i == 0 {
+			lines = append(lines, sMuted.Render(pad("Rules", 12))+l)
+		} else {
+			lines = append(lines, strings.Repeat(" ", 12)+l)
+		}
+	}
+	return panel("SETTINGS", lines, w, h)
 }
 
 // usagePanel charts the tokens each agent of the latest session has spent.
@@ -75,7 +103,10 @@ func usagePanel(f *usageFeed, w, h int) []string {
 	rep := f.shown()
 	title := "TOKENS · LIVE"
 	if !rep.Found {
-		return panel(title, []string{sMuted.Render("no session in this folder yet"), "", sMuted.Render("start `squad run` here and every agent's tokens show up as it works")}, w, h)
+		lines := wrapStyled("no session in this folder yet", sMuted, w-4)
+		lines = append(lines, "")
+		lines = append(lines, wrapStyled("start `squad run` here and every agent's tokens show up as it works", sMuted, w-4)...)
+		return panel(title, lines, w, h)
 	}
 	inner := w - 4
 	nameW := min(12, max(inner/3, 6))
@@ -110,7 +141,7 @@ func healthPanel(c workspace.Card, w, h int) []string {
 		lines = append(lines, wrapped...)
 	}
 	if len(c.Findings) == 0 {
-		lines = append(lines, sMuted.Render("every agent says what it does and when to call it"))
+		lines = append(lines, wrapStyled("every agent says what it does and when to call it", sMuted, w-4)...)
 	}
 	return panel("HEALTH", lines, w, h)
 }
@@ -133,7 +164,7 @@ func previewPanel(plan *apply.Plan, planErr string, w, h int) []string {
 	var lines []string
 	switch {
 	case planErr != "":
-		lines = []string{sErr.Render(truncate("✗ "+planErr, w-4))}
+		lines = wrapStyled("✗ "+planErr, sErr, w-4)
 	case plan == nil:
 		lines = []string{sMuted.Render("—")}
 	case plan.NoOp:
@@ -144,7 +175,7 @@ func previewPanel(plan *apply.Plan, planErr string, w, h int) []string {
 		}
 		for _, op := range plan.Settings {
 			for _, l := range settingLines(op) {
-				lines = append(lines, truncate(l, w-4))
+				lines = append(lines, wrapLoose(l, w-4)...)
 			}
 		}
 		if len(plan.Drift) > 0 {

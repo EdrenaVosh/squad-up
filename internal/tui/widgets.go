@@ -93,7 +93,8 @@ func (p *promptScreen) View(c viewCtx) string {
 	}
 	lines = append(lines, "› "+p.input.View())
 	if p.err != "" {
-		lines = append(lines, "", sErr.Render(p.err))
+		lines = append(lines, "")
+		lines = append(lines, wrapStyled(p.err, sErr, modalWidth(c)-4)...)
 	}
 	return modal(c, p.title, lines)
 }

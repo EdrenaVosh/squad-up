@@ -11,9 +11,6 @@ import (
 // usageInterval is how often the token report is read again.
 const usageInterval = time.Second
 
-// historyLen is how many samples of the pace the feed keeps.
-const historyLen = 60
-
 // usageFeed is the live report of the latest Claude Code session of the folder
 // the interface was started in. The app refreshes it on a one-second clock; the
 // screens only read it.
@@ -24,8 +21,6 @@ type usageFeed struct {
 	watcher *usage.Watcher
 	session string
 	report  usage.Report
-	last    int   // the squad's total at the previous refresh
-	history []int // tokens spent between refreshes, the newest last
 	base    map[string]usage.Tokens
 	colors  map[string]string // agent name → Claude Code color
 }
@@ -48,21 +43,13 @@ func (f *usageFeed) refresh() {
 		f.session = session
 		f.watcher = usage.NewWatcher(usage.ProjectDir(f.claudeDir, f.cwd), session)
 		f.watcher.Now = f.now
-		f.last, f.history, f.base = 0, nil, nil
+		f.base = nil
 	}
 	report, err := f.watcher.Refresh()
 	if err != nil {
 		return
 	}
 	f.report = report
-	total := report.Total.Total()
-	if f.history != nil || total > 0 {
-		f.history = append(f.history, max(total-f.last, 0))
-		if len(f.history) > historyLen {
-			f.history = f.history[len(f.history)-historyLen:]
-		}
-	}
-	f.last = total
 }
 
 // shown is the report with the baseline taken off, when one is set.
@@ -104,15 +91,6 @@ func (f *usageFeed) zero() (started bool) {
 	return true
 }
 
-// perMinute is the tokens spent over the last minute of samples.
-func (f *usageFeed) perMinute() int {
-	sum := 0
-	for _, n := range f.history[max(len(f.history)-60, 0):] {
-		sum += n
-	}
-	return sum
-}
-
 // setColors takes the colors of the agents of a card.
 func (f *usageFeed) setColors(c workspace.Card) {
 	f.colors = map[string]string{}
@@ -140,29 +118,3 @@ func (f *usageFeed) tint(name string) color.Color {
 }
 
 func tokensShort(n int) string { return usage.Short(n) }
-
-// sparkline draws samples as rising blocks, the biggest as tall as the screen
-// allows.
-func sparkline(samples []int, w int) string {
-	const blocks = "▁▂▃▄▅▆▇█"
-	runes := []rune(blocks)
-	if len(samples) > w {
-		samples = samples[len(samples)-w:]
-	}
-	top := 1
-	for _, s := range samples {
-		top = max(top, s)
-	}
-	out := make([]rune, 0, w)
-	for i := 0; i < w-len(samples); i++ {
-		out = append(out, ' ')
-	}
-	for _, s := range samples {
-		if s == 0 {
-			out = append(out, '·')
-			continue
-		}
-		out = append(out, runes[min(s*len(runes)/top, len(runes)-1)])
-	}
-	return string(out)
-}

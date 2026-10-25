@@ -23,10 +23,10 @@
 │                              │ ┌─ SETTINGS ────────────────────────┐ ┌─ TOKENS · LIVE ───────────────────┐ │
 │                              │ │ Model        haiku                │ │ no session in this folder yet     │ │
 │                              │ │ Effort      ····· —               │ │                                   │ │
-│                              │ │ Permissions —                     │ │ start `squad run` here and every… │ │
-│ ──────────────────────────── │ │ Main agent  debugger              │ │                                   │ │
-│   ● initial         ● ACTIVE │ │ Mode        replace               │ │                                   │ │
-│     ■ ■ ■ 3 agents           │ │ Rules                             │ │                                   │ │
+│                              │ │ Permissions —                     │ │ start `squad run` here and every  │ │
+│ ──────────────────────────── │ │ Main agent  debugger              │ │ agent's tokens show up as it      │ │
+│   ● initial         ● ACTIVE │ │ Mode        replace               │ │ works                             │ │
+│     ■ ■ ■ 3 agents           │ │ Rules       —                     │ │                                   │ │
 │     your original setup      │ └───────────────────────────────────┘ └───────────────────────────────────┘ │
 ╰──────────────────────────────┴─────────────────────────────────────────────────────────────────────────────╯
   ↑↓  preset   ←→  agent   enter  open   a  edit agent   e  equip   t  try   u  tokens   ?  help   q  quit

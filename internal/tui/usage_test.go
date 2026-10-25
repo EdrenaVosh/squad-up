@@ -87,7 +87,8 @@ func TestTheUsageReportShowsEveryAgentLive(t *testing.T) {
 
 	h.contains("AGENT", "STATE", "RUNS", "SENT", "CACHED", "OUT", "TOTAL", "SHARE")
 	h.contains("main", "reviewer", "tester", "working", "done", "SQUAD")
-	h.contains("session s1", "1 agent working", "CACHE HIT", "PACE")
+	h.contains("session s1", "1 agent working", "CACHE HIT")
+	h.lacks("PACE")
 	h.goldenAt("usage", 140, 40)
 }
 
