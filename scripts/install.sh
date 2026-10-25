@@ -52,12 +52,17 @@ latest_version() {
   have curl || fail "curl is needed to find the latest release; set SQUAD_UP_VERSION to skip the lookup"
   url=$(curl -fsSL -o /dev/null -w '%{url_effective}' "https://github.com/$REPO/releases/latest") || fail "could not look up the latest release"
   tag=${url##*/}
-  [ -n "$tag" ] && [ "$tag" != "latest" ] || fail "there is no release yet"
-  echo "${tag#v}"
+  # With no release GitHub redirects to .../releases, so the "tag" is a word.
+  case "$tag" in
+    v[0-9]*) echo "${tag#v}" ;;
+    *) fail "there is no release yet" ;;
+  esac
 }
 
 TMP=$(mktemp -d)
-trap 'rm -rf "$TMP"' EXIT INT TERM
+trap 'rm -rf "$TMP"' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 if [ -n "${SQUAD_UP_INSTALL_FROM:-}" ]; then
   archive=$SQUAD_UP_INSTALL_FROM
