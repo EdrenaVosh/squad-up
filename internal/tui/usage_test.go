@@ -264,7 +264,7 @@ func TestOnANarrowWindowTheSessionsAreAListAboveTheTable(t *testing.T) {
 	h.fits(80, 24)
 }
 
-func TestOnABigTerminalTheUsageScreenIsTwiceTheSizeOfAWindow(t *testing.T) {
+func TestOnABigTerminalTheUsageScreenIsAsBigAsTheMainScreen(t *testing.T) {
 	h := usageHarness(t)
 	h.resize(260, 80)
 	for i, id := range []string{"s1", "s2", "s3"} {
@@ -288,8 +288,8 @@ func TestOnABigTerminalTheUsageScreenIsTwiceTheSizeOfAWindow(t *testing.T) {
 			height++
 		}
 	}
-	if width != 240 || height != 72 {
-		t.Errorf("the screen is %d×%d, want 240×72 (twice the 120×36 window)", width, height)
+	if width != 200 || height != 44 {
+		t.Errorf("the screen is %d×%d, want %d×%d (the size of the main screen)", width, height, 200, 44)
 	}
 	h.fits(260, 80)
 }

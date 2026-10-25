@@ -25,9 +25,9 @@ func newUsageScreen(feed *usageFeed) *usageScreen { return &usageScreen{feed: fe
 
 func (s *usageScreen) Init() tea.Cmd { return nil }
 
-// maxSize is twice the window the other screens open in: the report has a list
-// and a table to show, and a big terminal has room for both to breathe.
-func (s *usageScreen) maxSize() (int, int) { return 2 * windowW, 2 * windowH }
+// fullscreen gives the report the size of the main screen, not of a window: it
+// has a list and a table to show, and a big terminal has room for both.
+func (s *usageScreen) fullscreen() bool { return true }
 
 // current is the selected session, or the newest when that one is gone.
 func (s *usageScreen) current() *sessionView {

@@ -237,8 +237,8 @@ Several Claude Code sessions can run in one folder, so the usage screen no longe
 - **Speed.** Lines of a transcript without `"usage"` are skipped without being parsed, which matters for transcripts of tens of megabytes.
 - **Demo.** The demo script has an explicit equip step (`e`, read what would change, `y`), the agents at work, and `ls` of the Claude config before and after `squad restore --yes` to show that the team was really written and taken away.
 
-### The usage screen is twice the size of a window
+### The usage screen is as big as the main screen
 
-It may grow to 240×72 (twice the 120×36 window of other screens) and then fills the height instead of hugging its content. A wide pane gets wider columns, a tall one (44 rows or more) puts a blank line between the agents and adds a chart, *Where the tokens went*: one bar per agent split into sent, cached and out on one scale. Screens can now name their own largest size (`sized`).
+It is a full-screen screen like the one with the presets (up to 200×44, as big as the terminal allows below that) and fills the height instead of hugging its content; for a moment it was allowed 240×72, twice a window, which was more than the author wanted. A wide pane gets wider columns, a tall one (44 rows or more) puts a blank line between the agents and adds a chart, *Where the tokens went*: one bar per agent split into sent, cached and out on one scale.
 
 **A flaky test, found and fixed.** `TestRunForwardsSignalsToClaude` sent SIGTERM to its own process 400 ms after starting; when the machine was busy (the whole suite runs in parallel) `Run` had not yet started listening, the signal ended the test binary and `make test` printed `signal: terminated` (seen twice). The test now listens for the signal itself and sends it only after claude has written its arguments file, that is after it has really started.
