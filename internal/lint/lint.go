@@ -174,16 +174,8 @@ func presetRules(in Input, files []loaded, add adder) {
 	}
 }
 
-// teamRules checks what independence and the flow ask of the agents' tools.
+// teamRules checks what the flow asks of the agents' tools.
 func teamRules(p *preset.Preset, files []loaded, add adder) {
-	for _, f := range files {
-		name := strings.TrimSuffix(f.file, ".md")
-		if team.Independent(f.agent) && team.CanEdit(f.agent) {
-			add(LevelWarn, "independent-can-edit", f.file,
-				fmt.Sprintf("%q is independent, but its tools let it change the code it reviews", name),
-				"list only Read, Grep, Glob and Bash in its tools, or add Write and Edit to disallowedTools")
-		}
-	}
 	if p.Flow == nil || p.Main == nil {
 		return
 	}

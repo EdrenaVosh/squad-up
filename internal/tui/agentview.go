@@ -148,8 +148,8 @@ func (e *agentEditor) descriptionBody(w int) []string {
 	return out
 }
 
-// independentBody is the switch for independence, what each side means, what
-// it really locks and what it only asks for.
+// independentBody is the switch for independence and what it does, which is
+// all done in text.
 func (e *agentEditor) independentBody(w int) []string {
 	on := team.Independent(e.agent)
 	normal, indep := sMuted.Render("○ normal"), sMuted.Render("○ independent")
@@ -168,28 +168,20 @@ func (e *agentEditor) independentBody(w int) []string {
 		return mark + pad(sBold.Render(name), 13) + sMuted.Render(text)
 	}
 	out = append(out,
-		choiceLine(!on, "Normal", "knows what Claude Code tells every agent: CLAUDE.md, and whatever the main agent chooses to say"),
-		choiceLine(on, "Independent", "judges the work on its own: for a code review that must not be swayed by how the code was made"),
+		choiceLine(!on, "Normal", "gets whatever the main agent decides to tell it, including what other agents concluded"),
+		choiceLine(on, "Independent", "works from its task and instructions alone, and is impartial: for any agent that must not be swayed by the reasoning of others"),
 		"")
 
 	if !on {
-		return append(out, wrapAll(sMuted.Render("Switch it on for a reviewer. Nothing else about the agent changes."), w)...)
+		return append(out, wrapAll(sMuted.Render("Switch it on for an agent that has to judge on its own, such as a reviewer, an auditor or a second opinion. Nothing else about the agent changes."), w)...)
 	}
 
-	out = append(out, sBold.Render("Locked by Claude Code"))
-	out = append(out, "  "+sOK.Render("✓")+" it does not load CLAUDE.md (omitClaudeMd), so none of the project's own instructions reach it")
+	out = append(out, sBold.Render("What it changes"))
+	out = append(out, "  "+sWarn.Render("·")+" its system prompt gets a short charter: work from the task and instructions, do not rely on or ask for other agents' conclusions, say what is missing instead of guessing, be impartial")
+	out = append(out, "  "+sWarn.Render("·")+" its description tells whoever calls it to give only the task and instructions")
+	out = append(out, "  "+sWarn.Render("·")+" the main agent is told which agents are independent, and to give them nothing from other agents' reasoning")
 	out = append(out, "")
-	out = append(out, sBold.Render("Only asked for in text"))
-	out = append(out, "  "+sWarn.Render("·")+" its prompt gets a short charter: judge by the task and the code, trust nothing it is told, report defects with path:line, never edit")
-	out = append(out, "  "+sWarn.Render("·")+" its description tells whoever calls it to give only the task and the diff")
-	out = append(out, "  "+sWarn.Render("·")+" the main agent is told the same; a model can still ignore it")
-	out = append(out, "")
-	if team.CanEdit(e.agent) {
-		out = append(out, sWarn.Render("!")+" Its tools can change files: it could edit the code it reviews. Give it Read, Grep, Glob and Bash only.")
-	} else {
-		out = append(out, sOK.Render("✓")+" Its tools cannot change files.")
-	}
-	out = append(out, "", sMuted.Render("It can still read the whole repository, and any file its tools allow: to give it review rules, say in its prompt which folder to read, for example docs/review-rules/."))
+	out = append(out, sMuted.Render("All of it is instructions: Claude Code does not enforce it, and a model can still ignore them. Everything else is as it was: tools, CLAUDE.md, repository access. To give it rules to follow, say in its prompt where they are, for example docs/review-rules/."))
 	var lines []string
 	for _, l := range out {
 		lines = append(lines, wrapLoose(l, w)...)

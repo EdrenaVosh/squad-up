@@ -281,7 +281,7 @@ func (a *app) newEdit() *cobra.Command {
 		},
 	}
 	cmd.Flags().BoolVar(&raw, "raw", false, "open the file in $EDITOR instead of the terminal interface")
-	cmd.Flags().BoolVar(&independent, "independent", false, "make the agent independent (--independent=false undoes it): it judges without CLAUDE.md or knowing how the work was made, e.g. a code reviewer")
+	cmd.Flags().BoolVar(&independent, "independent", false, "make the agent independent (--independent=false undoes it): it works from its task and instructions alone, without other agents' reasoning")
 	cmd.Flags().StringVar(&promptFile, "prompt-file", "", "replace the agent's prompt with the text of this Markdown file")
 	return cmd
 }
@@ -352,7 +352,7 @@ func (a *app) setIndependent(preset string, agent []string, independent bool) er
 		return libraryError(err, cloneInitialFix)
 	}
 	if independent {
-		printf(a.io.Out, "%s is independent: it does not load CLAUDE.md, it is told to judge by the task and the code alone, and the main agent is told to give it nothing else.\n", agent[0])
+		printf(a.io.Out, "%s is independent: it is told to work from its task and instructions alone, and the main agent is told to give it nothing else.\n", agent[0])
 	} else {
 		printf(a.io.Out, "%s is an ordinary agent again.\n", agent[0])
 	}

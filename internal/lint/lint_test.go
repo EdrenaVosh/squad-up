@@ -299,33 +299,30 @@ func TestEveryFindingHasARuleAndAMessage(t *testing.T) {
 	}
 }
 
-func TestTeamRulesCheckWhatIndependenceAndTheFlowNeed(t *testing.T) {
+func TestTheFlowNeedsAMainAgentThatCanCallOthers(t *testing.T) {
 	agent := func(name, extra string) lint.Agent {
 		return lint.Agent{File: name + ".md", Data: []byte("---\nname: " + name + "\ndescription: Does " + name + " work. Use when needed.\n" + extra + "---\nYou are " + name + ".\n")}
 	}
 	lead := "lead"
 	p := &preset.Preset{
-		Schema: 1, Name: "t", Mode: "replace", Main: &lead, Agents: []string{"lead", "dev", "careful", "careless"},
+		Schema: 1, Name: "t", Mode: "replace", Main: &lead, Agents: []string{"lead", "dev", "careful"},
 		Flow: &preset.Flow{Gate: "careful", Fix: "dev"},
 	}
 	report := lint.Run(lint.Input{Name: "t", Preset: p, Agents: []lint.Agent{
 		agent("lead", "tools: Read, Write\n"),
 		agent("dev", ""),
-		agent("careful", "squadIndependent: true\ntools: Read, Grep, Bash\n"),
-		agent("careless", "squadIndependent: true\n"),
+		agent("careful", "squadIndependent: true\n"),
 	}})
 
-	rules := map[string]string{}
+	rules := map[string]bool{}
 	for _, f := range report.Findings {
-		rules[f.Rule+" "+f.File] = f.Message
+		rules[f.Rule+" "+f.File] = true
 	}
-	for _, want := range []string{"lead-cannot-delegate lead.md", "independent-can-edit careless.md"} {
-		if _, ok := rules[want]; !ok {
-			t.Errorf("no finding %q in %v", want, rules)
-		}
+	if !rules["lead-cannot-delegate lead.md"] {
+		t.Errorf("a main agent without the Agent tool was not reported: %v", rules)
 	}
-	for _, unwanted := range []string{"independent-can-edit careful.md", "independent-can-edit dev.md", "lead-cannot-delegate dev.md", "unknown-field careful.md"} {
-		if _, ok := rules[unwanted]; ok {
+	for _, unwanted := range []string{"lead-cannot-delegate dev.md", "unknown-field careful.md"} {
+		if rules[unwanted] {
 			t.Errorf("unexpected finding %q", unwanted)
 		}
 	}

@@ -5,19 +5,19 @@ import (
 	"testing"
 
 	"github.com/EdrenaVosh/squadup/internal/preset"
-	"github.com/EdrenaVosh/squadup/internal/testutil"
 )
 
 func TestTheIndependentSwitch(t *testing.T) {
 	h := newHarness(t)
 	h.resize(140, 40)
-	h.openAgent("solo-indie", 1) // reviewer: tools Read, Grep
+	h.openAgent("solo-indie", 1) // reviewer
 
 	h.field(fIndependent)
-	h.contains("Independent", "◇ normal", "Normal", "judges the work on its own")
+	h.contains("Independent", "◇ normal", "Normal", "works from its task and instructions alone")
 
 	h.press("enter")
-	h.contains("◈ independent", "Locked by Claude Code", "omitClaudeMd", "Only asked for in text", "Its tools cannot change files")
+	h.contains("◈ independent", "What it changes", "short charter", "main agent is told", "All of it is instructions")
+	h.lacks("omitClaudeMd", "Locked by Claude Code")
 	if got := string(h.stored("solo-indie").Agents[1].Data); !strings.Contains(got, "squadIndependent: true") {
 		t.Errorf("independence was not stored:\n%s", got)
 	}
@@ -27,20 +27,6 @@ func TestTheIndependentSwitch(t *testing.T) {
 	if got := string(h.stored("solo-indie").Agents[1].Data); strings.Contains(got, "squadIndependent") {
 		t.Errorf("the default must not be written:\n%s", got)
 	}
-}
-
-func TestTheSwitchWarnsWhenAnIndependentAgentCanEditCode(t *testing.T) {
-	h := newHarness(t)
-	testutil.WriteFiles(t, h.paths.PresetDir("solo-indie"), map[string]string{
-		"agents/tester.md": agentFile("tester", "Writes and runs tests. Use when a change needs coverage.", "", "Test it."), // no tools list: every tool
-	})
-	h.resize(140, 40)
-	h.openAgent("solo-indie", 2)
-
-	h.field(fIndependent)
-	h.press("enter")
-
-	h.contains("◈ independent", "Its tools can change files", "edit the code it reviews")
 }
 
 func TestTilesAndTheTableSayWhoIsIndependent(t *testing.T) {

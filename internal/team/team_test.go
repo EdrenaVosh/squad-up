@@ -49,19 +49,22 @@ func TestAnAgentIsNotIndependentUnlessItSays(t *testing.T) {
 	}
 }
 
-func TestAnIndependentAgentGetsNoClaudeMdAndAnInstructionToJudgeAlone(t *testing.T) {
+func TestAnIndependentAgentGetsACharterAndANoteForItsCaller(t *testing.T) {
 	got := compile(t, bundle(nil, "", file("dev", ""), file("reviewer", "squadIndependent: true\n")))
 
 	r := got["reviewer"]
 	if strings.Contains(r, team.IndependentKey) {
 		t.Errorf("the squad-only field reached Claude Code:\n%s", r)
 	}
-	for _, want := range []string{"omitClaudeMd: true", "<!-- squad:independent -->", "do not edit the code", "Independent: give it only the task", "You are reviewer."} {
+	for _, want := range []string{"<!-- squad:independent -->", "You are an independent agent", "only a task and instructions", "Independent: give it only the task and instructions", "You are reviewer."} {
 		if !strings.Contains(r, want) {
 			t.Errorf("reviewer lacks %q:\n%s", want, r)
 		}
 	}
-	if strings.Contains(got["dev"], "squad:independent") || strings.Contains(got["dev"], "omitClaudeMd") {
+	if strings.Contains(r, "omitClaudeMd") {
+		t.Errorf("an independent agent must still see CLAUDE.md:\n%s", r)
+	}
+	if strings.Contains(got["dev"], "squad:independent") {
 		t.Errorf("a normal agent was touched:\n%s", got["dev"])
 	}
 }
@@ -69,16 +72,8 @@ func TestAnIndependentAgentGetsNoClaudeMdAndAnInstructionToJudgeAlone(t *testing
 func TestTheDescriptionTellsTheCallerHowToCallIt(t *testing.T) {
 	a := mustParse(t, compile(t, bundle(nil, "", file("reviewer", "squadIndependent: true\n")))["reviewer"])
 
-	if d := a.Description(); !strings.HasPrefix(d, "Does reviewer work") || !strings.Contains(d, "never your own conclusions") {
+	if d := a.Description(); !strings.HasPrefix(d, "Does reviewer work") || !strings.Contains(d, "never your own conclusions or what other agents reasoned") {
 		t.Errorf("description = %q", d)
-	}
-}
-
-func TestAnExplicitOmitClaudeMdIsRespected(t *testing.T) {
-	got := compile(t, bundle(nil, "", file("reviewer", "squadIndependent: true\nomitClaudeMd: false\n")))
-
-	if !strings.Contains(got["reviewer"], "omitClaudeMd: false") {
-		t.Errorf("the author's choice was overridden:\n%s", got["reviewer"])
 	}
 }
 
@@ -107,7 +102,7 @@ func TestTheLeadGetsTheFlowTheLoopAndWhoIsIndependent(t *testing.T) {
 	got := compile(t, b)
 
 	lead := got["lead"]
-	for _, want := range []string{"<!-- squad:lead -->", "1 dev → 2 reviewer", "Independent: `reviewer`", "Give them only the original task", "Never your own conclusions", "After 2 rounds"} {
+	for _, want := range []string{"<!-- squad:lead -->", "1 dev → 2 reviewer", "Independent: `reviewer`", "Give them only the original task and the instructions", "Never your own conclusions", "After 2 rounds"} {
 		if !strings.Contains(lead, want) {
 			t.Errorf("lead lacks %q:\n%s", want, lead)
 		}
@@ -163,17 +158,16 @@ func TestIndependentAndSetIndependent(t *testing.T) {
 }
 
 func TestWhatTheToolsAllow(t *testing.T) {
-	cases := map[string]struct{ edit, delegate bool }{
-		"":                               {true, true},
-		"tools: Read, Grep\n":            {false, false},
-		"tools: Read, Edit, Agent\n":     {true, true},
-		"disallowedTools: Write, Edit\n": {false, true},
-		"tools: Read, Write\ndisallowedTools: Write\n": {false, false},
+	cases := map[string]bool{
+		"":                                       true,
+		"tools: Read, Grep\n":                    false,
+		"tools: Read, Edit, Agent\n":             true,
+		"disallowedTools: Agent\n":               false,
+		"tools: Agent\ndisallowedTools: Agent\n": false,
 	}
 	for extra, want := range cases {
-		a := mustParse(t, string(file("x", extra).Data))
-		if team.CanEdit(a) != want.edit || team.CanDelegate(a) != want.delegate {
-			t.Errorf("%q: edit %v delegate %v, want %+v", extra, team.CanEdit(a), team.CanDelegate(a), want)
+		if got := team.CanDelegate(mustParse(t, string(file("x", extra).Data))); got != want {
+			t.Errorf("%q: delegate %v, want %v", extra, got, want)
 		}
 	}
 }
@@ -181,7 +175,7 @@ func TestWhatTheToolsAllow(t *testing.T) {
 func TestTheCharterIsShort(t *testing.T) {
 	r := compile(t, bundle(nil, "", file("reviewer", "squadIndependent: true\n")))["reviewer"]
 	block := r[strings.Index(r, "<!-- squad:independent -->"):]
-	if words := len(strings.Fields(block)); words > 100 {
+	if words := len(strings.Fields(block)); words > 90 {
 		t.Errorf("the charter is %d words; every call of the agent pays for it", words)
 	}
 }

@@ -329,7 +329,7 @@ func TestBuildPassesTheFlowBriefWhenNoMainAgentCarriesIt(t *testing.T) {
 	}
 }
 
-func TestBuildDropsTheSquadOnlyFieldAndMakesAnIndependentAgentIndependent(t *testing.T) {
+func TestBuildDropsTheSquadOnlyFieldAndBriefsAnIndependentAgent(t *testing.T) {
 	b := bundle(nil)
 	b.Agents[1].Data = []byte(strings.Replace(reviewerMD, "name: reviewer\n", "name: reviewer\nsquadIndependent: true\n", 1))
 
@@ -346,13 +346,13 @@ func TestBuildDropsTheSquadOnlyFieldAndMakesAnIndependentAgentIndependent(t *tes
 		t.Errorf("the squad-only field reached claude:\n%s", spec.AgentsJSON)
 	}
 	reviewer := got["reviewer"]
-	if reviewer["omitClaudeMd"] != true {
-		t.Errorf("an independent agent must not load CLAUDE.md: %v", reviewer)
+	if _, ok := reviewer["omitClaudeMd"]; ok {
+		t.Errorf("an independent agent still sees CLAUDE.md: %v", reviewer)
 	}
 	if prompt, _ := reviewer["prompt"].(string); !strings.Contains(prompt, "squad:independent") {
 		t.Errorf("an independent agent got no charter: %q", prompt)
 	}
-	if desc, _ := reviewer["description"].(string); !strings.Contains(desc, "give it only the task") {
+	if desc, _ := reviewer["description"].(string); !strings.Contains(desc, "give it only the task and instructions") {
 		t.Errorf("the description tells the caller nothing: %q", desc)
 	}
 	if prompt, _ := got["planner"]["prompt"].(string); strings.Contains(prompt, "squad:") {

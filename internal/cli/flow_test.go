@@ -220,7 +220,7 @@ func TestADryRunShowsTheSquadBrief(t *testing.T) {
 
 	r := e.run("run", "solo", "--dry-run")
 
-	for _, want := range []string{"--append-system-prompt", "Squad brief", "Independent: `reviewer`", "1 planner → 2 reviewer", "omitClaudeMd"} {
+	for _, want := range []string{"--append-system-prompt", "Squad brief", "Independent: `reviewer`", "1 planner → 2 reviewer", "You are an independent agent"} {
 		if !strings.Contains(r.stdout, want) {
 			t.Errorf("stdout lacks %q:\n%s", want, r.stdout)
 		}

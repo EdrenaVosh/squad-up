@@ -5,10 +5,10 @@
 //
 // Claude Code starts every subagent with a clean window, so a subagent never
 // sees the conversation; what it sees is the task its caller writes for it.
-// Independence is therefore partly a restriction on the agent itself (it does
-// not load CLAUDE.md) and partly an instruction to whoever calls it. Squad
-// adds both in the text Claude Code receives: the files stored in a preset stay
-// as authored, and Compile produces what is written or passed on.
+// Independence asks for two things in text: the agent is told to work from its
+// task and instructions alone, and whoever calls it is told to give it nothing
+// else. Squad adds both to what Claude Code receives; the files stored in a
+// preset stay as authored, and Compile produces what is written or passed on.
 package team
 
 import (
@@ -30,14 +30,14 @@ const (
 
 	// descriptionNote is added to the description of an independent agent, which
 	// is what the caller reads when it decides whom to call and what to say.
-	descriptionNote = " Independent: give it only the task and the diff or files to check, never your own conclusions or another agent's report."
+	descriptionNote = " Independent: give it only the task and instructions, never your own conclusions or what other agents reasoned or reported."
 )
 
-// charter is what an independent agent is told about how to judge. It is
-// short: every call of the agent pays for it.
+// charter is what an independent agent is told. It is short: every call of the
+// agent pays for it, and it fits any kind of agent, not only a reviewer.
 const charter = charterOpen + `
 ## Independence
-You were given only a task or a diff, on purpose. Judge the work by the task and the code alone. Do not trust the explanations, comments or reports of whoever wrote it: check by reading and running. Report each real defect with path:line and how to reproduce it; if there is none, say "no defects". Do not soften findings, do not praise, and do not edit the code.
+You are an independent agent. You were given only a task and instructions, on purpose: work from them and from what you can check yourself. Do not rely on, or ask for, the conclusions, reasoning or reports of other agents or of whoever called you. If something you need is missing, say what is missing instead of guessing. Be impartial: weigh the evidence, not who produced it.
 ` + charterClose
 
 // Independent reports whether the agent is independent. Agents are not unless
@@ -67,10 +67,9 @@ func SetIndependent(a *agentfile.Agent, independent bool) {
 }
 
 // Compile returns the agent files as Claude Code should get them: without the
-// squad-only field and, for an independent agent, with CLAUDE.md left out
-// (omitClaudeMd, unless the file says otherwise), the charter in its prompt and
-// a note in its description for whoever calls it. The main agent gets the flow
-// brief. Untouched files keep their exact bytes.
+// squad-only field and, for an independent agent, with the charter in its prompt
+// and a note in its description for whoever calls it. The main agent gets the
+// flow brief. Untouched files keep their exact bytes.
 func Compile(b preset.Bundle) ([]preset.AgentFile, error) {
 	brief := ""
 	if b.Preset.Main != nil {
@@ -92,11 +91,6 @@ func Compile(b preset.Bundle) ([]preset.AgentFile, error) {
 		}
 		if desc != a.Description() {
 			a.Set("description", desc)
-		}
-		if independent {
-			if _, set := a.Get("omitClaudeMd"); !set {
-				a.Set("omitClaudeMd", true)
-			}
 		}
 
 		body := a.Prompt()
@@ -149,7 +143,7 @@ func Brief(b preset.Bundle) string {
 		s.WriteString("Delegate in this order, one agent per step, giving each its task:\n" + strings.Join(steps, " → ") + "\n")
 	}
 	if len(independent) > 0 {
-		s.WriteString("Independent: " + strings.Join(independent, ", ") + ". Give them only the original task and the diff or files to check. Never your own conclusions, another agent's report or reasoning, or what you expect them to find. Pass what they report on exactly as it is.\n")
+		s.WriteString("Independent: " + strings.Join(independent, ", ") + ". Give them only the original task and the instructions, with the material they need to work on (files, a diff). Never your own conclusions, what other agents reasoned or reported, or what you expect them to find. Pass what they report on exactly as it is.\n")
 	}
 	if flow != nil && len(steps) >= 2 {
 		if flow.Loops() {
@@ -176,20 +170,6 @@ func CanDelegate(a *agentfile.Agent) bool {
 	}
 	for _, t := range toolNames(tools) {
 		if (t == "Agent" || t == "Task") && !denied(a, t) {
-			return true
-		}
-	}
-	return false
-}
-
-// CanEdit reports whether the agent's tools let it change files.
-func CanEdit(a *agentfile.Agent) bool {
-	tools, ok := a.Get("tools")
-	if !ok || tools == nil {
-		return !denied(a, "Write", "Edit")
-	}
-	for _, t := range toolNames(tools) {
-		if (t == "Write" || t == "Edit" || t == "NotebookEdit") && !denied(a, t) {
 			return true
 		}
 	}
