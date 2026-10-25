@@ -5,7 +5,9 @@
 #   make build && make sandbox-reset      # an empty sandbox: no presets yet
 #   vhs docs/demo.tape
 #
-# It runs against the sandbox, never against your real Claude config.
+# It runs against the sandbox, never against your real Claude config. HOME is
+# pointed into the sandbox, so every path on screen is written as ~/…, and the
+# prompt is a bare "$": nothing in the recording names your account or folders.
 Output docs/assets/demo.gif
 
 Set Shell "bash"
@@ -17,7 +19,7 @@ Set TypingSpeed 70ms
 Set Theme "Catppuccin Mocha"
 
 Hide
-Type "export PATH=$PWD/bin:$PATH CLAUDE_CONFIG_DIR=$PWD/.sandbox/claude SQUADUP_HOME=$PWD/.sandbox/squadup"
+Type "export PATH=$PWD/bin:$PATH HOME=$PWD/.sandbox CLAUDE_CONFIG_DIR=$PWD/.sandbox/claude SQUADUP_HOME=$PWD/.sandbox/squadup PS1='$ '"
 Enter
 Type "squad list > /dev/null && clear"
 Enter
@@ -31,7 +33,7 @@ Sleep 3s
 # 2. New preset: the first option is a template
 Type "n"
 Sleep 1s
-Type "Cube Bug Hunter!"
+Type "Bug Hunter"
 Sleep 600ms
 Enter
 Sleep 1800ms

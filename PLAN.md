@@ -317,7 +317,7 @@ You are a strict code reviewer. Report findings ranked by severity...
 
 ## Репозиторий, установка и релизы
 
-Репозиторий создаётся локально в `/Users/aliakseikostsin/dev/squadup` (`git init`, ветка `main`, модуль `github.com/<owner>/squadup`) и публикуется на GitHub только после подтверждения автора. В репозитории лежит исходный код; пользователь получает один собранный файл `squad` из GitHub Releases.
+Репозиторий создаётся локально в `~/dev/squadup` (`git init`, ветка `main`, модуль `github.com/<owner>/squadup`) и публикуется на GitHub только после подтверждения автора. В репозитории лежит исходный код; пользователь получает один собранный файл `squad` из GitHub Releases.
 
 ```text
 squadup/

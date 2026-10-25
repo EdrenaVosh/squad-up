@@ -191,22 +191,22 @@ func TestTheKeysOfTheDemoDoWhatTheScriptExpects(t *testing.T) {
 	h.resize(156, 48)
 
 	h.press("n")
-	h.typeText("Cube Bug Hunter!")
+	h.typeText("Bug Hunter")
 	h.press("enter") // the name
 	h.contains("Use a template")
 	h.press("enter") // the first option
 	h.contains("Bug Hunter", "Feature Creator")
 	h.press("enter") // Bug Hunter, the first
-	h.contains("Cube Bug Hunter!", "AGENTS", "debugger", "fixer", "reviewer", "tester")
+	h.contains("Bug Hunter", "AGENTS", "debugger", "fixer", "reviewer", "tester")
 
 	h.press("down", "down", "down", "down", "esc")
-	h.contains("PRESETS", "Cube Bug Hunter!")
-	h.goTo("cube-bug-hunter") // in the sandbox of the demo it is the only preset, so it is already selected
+	h.contains("PRESETS", "Bug Hunter")
+	h.goTo("bug-hunter") // in the sandbox of the demo it is the only preset, so it is already selected
 	h.press("right", "right", "right")
 	h.contains("╔═ ▶ 4 ") // the fourth agent is selected
 
 	h.press("e")
-	h.contains("Equip cube-bug-hunter")
+	h.contains("Equip bug-hunter")
 	h.press("enter")
 	h.contains("Squad ready", "▐▛███▜▌")
 	h.press("esc")
