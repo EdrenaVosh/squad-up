@@ -198,8 +198,6 @@ Per agent: runs, tokens sent, read from the cache, produced, the share of the sq
 
 ## How it works
 
-![How squad-up works](docs/assets/how-it-works.svg)
-
 ```mermaid
 flowchart LR
     You([You]) --> Squad["squad<br/>interface + CLI"]
@@ -434,7 +432,7 @@ make sandbox-reset && make sandbox-presets && make try    # the interface on a f
 make snapshot           # a local release build of all platforms into dist/; publishes nothing
 ```
 
-Requires Go (see `go.mod`), `golangci-lint` v2 and `goreleaser` v2. The design is in [`PLAN.md`](PLAN.md), the reasons behind the choices in [`docs/DECISIONS.md`](docs/DECISIONS.md), and the history of releases in [CHANGELOG.md](CHANGELOG.md).
+Requires Go (see `go.mod`), `golangci-lint` v2 and `goreleaser` v2. The reasons behind the choices are in [`docs/DECISIONS.md`](docs/DECISIONS.md), and the history of releases in [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 

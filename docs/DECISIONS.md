@@ -1,6 +1,6 @@
 # Decisions
 
-Deviations from PLAN.md and facts verified against the real machine.
+Choices made while building, and facts verified against the real machine. (The original plan, `PLAN.md`, was deleted before the first release; it is in the git history.)
 
 ## Stage 0
 
@@ -272,3 +272,7 @@ Renamed everywhere before anything was published, so nothing outside this machin
 ## README: a "How to use" section instead of "Quick start"
 
 The README now starts the use with *How to use*: five commands at a glance, then six short steps (open the interface, make the team yours with prompts loaded from files, start Claude with `squad run` or equip with `squad use` and a table of the difference, pin a preset to each project for many presets and parallel sessions, export and import, live tokens). The command table is split into groups (everyday, presets, agents and teams, share, info) and lists every command with its flags, checked against `squad <command> --help`. The demo GIF is shown at the top again (it is the file in `docs/assets/demo.gif`, which has to be re-recorded with the new script).
+
+## `PLAN.md` and the how-it-works SVG are gone
+
+The planning document and `docs/assets/how-it-works.svg` were deleted at the author's request. The README keeps its Mermaid diagram of how squad-up works (GitHub draws it from text); the SVG that stood above it is removed, and so are the links to the plan in the README and CONTRIBUTING. Older notes in this file that say "the plan" refer to `PLAN.md` as it was; `git log -- PLAN.md` finds it.

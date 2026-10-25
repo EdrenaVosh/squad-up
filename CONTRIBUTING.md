@@ -1,7 +1,6 @@
 # Contributing
 
-Thanks for looking. squad-up is a small Go program; the whole contract is in
-[`PLAN.md`](PLAN.md), the reasons behind each choice are in
+Thanks for looking. squad-up is a small Go program; the reasons behind each choice are in
 [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
 ## Set up
