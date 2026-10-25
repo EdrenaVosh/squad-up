@@ -286,3 +286,7 @@ GoReleaser 2.19 marks this `hooks.post.install` form deprecated: `goreleaser che
 ## `squad run` and signals
 
 SIGTERM and SIGHUP are passed on to claude (so closing the terminal stops claude and the temporary settings file, which holds the permission settings, is removed); **Ctrl-C is not**. The terminal sends Ctrl-C to the whole foreground group, claude included, so passing it on made claude receive two and take its force-quit path. The price: a `kill -INT <squad pid>` aimed at squad alone is caught but does not reach claude. `squad use` and the other operations that write `~/.claude` hold SIGINT, SIGTERM and SIGHUP until the files are written and then re-send the signal to themselves, so an interrupt can no longer leave a change half done; a process that is killed outright (SIGKILL, a power cut) still can, and the lock message says what to delete.
+
+## Known limitation: a very large preset on Windows
+
+`squad run` refuses an `--agents` value over 30,000 bytes and sends you to `squad use`. On Windows the real limit of a command line is about 32 KB **after** the quotes are escaped (each `"` becomes `\"`) and counting the other arguments (the team brief, the settings path, yours), so a preset just under the cap can still fail to start, with the system's "filename or extension is too long" instead of our hint. Presets that big are far from the two starter templates; it is left as it is, and `squad use` has no such limit.

@@ -125,6 +125,29 @@ func TestEnableTwiceChangesNothingAndRefreshesAMovedBinary(t *testing.T) {
 	}
 }
 
+func TestRefreshingKeepsTheBackupOfTheSettingsFromBeforeTheFirstEnable(t *testing.T) {
+	p := setup(t, withLine)
+	if _, err := statusline.Enable(p, ours, now); err != nil {
+		t.Fatal(err)
+	}
+	before, err := os.ReadFile(p.StatuslineBackupFile())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if out, err := statusline.Enable(p, "'/usr/local/bin/squad' statusline", now); err != nil || out != statusline.Refreshed {
+		t.Fatalf("Enable with a new path = %v, %v", out, err)
+	}
+
+	after, err := os.ReadFile(p.StatuslineBackupFile())
+	if err != nil || string(after) != string(before) {
+		t.Errorf("the backup was rewritten by a refresh:\nbefore: %s\nafter:  %s", before, after)
+	}
+	if strings.Contains(string(after), "squad") {
+		t.Errorf("the backup holds squad's own line: %s", after)
+	}
+}
+
 func TestDisableLeavesALineTheUserChangedAfterwards(t *testing.T) {
 	p := setup(t, plain)
 	if _, err := statusline.Enable(p, ours, now); err != nil {

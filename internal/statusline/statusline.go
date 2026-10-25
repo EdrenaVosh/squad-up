@@ -143,7 +143,9 @@ func Enable(p paths.Paths, command string, now time.Time) (Outcome, error) {
 	if err != nil {
 		return 0, fmt.Errorf("edit %s: %w", p.SettingsFile(), err)
 	}
-	if existed {
+	// The backup is of the settings as they were before squad touched them;
+	// a refresh finds squad's own line in them and must not replace it.
+	if _, err := os.Stat(p.StatuslineBackupFile()); existed && (outcome != Refreshed || err != nil) {
 		if err := fsx.WriteFileAtomic(p.StatuslineBackupFile(), doc, 0o600); err != nil {
 			return 0, fmt.Errorf("back up settings.json: %w", err)
 		}
