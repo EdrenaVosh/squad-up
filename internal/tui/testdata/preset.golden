@@ -1,5 +1,6 @@
 ╭─ Solo Indie ────────────────────────────────────────── solo-indie · replace ─╮
 │ Planner, reviewer and tester for one-person apps                             │
+│ saved in /var/folders/dv/j2x09c7s6ml91zftpg6wps9c0000gn/T/TestPresetScreenA… │
 │                                                                              │
 │ AGENTS                                                                       │
 │   SLOT    AGENT           MODEL     EFFORT       ACCESS        CONTEXT       │
@@ -17,7 +18,6 @@
 │   Mode            replace — your own agents are removed while equipped       │
 │                                                                              │
 │ LINT  ✓ clean · 2 notes                                                      │
-│                                                                              │
 │                                                                              │
 │                                                                              │
 ╰──────────────────────────────────────────────────────────────────────────────╯

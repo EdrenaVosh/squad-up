@@ -233,18 +233,30 @@ func previewLines(imp transfer.Imported, w int) []string {
 
 // ---- export ----
 
-// exportFlow asks for the file to write a preset to.
+// exportFlow asks for the file to write a preset to. The suggestion is a whole
+// path in the folder squad was started in, so there is no doubt where the file
+// lands.
 func exportFlow(ws workspace.Workspace, name string) screen {
 	free := func(path string) error {
 		if path == "" {
 			return fmt.Errorf("enter a file name")
 		}
-		if _, err := os.Stat(path); err == nil {
-			return fmt.Errorf("%s already exists", path)
+		full, err := userPath(path)
+		if err != nil {
+			return err
+		}
+		if _, err := os.Stat(full); err == nil {
+			return fmt.Errorf("already exists: %s", full)
+		}
+		if _, err := os.Stat(filepath.Dir(full)); err != nil {
+			return fmt.Errorf("no such folder: %s", filepath.Dir(full))
 		}
 		return nil
 	}
-	return newPrompt(ExportPromptTitle, ExportPromptHelp, name+".squad.json", free, func(path string) tea.Cmd {
+	cwd, _ := os.Getwd()
+	help := "Saved in " + tildePath(cwd) + " unless you type a path (~/… works). Nothing is uploaded. The preset itself stays in " + tildePath(ws.Paths.PresetDir(name)) + "."
+	return newPrompt(ExportPromptTitle, help, name+".squad.json", free, func(path string) tea.Cmd {
+		path, _ = userPath(path)
 		b, err := ws.Store().Load(name)
 		if err != nil {
 			return flashErr(err.Error())
@@ -267,6 +279,30 @@ func exportFlow(ws workspace.Workspace, name string) screen {
 	})
 }
 
+// userPath turns what was typed into an absolute path: a leading ~ is the home
+// folder, anything relative starts in the working folder.
+func userPath(p string) (string, error) {
+	p = strings.TrimSpace(p)
+	if p == "~" || strings.HasPrefix(p, "~/") {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", err
+		}
+		p = filepath.Join(home, strings.TrimPrefix(p, "~"))
+	}
+	return filepath.Abs(p)
+}
+
+// tildePath writes a path under the home folder as ~/…, the way a person says it.
+func tildePath(p string) string {
+	if home, err := os.UserHomeDir(); err == nil && home != "" {
+		if rest, ok := strings.CutPrefix(p, home+string(filepath.Separator)); ok {
+			return "~" + string(filepath.Separator) + rest
+		}
+	}
+	return p
+}
+
 func writeExport(ws workspace.Workspace, name, path string) tea.Cmd {
 	b, err := ws.Store().Load(name)
 	if err != nil {
@@ -279,7 +315,15 @@ func writeExport(ws workspace.Workspace, name, path string) tea.Cmd {
 	if err := fsx.WriteFileAtomic(path, data, 0o644); err != nil {
 		return flashErr(err.Error())
 	}
-	return flash(fmt.Sprintf("Exported %q to %s", name, path))
+	return push(newNotice("Exported", []string{
+		sBold.Render(fmt.Sprintf("%q", name)) + " is saved as a file:",
+		"",
+		"  " + sAccent.Render(path),
+		sMuted.Render(fmt.Sprintf("  %d bytes · nothing was uploaded", len(data))),
+		"",
+		sMuted.Render("Send the file to someone: they import it with `squad import " + filepath.Base(path) + "` or the i key here."),
+		sMuted.Render("Your preset itself stays in " + tildePath(ws.Paths.PresetDir(name)) + "."),
+	}))
 }
 
 // ---- templates ----

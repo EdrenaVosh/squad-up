@@ -183,10 +183,15 @@ func TestExportWritesAFileAfterAskingWhere(t *testing.T) {
 	h.goTo("solo-indie")
 
 	h.press("x")
-	h.contains("Export preset", "solo-indie.squad.json")
+	h.contains("Export preset", "solo-indie.squad.json", "Saved in", "stays in")
 	h.press("enter")
 
-	h.contains("Exported", "solo-indie.squad.json")
+	cwd, _ := os.Getwd()
+	h.contains("Exported", "is saved as a file", "solo-indie.squad.json", "nothing was uploaded", "squad import")
+	if got := h.view(); !strings.Contains(strings.ReplaceAll(got, "\n", ""), filepath.Base(cwd)) {
+		t.Errorf("the notice must give the whole path, starting in %s:\n%s", cwd, got)
+	}
+	h.press("x") // any key closes the notice
 	data, err := os.ReadFile("solo-indie.squad.json")
 	if err != nil {
 		t.Fatal(err)
@@ -198,6 +203,19 @@ func TestExportWritesAFileAfterAskingWhere(t *testing.T) {
 
 	h.press("x", "enter")
 	h.contains("already exists")
+}
+
+func TestExportToAFolderThatDoesNotExistSaysSo(t *testing.T) {
+	h := newHarness(t)
+	t.Chdir(t.TempDir())
+	h.goTo("solo-indie")
+
+	h.press("x")
+	h.clear(len("solo-indie.squad.json"))
+	h.typeText("/no/such/folder/x.squad.json")
+	h.press("enter")
+
+	h.contains("no such folder: /no/such/folder")
 }
 
 func TestExportOfInitialIsRefused(t *testing.T) {

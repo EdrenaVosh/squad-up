@@ -223,3 +223,19 @@ func TestUsageWithoutASessionIsNotAnError(t *testing.T) {
 		t.Error("--watch worked without a terminal")
 	}
 }
+
+func TestExportSaysTheWholePathOfTheFile(t *testing.T) {
+	e := newEnv(t)
+	e.addPresets()
+	dir := t.TempDir()
+	t.Chdir(dir)
+
+	r := e.run("export", "solo")
+
+	if r.code != 0 || !strings.Contains(r.stdout, filepath.Join(dir, "solo.squad.json")) && !strings.Contains(r.stdout, "solo.squad.json") {
+		t.Fatalf("%d %q %q", r.code, r.stdout, r.stderr)
+	}
+	if !strings.Contains(r.stdout, string(filepath.Separator)) || !filepath.IsAbs(strings.TrimSuffix(strings.TrimSpace(r.stdout[strings.LastIndex(r.stdout, " to ")+4:]), ".")) {
+		t.Errorf("the path is not whole: %q", r.stdout)
+	}
+}

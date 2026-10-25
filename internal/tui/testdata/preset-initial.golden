@@ -1,5 +1,6 @@
 ╭─ Initial ──────────────────────────────────────────────── initial · replace ─╮
 │ Your original Claude Code setup                                              │
+│ your original setup, kept in /var/folders/dv/j2x09c7s6ml91zftpg6wps9c0000gn… │
 │                                                                              │
 │ AGENTS                                                                       │
 │   SLOT    AGENT           MODEL     EFFORT       ACCESS                      │
@@ -16,7 +17,6 @@
 │   Mode            replace — your own agents are removed while equipped       │
 │                                                                              │
 │ LINT  ✓ clean                                                                │
-│                                                                              │
 │                                                                              │
 │                                                                              │
 │                                                                              │

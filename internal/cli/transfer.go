@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"slices"
 	"strings"
 
@@ -82,7 +83,11 @@ func (a *app) newExport() *cobra.Command {
 				if err := writeNew(out, data); err != nil {
 					return err
 				}
-				printf(a.io.Out, "Exported %s to %s.\n", exportedWhat(bundles), out)
+				shown := out
+				if abs, err := filepath.Abs(out); err == nil {
+					shown = abs
+				}
+				printf(a.io.Out, "Exported %s to %s.\n", exportedWhat(bundles), shown)
 			}
 			if gist {
 				return a.uploadGist(commandContext(cmd), file, desc, data)

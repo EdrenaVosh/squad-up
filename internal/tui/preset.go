@@ -299,6 +299,11 @@ func (p *presetScreen) View(c viewCtx) string {
 		return c.box(title, right, lines, 0)
 	}
 	add(" " + sMuted.Render(truncate(p.card.Description, inner-2)))
+	where := "saved in " + tildePath(p.ws.Paths.PresetDir(p.name)) + " · every change is written at once"
+	if p.readOnly {
+		where = "your original setup, kept in " + tildePath(p.ws.Paths.InitialDir()) + " and never changed"
+	}
+	add(" " + fg(cDim).Render(truncate(where, inner-2)))
 	add("")
 	add(" " + sMuted.Render("AGENTS"))
 	if len(p.card.Agents) > 0 {

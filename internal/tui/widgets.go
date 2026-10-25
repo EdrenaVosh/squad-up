@@ -377,6 +377,35 @@ func (s *confirmScreen) Hints() []hint {
 	return []hint{{"y", "yes"}, {"n", "no"}, {"←→", "switch"}, {"enter", "pick"}}
 }
 
+// ---- notice ----
+
+// noticeScreen tells something worth reading twice, such as where a file went,
+// and stays until a key is pressed. A hint in the footer would be gone too soon.
+type noticeScreen struct {
+	title string
+	lines []string
+}
+
+func newNotice(title string, lines []string) *noticeScreen {
+	return &noticeScreen{title: title, lines: lines}
+}
+
+func (s *noticeScreen) Init() tea.Cmd { return nil }
+
+func (s *noticeScreen) Update(msg tea.Msg) (screen, tea.Cmd) {
+	if _, ok := msg.(tea.KeyPressMsg); ok {
+		return s, pop()
+	}
+	return s, nil
+}
+
+func (s *noticeScreen) View(c viewCtx) string {
+	w := choiceWidth(c) - 4
+	return modalSized(c, s.title, wrapLines(s.lines, w), choiceWidth(c))
+}
+
+func (s *noticeScreen) Hints() []hint { return []hint{{"any key", "close"}} }
+
 // steady gives a text input a cursor that does not blink: it needs no timers,
 // and the screen stays the same between key presses.
 func steady(in *textinput.Model) {
