@@ -28,6 +28,14 @@ func (e Engine) Execute(plan *Plan, opts Options) (*Result, error) {
 	if plan.NoOp {
 		return &Result{Plan: plan}, nil
 	}
+	// Until the files are written an interrupt waits. This defer is registered
+	// first, so it runs last: the lock is already gone when the signal is sent.
+	release := holdSignals()
+	defer func() {
+		if s := release(); s != nil {
+			raiseAgain(s)
+		}
+	}()
 	unlock, err := fsx.Lock(e.Paths.LockFile())
 	if err != nil {
 		return nil, err
