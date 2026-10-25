@@ -15,7 +15,7 @@
 │   Team flow       off — separate helpers                                     │
 │   Mode            replace — your own agents are removed while equipped       │
 │                                                                              │
-│ LINT  ✓ clean  ·  ~42 tokens/session for names and descriptions              │
+│ LINT  ✓ clean                                                                │
 │                                                                              │
 │                                                                              │
 │                                                                              │

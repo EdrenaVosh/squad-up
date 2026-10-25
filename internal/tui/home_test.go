@@ -269,7 +269,7 @@ func TestHomeOnABigTerminalUsesTheSpace(t *testing.T) {
 	h.resize(200, 52)
 
 	h.lacks("PROMPT")
-	h.contains("PRESETS", "██", "IF YOU EQUIP IT", "SETTINGS", "CONTEXT COST", "HEALTH", "claude 2.1.309", "3 presets · 6 agents")
+	h.contains("PRESETS", "██", "IF YOU EQUIP IT", "SETTINGS", "TOKENS · LIVE", "HEALTH", "claude 2.1.309", "3 presets · 6 agents")
 	h.goldenAt("home-wide", 200, 52)
 }
 

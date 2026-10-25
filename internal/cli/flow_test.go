@@ -1,8 +1,11 @@
 package cli_test
 
 import (
+	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -121,5 +124,102 @@ func TestNotesShowsAndClearsTheSharedFile(t *testing.T) {
 	}
 	if r := e.run("notes", "--clear"); r.code != 0 || !strings.Contains(r.stdout, "nothing to clear") {
 		t.Errorf("clear again: %d %q", r.code, r.stdout)
+	}
+}
+
+// transcript writes a session of the project in dir, in the shape Claude Code
+// writes it: the main session, and a subagent run with its meta file.
+func (e *env) transcript(dir string) {
+	e.t.Helper()
+	if real, err := filepath.EvalSymlinks(dir); err == nil {
+		dir = real // Claude Code names the folder after the real path
+	}
+	project := filepath.Join(e.claudeDir, "projects", regexp.MustCompile(`[^a-zA-Z0-9]`).ReplaceAllString(dir, "-"))
+	sub := filepath.Join(project, "s1", "subagents")
+	if err := os.MkdirAll(sub, 0o755); err != nil {
+		e.t.Fatal(err)
+	}
+	msg := func(id string, in, write, read, out int) string {
+		return fmt.Sprintf(`{"type":"assistant","timestamp":"2026-10-24T09:30:00Z","message":{"id":%q,"model":"claude-sonnet-5-5","usage":{"input_tokens":%d,"cache_creation_input_tokens":%d,"cache_read_input_tokens":%d,"output_tokens":%d}}}`+"\n", id, in, write, read, out)
+	}
+	files := map[string]string{
+		filepath.Join(project, "s1.jsonl"):       msg("m1", 3, 17000, 9000, 400) + msg("m1", 3, 17000, 9000, 400),
+		filepath.Join(sub, "agent-a1.jsonl"):     msg("r1", 2, 20872, 0, 55),
+		filepath.Join(sub, "agent-a1.meta.json"): `{"agentType":"reviewer","finished":true}`,
+	}
+	for path, content := range files {
+		if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+			e.t.Fatal(err)
+		}
+	}
+}
+
+func TestUsagePrintsWhatEachAgentSpent(t *testing.T) {
+	e := newEnv(t)
+	dir := t.TempDir()
+	t.Chdir(dir)
+	if real, err := os.Getwd(); err == nil {
+		dir = real // the working folder as the system spells it
+	}
+	e.transcript(dir)
+
+	r := e.run("usage")
+
+	if r.code != 0 {
+		t.Fatalf("exit %d: %s", r.code, r.stderr)
+	}
+	for _, want := range []string{"AGENT", "SENT", "CACHED", "TOTAL", "main", "reviewer", "SQUAD", "17k", "20k"} {
+		if !strings.Contains(r.stdout, want) {
+			t.Errorf("stdout lacks %q:\n%s", want, r.stdout)
+		}
+	}
+}
+
+func TestUsageJSONCountsAMessageOnce(t *testing.T) {
+	e := newEnv(t)
+	dir := t.TempDir()
+	t.Chdir(dir)
+	if real, err := os.Getwd(); err == nil {
+		dir = real
+	}
+	e.transcript(dir)
+
+	r := e.run("usage", "--json")
+
+	var got struct {
+		Found  bool `json:"found"`
+		Agents []struct {
+			Name  string `json:"name"`
+			Runs  int    `json:"runs"`
+			Total int    `json:"total"`
+		} `json:"agents"`
+		Total struct {
+			Total, Messages int
+			CacheRead       int `json:"cacheRead"`
+		} `json:"total"`
+	}
+	if err := json.Unmarshal([]byte(r.stdout), &got); err != nil {
+		t.Fatalf("%v\n%s", err, r.stdout)
+	}
+	if !got.Found || len(got.Agents) != 2 || got.Agents[0].Name != "main" || got.Agents[0].Total != 3+17000+400 {
+		t.Errorf("agents = %+v", got.Agents)
+	}
+	if got.Agents[1].Name != "reviewer" || got.Agents[1].Runs != 1 || got.Total.Total != 3+17000+400+2+20872+55 || got.Total.CacheRead != 9000 {
+		t.Errorf("reviewer %+v, total %+v", got.Agents[1], got.Total)
+	}
+}
+
+func TestUsageWithoutASessionIsNotAnError(t *testing.T) {
+	e := newEnv(t)
+	t.Chdir(t.TempDir())
+
+	if r := e.run("usage"); r.code != 0 || !strings.Contains(r.stdout, "No Claude Code session") {
+		t.Errorf("text: %d %q", r.code, r.stdout)
+	}
+	if r := e.run("usage", "--json"); r.code != 0 || !strings.Contains(r.stdout, `"found": false`) {
+		t.Errorf("json: %d %q", r.code, r.stdout)
+	}
+	if r := e.run("usage", "--watch"); r.code == 0 {
+		t.Error("--watch worked without a terminal")
 	}
 }

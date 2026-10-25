@@ -12,7 +12,7 @@
 │                      │                                                       │
 │                      │ Default model   haiku        Main agent  debugger     │
 │                      │ Permissions    —             Mode        replace      │
-│                      │ Lint           ✓ clean · ~34 tokens/session           │
+│                      │ Lint           ✓ clean                                │
 │                      │                                                       │
 │                      │                                                       │
 │                      │                                                       │

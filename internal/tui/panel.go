@@ -70,38 +70,32 @@ func settingsPanel(c workspace.Card, w, h int) []string {
 	}, w, h)
 }
 
-// costPanel charts how many tokens each agent adds when it is called.
-func costPanel(c workspace.Card, w, h int) []string {
-	inner := w - 4
-	maxTokens := 1
-	for _, a := range c.Costs {
-		maxTokens = max(maxTokens, a.Prompt)
+// usagePanel charts the tokens each agent of the latest session has spent.
+func usagePanel(f *usageFeed, w, h int) []string {
+	rep := f.shown()
+	title := "TOKENS · LIVE"
+	if !rep.Found {
+		return panel(title, []string{sMuted.Render("no session in this folder yet"), "", sMuted.Render("start `squad run` here and every agent's tokens show up as it works")}, w, h)
 	}
-	nameW := min(14, max(inner/3, 6))
-	barW := max(inner-nameW-6, 4)
+	inner := w - 4
+	nameW := min(12, max(inner/3, 6))
+	numW := 6
+	barW := max(inner-nameW-numW-3, 4)
 	var lines []string
-	for i, a := range c.Costs {
-		if i == h-4 {
-			lines = append(lines, sMuted.Render(fmt.Sprintf("… +%d more", len(c.Costs)-i)))
+	total := max(rep.Total.Total(), 1)
+	for i, a := range rep.Agents {
+		if len(lines) >= h-5 {
+			lines = append(lines, sMuted.Render(fmt.Sprintf("… +%d more", len(rep.Agents)-i)))
 			break
 		}
-		filled := max(a.Prompt*barW/maxTokens, 1)
-		colors := gradient(max(barW, 2))
-		var bar strings.Builder
-		for x := 0; x < barW; x++ {
-			if x < filled {
-				bar.WriteString(fg(colors[x]).Render("█"))
-			} else {
-				bar.WriteString(fg(cDim).Render("░"))
-			}
+		mark := " "
+		if a.Running > 0 {
+			mark = fg(cClaude).Render("●")
 		}
-		lines = append(lines, pad(truncate(a.Name, nameW), nameW)+" "+bar.String()+" "+fmt.Sprintf("%4d", a.Prompt))
+		lines = append(lines, mark+pad(truncate(a.Name, nameW), nameW)+" "+shareBar(float64(a.Tokens.Total())/float64(total), barW, f.tint(a.Name))+" "+fmt.Sprintf("%*s", numW, tokensShort(a.Tokens.Total())))
 	}
-	if len(c.Costs) == 0 {
-		lines = append(lines, sMuted.Render("no agents"))
-	}
-	lines = append(lines, "", sMuted.Render(fmt.Sprintf("~%d tokens per session", c.SessionTokens)))
-	return panel("CONTEXT COST · TOKENS/CALL", lines, w, h)
+	lines = append(lines, "", sBold.Render(tokensShort(rep.Total.Total()))+sMuted.Render(" tokens · u opens the report"))
+	return panel(title, lines, w, h)
 }
 
 // healthPanel is what the linter says.
@@ -168,10 +162,10 @@ func previewPanel(plan *apply.Plan, planErr string, w, h int) []string {
 
 // panelsRow lays the panels out across w cells: as many as fit, each at least
 // 34 cells wide.
-func panelsRow(c workspace.Card, activity []apply.JournalEntry, plan *apply.Plan, planErr string, w, h int) []string {
+func panelsRow(c workspace.Card, f *usageFeed, activity []apply.JournalEntry, plan *apply.Plan, planErr string, w, h int) []string {
 	builders := []func(int) []string{
 		func(pw int) []string { return settingsPanel(c, pw, h) },
-		func(pw int) []string { return costPanel(c, pw, h) },
+		func(pw int) []string { return usagePanel(f, pw, h) },
 		func(pw int) []string { return previewPanel(plan, planErr, pw, h) },
 		func(pw int) []string { return healthPanel(c, pw, h) },
 		func(pw int) []string { return activityPanel(activity, pw, h) },

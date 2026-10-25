@@ -12,7 +12,7 @@
 │                      │                                                       │
 │                      │ Default model   opus         Main agent  —            │
 │                      │ Permissions    acceptEdits   Mode        replace      │
-│                      │ Lint           ✓ clean · ~42 tokens/session           │
+│                      │ Lint           ✓ clean                                │
 │                      │                                                       │
 │                      │                                                       │
 │                      │                                                       │

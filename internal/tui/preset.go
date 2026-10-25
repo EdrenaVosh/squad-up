@@ -340,7 +340,7 @@ func (p *presetScreen) View(c viewCtx) string {
 		}
 	}
 	add("")
-	add(" " + sMuted.Render("LINT  ") + lintWord(p.card) + sMuted.Render(fmt.Sprintf("  ·  ~%d tokens/session for names and descriptions", p.card.SessionTokens)))
+	add(" " + sMuted.Render("LINT  ") + lintWord(p.card))
 	shown := 0
 	findings := slices.Clone(p.report.Findings)
 	severity := map[lint.Level]int{lint.LevelError: 2, lint.LevelWarn: 1}

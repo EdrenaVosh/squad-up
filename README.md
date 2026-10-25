@@ -25,6 +25,7 @@ Presets of agent teams for [Claude Code](https://code.claude.com): switch them w
 | `squad import <file\|https-link\|gist:id\|->` | Add a shared preset after a preview; it is never equipped (`--as`, `--force`, `--allow-hooks`, `--accept-risks`) |
 | `squad card <agent>` | An agent as a card: role, model, tools, permission strength (`--preset`) |
 | `squad flow <preset>` | Show or set how the agents work as a team: `--order`, or `--gate <agent> --fix <agent> [--rounds n]` for a review loop, `--off` |
+| `squad usage` | The tokens each agent of a Claude Code session has spent, read from its own transcripts (`--watch` follows it live in the interface, `--json`, `--session`, `--dir`) |
 | `squad notes` | Show the squad's shared notes of this project (`--clear` starts the next task fresh) |
 | `squad pin <preset>` | Pin a preset to this project (a `.squadup` file with its name; `--clear` removes it). `squad run` with no name then uses the nearest one |
 | `squad statusline enable\|disable\|status` | Show ◆ and the equipped preset in the Claude Code status line; your own line keeps running first |
@@ -45,6 +46,12 @@ Claude Code starts every subagent with a clean window: it sees only the task the
 - **A flow** makes the agents a team: the main agent hands work down the slots in order. In the preset screen, *Team flow* offers *In order* and *Review loop*: pick who checks (the gate) and who fixes. The gate runs last; the main agent then counts the `!` lines, sends only those to the fixer, and runs the gate again, up to the number of rounds you set (3 by default), then stops and shows what is still open.
 - **Where it runs.** The flow is told to the main agent of the preset. With no main agent, `squad run` passes it to Claude Code on the command line; an equipped preset needs a main agent to carry it (the notes work either way).
 - **A read-only agent** (tools without Write, Edit or Bash) can read the notes but not change them, so it ends its answer with the lines to add and the main agent records them.
+
+## Tokens, live
+
+`squad usage --watch` (or `u` on the main screen) opens a live report of what each agent of the newest Claude Code session in the folder has spent: the main session and every subagent run, with its state (a working mascot while it runs), runs, tokens sent, read from the cache, produced, the total, its share of the squad, a sparkline of the pace and the cache hit rate. `z` starts counting from now, which measures one task. The main screen has the same numbers as a *TOKENS · LIVE* panel, and `squad run` prints the table when claude exits.
+
+The numbers are not estimated: Claude Code records the API's own token counts for every message, and squadup reads them from `~/.claude/projects/<project>/<session>.jsonl` and `<session>/subagents/agent-<id>.jsonl`. Like Claude Code's own count, TOTAL is fresh input plus cache writes plus output; cache reads, which cost a fraction, are shown beside it.
 
 ## Claude Code plugin
 

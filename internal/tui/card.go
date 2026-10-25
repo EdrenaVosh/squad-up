@@ -49,7 +49,7 @@ func cardLines(c workspace.Card, w, h int, o rosterOpts) []string {
 		"",
 		pair("Default model", modelOrDash(c.Model), "Main agent", orDash(c.Main, "—")),
 		pair("Permissions", permissionWord(c), "Mode", orDash(c.Mode, "—")),
-		" " + sMuted.Render(pad("Lint", 15)) + lintWord(c) + sMuted.Render(fmt.Sprintf(" · ~%d tokens/session", c.SessionTokens)),
+		" " + sMuted.Render(pad("Lint", 15)) + lintWord(c),
 	}
 
 	room := max(h-len(header)-len(footer), 1)

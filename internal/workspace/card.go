@@ -38,30 +38,21 @@ const (
 	NotesNone  = "none"
 )
 
-// AgentCost is what an agent adds to the context.
-type AgentCost struct {
-	Name        string
-	Description int // tokens loaded into every session
-	Prompt      int // tokens loaded when the agent is called
-}
-
 // Card is everything the terminal interface shows about one preset.
 type Card struct {
 	Entry
-	Mode          string
-	Main          string
-	Model         string // the default model the preset sets
-	Effort        string
-	Permissions   string // "acceptEdits · 4 allow · 1 ask · 2 deny", or "" when not set
-	Agents        []AgentInfo
-	Flow          *preset.Flow // how the agents work as a team; nil when they do not
-	Sharing       bool         // whether the notes are in use: a stored preset of two agents or more
-	Costs         []AgentCost
-	Findings      []lint.Finding // errors and warnings; notes are only counted
-	Errors        int
-	Warnings      int
-	Infos         int
-	SessionTokens int // estimated cost of the agents' names and descriptions
+	Mode        string
+	Main        string
+	Model       string // the default model the preset sets
+	Effort      string
+	Permissions string // "acceptEdits · 4 allow · 1 ask · 2 deny", or "" when not set
+	Agents      []AgentInfo
+	Flow        *preset.Flow   // how the agents work as a team; nil when they do not
+	Sharing     bool           // whether the notes are in use: a stored preset of two agents or more
+	Findings    []lint.Finding // errors and warnings; notes are only counted
+	Errors      int
+	Warnings    int
+	Infos       int
 }
 
 // Card describes a preset, or "initial". A preset that cannot be read still
@@ -82,14 +73,10 @@ func (w Workspace) Card(name string) (Card, error) {
 		return Card{}, err
 	}
 	c.Errors, c.Warnings, c.Infos = report.Count(lint.LevelError), report.Count(lint.LevelWarn), report.Count(lint.LevelInfo)
-	c.SessionTokens = report.Cost.SessionTokens
 	for _, f := range report.Findings {
 		if f.Level != lint.LevelInfo {
 			c.Findings = append(c.Findings, f)
 		}
-	}
-	for _, a := range report.Cost.Agents {
-		c.Costs = append(c.Costs, AgentCost{Name: a.Name, Description: a.DescriptionTokens, Prompt: a.PromptTokens})
 	}
 
 	switch {

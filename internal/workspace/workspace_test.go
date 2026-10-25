@@ -372,9 +372,6 @@ func TestCardDescribesAPreset(t *testing.T) {
 	if !reflect.DeepEqual(c.Agents, want) {
 		t.Errorf("agents = %+v, want %+v", c.Agents, want)
 	}
-	if c.SessionTokens == 0 {
-		t.Error("the cost estimate is missing")
-	}
 }
 
 func TestCardCountsLintFindings(t *testing.T) {

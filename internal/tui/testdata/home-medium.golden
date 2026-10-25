@@ -20,13 +20,13 @@
 │                              │ ┃ context ⇄ shared           ┃ │ context ⇄ shared           │               │
 │                              │ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ╰────────────────────────────╯               │
 │                              │  ▪ SQUAD  ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄ settings, cost and health of the whole preset   │
-│                              │ ┌─ SETTINGS ────────────────────────┐ ┌─ CONTEXT COST · TOKENS/CALL ──────┐ │
-│                              │ │ Model        haiku                │ │ debugger    ████████████░░░░    3 │ │
-│                              │ │ Effort      ····· —               │ │ tester      ████████████████    4 │ │
-│                              │ │ Permissions —                     │ │                                   │ │
-│ ──────────────────────────── │ │ Main agent  debugger              │ │ ~34 tokens per session            │ │
+│                              │ ┌─ SETTINGS ────────────────────────┐ ┌─ TOKENS · LIVE ───────────────────┐ │
+│                              │ │ Model        haiku                │ │ no session in this folder yet     │ │
+│                              │ │ Effort      ····· —               │ │                                   │ │
+│                              │ │ Permissions —                     │ │ start `squad run` here and every… │ │
+│ ──────────────────────────── │ │ Main agent  debugger              │ │                                   │ │
 │   ● initial         ● ACTIVE │ │ Mode        replace               │ │                                   │ │
 │     ■ ■ ■ 3 agents           │ │ Rules                             │ │                                   │ │
 │     your original setup      │ └───────────────────────────────────┘ └───────────────────────────────────┘ │
 ╰──────────────────────────────┴─────────────────────────────────────────────────────────────────────────────╯
-  ↑↓  preset   ←→  agent   enter  open   a  edit agent   e  equip   t  try   n  new   ?  help   q  quit
+  ↑↓  preset   ←→  agent   enter  open   a  edit agent   e  equip   t  try   u  tokens   ?  help   q  quit

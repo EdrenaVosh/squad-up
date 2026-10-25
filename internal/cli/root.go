@@ -137,7 +137,7 @@ func (a *app) newRoot() *cobra.Command {
 
 	root.AddCommand(newDoctor(), a.newList(), a.newStatus(), a.newCapture(), a.newInitial(),
 		a.newUse(), a.newRestore(), a.newUndo(), a.newLog(), a.newRun(), a.newModels(), a.newLint(),
-		a.newNew(), a.newClone(), a.newRename(), a.newRm(), a.newEdit(), a.newExport(), a.newImport(), a.newTemplates(), a.newCard(), a.newPin(), a.newFlow(), a.newNotes(), a.newStatusline())
+		a.newNew(), a.newClone(), a.newRename(), a.newRm(), a.newEdit(), a.newExport(), a.newImport(), a.newTemplates(), a.newCard(), a.newPin(), a.newFlow(), a.newNotes(), a.newUsage(), a.newStatusline())
 	return root
 }
 
@@ -191,7 +191,7 @@ func (a *app) useColor() bool {
 
 // openInterface runs the terminal interface, starting on the given screen.
 func (a *app) openInterface(start tui.Start) error {
-	env := tui.Env{Paths: a.paths, Now: a.now, Start: start, Animate: os.Getenv("SQUADUP_NO_ANIM") == ""}
+	env := tui.Env{Paths: a.paths, Now: a.now, Start: start, Animate: os.Getenv("SQUADUP_NO_ANIM") == "", Live: true, Cwd: start.Cwd}
 	if start.Kind == tui.StartHome {
 		env.Welcome = a.welcome
 	}

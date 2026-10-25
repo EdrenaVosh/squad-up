@@ -328,7 +328,7 @@ func (h *home) detail(w, rows, headerRows, listW int, c viewCtx) []string {
 			out = append(out, "")
 			ph--
 		}
-		for _, l := range panelsRow(card, h.activity, h.plan, h.planErr, w-2, ph) {
+		for _, l := range panelsRow(card, c.usage, h.activity, h.plan, h.planErr, w-2, ph) {
 			out = append(out, " "+l)
 		}
 	} else {
@@ -339,7 +339,7 @@ func (h *home) detail(w, rows, headerRows, listW int, c viewCtx) []string {
 		out = append(out, "",
 			pair("Default model", modelOrDash(card.Model), "Main agent", orDash(card.Main, "—")),
 			pair("Permissions", permissionWord(card), "Mode", orDash(card.Mode, "—")),
-			" "+sMuted.Render(pad("Lint", 15))+lintWord(card)+sMuted.Render(fmt.Sprintf(" · ~%d tokens/session", card.SessionTokens)))
+			" "+sMuted.Render(pad("Lint", 15))+lintWord(card))
 	}
 	return fit(out, w, rows)
 }

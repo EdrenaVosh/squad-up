@@ -85,7 +85,9 @@ func (a *app) runPreset(ctx context.Context, name string, extra []string, dryRun
 		return &ExitError{Code: 1, Err: errors.New("claude is not installed or not on PATH"), Fix: "install Claude Code (https://code.claude.com/docs) and make sure `claude` runs in this shell"}
 	}
 	printf(a.io.Err, "Running claude with %q (+ your global agents). Nothing is written to your Claude config.\n", name)
+	started := a.now()
 	code, err := runner.Run(bin, spec, extra, runner.Streams{In: a.io.In, Out: a.io.Out, Err: a.io.Err})
+	a.printRunUsage(started)
 	if err != nil {
 		return &ExitError{Code: 1, Err: err, Fix: "run `squad doctor` to check claude"}
 	}

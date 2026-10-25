@@ -31,11 +31,11 @@
 │                                              │                                                                                                                                                       │
 │                                              │  ▪ SQUAD  ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄ settings, cost and health of the whole preset   │
 │                                              │                                                                                                                                                       │
-│                                              │ ┌─ SETTINGS ───────────────────────┐ ┌─ CONTEXT COST · TOKENS/CALL ─────┐ ┌─ IF YOU EQUIP IT · e ────────────┐ ┌─ HEALTH ───────────────────────────┐ │
-│                                              │ │ Model        haiku               │ │ debugger   ████████████░░░░    3 │ │ + debugger.md                    │ │ ✓ clean                            │ │
-│                                              │ │ Effort      ····· —              │ │ tester     ████████████████    4 │ │ − docs-writer.md                 │ │ every agent says what it does and… │ │
-│                                              │ │ Permissions —                    │ │                                  │ │ − reviewer.md                    │ │                                    │ │
-│                                              │ │ Main agent  debugger             │ │ ~34 tokens per session           │ │ − team/tester.md                 │ │                                    │ │
+│                                              │ ┌─ SETTINGS ───────────────────────┐ ┌─ TOKENS · LIVE ──────────────────┐ ┌─ IF YOU EQUIP IT · e ────────────┐ ┌─ HEALTH ───────────────────────────┐ │
+│                                              │ │ Model        haiku               │ │ no session in this folder yet    │ │ + debugger.md                    │ │ ✓ clean                            │ │
+│                                              │ │ Effort      ····· —              │ │                                  │ │ − docs-writer.md                 │ │ every agent says what it does and… │ │
+│                                              │ │ Permissions —                    │ │ start `squad run` here and ever… │ │ − reviewer.md                    │ │                                    │ │
+│                                              │ │ Main agent  debugger             │ │                                  │ │ − team/tester.md                 │ │                                    │ │
 │                                              │ │ Mode        replace              │ │                                  │ │ + tester.md                      │ │                                    │ │
 │                                              │ │ Rules                            │ │                                  │ │ ~ model: "opus" → "haiku"        │ │                                    │ │
 │                                              │ │                                  │ │                                  │ │ + agent: "debugger"              │ │                                    │ │
@@ -49,4 +49,4 @@
                                                                                                                                                                                                         
                                                                                                                                                                                                         
                                                                                                                                                                                                         
-  ↑↓  preset   ←→  agent   enter  open   a  edit agent   e  equip   t  try   n  new   c  clone   r  rename   d  delete   i  import   x  export   /  filter   ?  help   q  quit
+  ↑↓  preset   ←→  agent   enter  open   a  edit agent   e  equip   t  try   u  tokens   n  new   c  clone   r  rename   d  delete   i  import   x  export   /  filter   ?  help   q  quit

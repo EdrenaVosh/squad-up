@@ -5,6 +5,7 @@ package tui
 
 import (
 	"context"
+	"os"
 	"strings"
 	"time"
 
@@ -23,9 +24,10 @@ type StartKind int
 
 // Screens the interface can start on.
 const (
-	StartHome StartKind = iota // the main screen
-	StartNew                   // the dialog that creates a preset
-	StartEdit                  // the editor of a preset or of one of its agents
+	StartHome  StartKind = iota // the main screen
+	StartNew                    // the dialog that creates a preset
+	StartEdit                   // the editor of a preset or of one of its agents
+	StartUsage                  // the live report of the tokens the agents spend
 )
 
 // Start is the screen to open first.
@@ -33,6 +35,7 @@ type Start struct {
 	Kind   StartKind
 	Preset string
 	Agent  string // with StartEdit: the agent to edit, or "" for the preset
+	Cwd    string // the folder whose Claude Code sessions the usage report follows; the working folder when empty
 }
 
 // Env is everything the interface needs from the outside.
@@ -48,6 +51,12 @@ type Env struct {
 	// Animate turns the motion on: a frame clock runs and screens animate.
 	// Tests and terminals that should stay still leave it off.
 	Animate bool
+	// Cwd is the folder whose Claude Code sessions the usage report follows;
+	// the working folder when empty.
+	Cwd string
+	// Live reads the transcripts of the session again every second. Tests
+	// leave it off and send the clock by hand.
+	Live bool
 }
 
 // minimum size the interface is laid out for.
@@ -63,6 +72,7 @@ type viewCtx struct {
 	frame  int  // the animation frame, advancing while Animate is on
 	anim   bool // whether anything should animate
 	ox, oy int  // where the top left of the screen sits in the terminal
+	usage  *usageFeed
 }
 
 type hint struct{ key, label string }
@@ -111,7 +121,16 @@ type (
 	}
 	reloadMsg struct{}
 	claudeMsg struct{ version string }
+	// usageTickMsg is the clock that reads the session's transcripts again.
+	usageTickMsg struct{}
+	// openUsageMsg opens the usage report.
+	openUsageMsg struct{}
 )
+
+func usageTick() tea.Cmd {
+	return tea.Tick(usageInterval, func(time.Time) tea.Msg { return usageTickMsg{} })
+}
+func openUsage() tea.Cmd { return func() tea.Msg { return openUsageMsg{} } }
 
 func push(s screen) tea.Cmd { return func() tea.Msg { return pushMsg{s} } }
 func pushAll(screens ...screen) tea.Cmd {
@@ -141,6 +160,7 @@ type App struct {
 	flash  flashState
 	claude string
 	frame  int
+	usage  *usageFeed
 }
 
 // New builds the interface. It starts at 80×24 until the terminal reports its
@@ -153,12 +173,24 @@ func New(env Env) tea.Model {
 		h:      minHeight,
 		claude: env.ClaudeVersion,
 	}
+	cwd := env.Cwd
+	if cwd == "" {
+		cwd, _ = os.Getwd()
+	}
+	now := env.Now
+	if now == nil {
+		now = time.Now
+	}
+	a.usage = newUsageFeed(env.Paths.ClaudeDir, cwd, now)
+	a.reloadColors()
 	a.stack = []screen{newHome(a.ws)}
 	switch {
 	case env.Welcome != nil:
 		a.stack = append(a.stack, newWelcome(a.ws, env.Welcome))
 	case env.Start.Kind == StartNew:
 		a.stack = append(a.stack, newCreateFlow(a.ws, nil))
+	case env.Start.Kind == StartUsage:
+		a.stack = append(a.stack, newUsageScreen(a.usage))
 	case env.Start.Kind == StartEdit:
 		if s := newEditStart(a.ws, env.Start); s != nil {
 			a.stack = append(a.stack, s...)
@@ -180,6 +212,9 @@ func (a *App) Init() tea.Cmd {
 	}
 	if a.env.Animate {
 		cmds = append(cmds, tick())
+	}
+	if a.env.Live {
+		cmds = append(cmds, usageTick())
 	}
 	return tea.Batch(cmds...)
 }
@@ -227,6 +262,16 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case claudeMsg:
 		a.claude = m.version
 		return a, nil
+	case usageTickMsg:
+		a.usage.refresh()
+		if a.env.Live {
+			return a, usageTick()
+		}
+		return a, nil
+	case openUsageMsg:
+		a.usage.refresh()
+		a.stack = append(a.stack, newUsageScreen(a.usage))
+		return a, nil
 	case tea.MouseMsg:
 		return a.forward(msg)
 	case tryDoneMsg:
@@ -248,6 +293,7 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case popMsg:
 		return a.pop(m)
 	case reloadMsg:
+		a.reloadColors()
 		var cmds []tea.Cmd
 		for i, s := range a.stack {
 			next, cmd := s.Update(msg)
@@ -295,7 +341,7 @@ func (a *App) View() tea.View {
 		note := sWarn.Render("Terminal too small") + "\n" + sMuted.Render("squadup needs 80×24")
 		content = lipgloss.Place(a.w, a.h, lipgloss.Center, lipgloss.Center, note)
 	default:
-		ctx := viewCtx{w: a.w, h: a.h - 1, claude: a.claude, frame: a.frame, anim: a.env.Animate}
+		ctx := viewCtx{w: a.w, h: a.h - 1, claude: a.claude, frame: a.frame, anim: a.env.Animate, usage: a.usage}
 		var body string
 		maxW, maxH := windowW, windowH
 		if _, ok := a.top().(fullscreen); ok {
@@ -340,4 +386,22 @@ func renderHints(hints []hint, w int) string {
 		hs = append(hs[:len(hs)-3], hs[len(hs)-2:]...)
 	}
 	return truncate(render(hs), w)
+}
+
+// reloadColors learns the colors of the agents of the equipped preset, for the
+// usage report.
+func (a *App) reloadColors() {
+	entries, err := a.ws.Entries()
+	if err != nil {
+		return
+	}
+	for _, e := range entries {
+		if e.Active && !e.Initial {
+			if card, err := a.ws.Card(e.Name); err == nil {
+				a.usage.setColors(card)
+			}
+			return
+		}
+	}
+	a.usage.setColors(workspace.Card{})
 }
