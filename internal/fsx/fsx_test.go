@@ -125,3 +125,32 @@ func TestWritesIntoRealConfigPanicInTests(t *testing.T) {
 		}
 	}
 }
+
+func TestWritingThroughASymlinkUpdatesTheTargetAndKeepsTheLink(t *testing.T) {
+	dir := t.TempDir()
+	real := filepath.Join(dir, "dotfiles", "settings.json")
+	if err := os.MkdirAll(filepath.Dir(real), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(real, []byte("old"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	link := filepath.Join(dir, "claude", "settings.json")
+	if err := os.MkdirAll(filepath.Dir(link), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(real, link); err != nil {
+		t.Skip("symlinks are not available:", err)
+	}
+
+	if err := fsx.WriteFileAtomic(link, []byte("new"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	if info, err := os.Lstat(link); err != nil || info.Mode()&os.ModeSymlink == 0 {
+		t.Errorf("the link was replaced by a regular file: %v, %v", info, err)
+	}
+	if got, _ := os.ReadFile(real); string(got) != "new" {
+		t.Errorf("the file behind the link = %q, want it updated", got)
+	}
+}

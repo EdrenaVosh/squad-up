@@ -38,8 +38,13 @@ func guard(path string) {
 }
 
 // WriteFileAtomic writes data to path through a temp file in the same
-// directory and a rename, creating missing parent directories.
+// directory and a rename, creating missing parent directories. A path that is
+// a symbolic link (a settings.json kept in a dotfiles repository, say) is
+// written through: the file behind it changes and the link stays a link.
 func WriteFileAtomic(path string, data []byte, perm os.FileMode) (err error) {
+	if resolved, err := filepath.EvalSymlinks(path); err == nil {
+		path = resolved
+	}
 	guard(path)
 	dir := filepath.Dir(path)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
