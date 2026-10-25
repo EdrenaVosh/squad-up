@@ -49,7 +49,7 @@ func (a *app) newNew() *cobra.Command {
 		Short: "Create a preset: blank, or a copy of another preset, Initial or the current setup",
 		Long: "The name is free text: capitals, spaces and symbols are fine, as in `squad new \"Cube creator\"`.\n" +
 			"The short id that other commands use is made from it (cube-creator).",
-		Args:  cobra.MaximumNArgs(1),
+		Args: cobra.MaximumNArgs(1),
 		RunE: func(_ *cobra.Command, args []string) error {
 			if len(args) == 0 && template != "" {
 				args = []string{template}
