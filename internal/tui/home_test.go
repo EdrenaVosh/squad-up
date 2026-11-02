@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	tea "charm.land/bubbletea/v2"
+	"github.com/charmbracelet/x/ansi"
 
 	"github.com/EdrenaVosh/squad-up/internal/tui"
 )
@@ -86,10 +87,37 @@ func TestHelpOpensAndClosesOnAnyKey(t *testing.T) {
 	h := newHarness(t)
 
 	h.press("?")
-	h.contains("Help", "equip it", "squad restore")
+	h.contains("Help", "equip it", "↓ more · ↑↓ scroll")
 	h.golden("help")
 	h.press("x")
 	h.contains("PRESETS")
+	h.lacks("Help")
+}
+
+func TestHelpListsTheKeysAndTheCommands(t *testing.T) {
+	h := newHarness(t)
+	h.resize(160, 50)
+
+	h.press("?")
+
+	h.contains("Main screen", "live tokens of this folder", "Commands", "in your shell",
+		"squad run <preset>", "squad use <preset>", "squad update", "squad --help", "brings it back at any time")
+	h.lacks("scroll")
+}
+
+func TestHelpScrollsWhenItDoesNotFit(t *testing.T) {
+	h := newHarness(t) // 80×24
+
+	h.press("?")
+	h.lacks("squad --help")
+	for range 20 {
+		h.press("down")
+	}
+	h.contains("Help", "squad update", "squad --help", "↑↓ scroll")
+	h.lacks("↓ more", "Main screen")
+	h.press("up")
+	h.contains("Help") // scrolling does not close it
+	h.press("q")
 	h.lacks("Help")
 }
 
@@ -124,6 +152,24 @@ func TestNewPresetFlowCreatesABlankPresetAndOpensIt(t *testing.T) {
 	}
 	h.press("esc")
 	h.contains("fresh")
+}
+
+func TestTheMainScreenDoesNotFlashBetweenTheStepsOfANewPreset(t *testing.T) {
+	h := newHarness(t)
+	h.press("n")
+	var frames []string
+	h.frames = &frames
+
+	h.typeText("my-team")
+	h.press("enter")         // the name, then what to start from
+	h.press("down", "enter") // Blank preset
+
+	h.contains("my-team", "AGENTS")
+	for i, f := range frames {
+		if strings.Contains(f, "PRESETS") {
+			t.Fatalf("frame %d shows the main screen between the steps:\n%s", i, f)
+		}
+	}
 }
 
 func TestNewPresetCanStartFromACopyOrTheCurrentSetup(t *testing.T) {
@@ -213,7 +259,7 @@ func TestCloneOfInitialMakesAnEditableCopy(t *testing.T) {
 	h.goTo("initial")
 
 	h.press("c")
-	h.contains("Clone preset", "my-setup", "stays as it is")
+	h.contains("Clone preset", "my-setup", "Initial itself stays as")
 	h.press("enter")
 
 	b, err := h.ws.Store().Load("my-setup")
@@ -290,6 +336,50 @@ func TestTheInterfaceSurvivesSmallAndNarrowTerminals(t *testing.T) {
 	}
 }
 
+func TestEveryFrameTakesTheWholeTerminal(t *testing.T) {
+	h := newHarness(t)
+	h.resize(260, 80)
+	h.goTo("solo-indie")
+	h.press("enter")
+
+	// the preset fills the screen from the top left, its table across it
+	lines := strings.Split(h.view(), "\n")
+	if !strings.HasPrefix(lines[0], "╭─ Solo Indie") || !strings.HasPrefix(lines[78], "╰") || ansi.StringWidth(lines[0]) != 260 {
+		t.Fatalf("the frame does not take the whole terminal:\n%s", h.view())
+	}
+	if !strings.HasPrefix(lines[1], "│ Planner, reviewer and tester") {
+		t.Errorf("the preset does not start at the top left:\n%s", h.view())
+	}
+	for _, l := range lines {
+		if strings.Contains(l, "SLOT 1") && ansi.StringWidth(strings.TrimRight(l, " │")) < 200 {
+			t.Errorf("the agents table does not run across the screen: %q", l)
+		}
+	}
+
+	// a window keeps its content in the middle of the frame
+	h.press("esc")
+	h.openPerms("solo-indie", 3)
+	lines = strings.Split(h.view(), "\n")
+	if !strings.HasPrefix(lines[0], "╭─ Permissions") || ansi.StringWidth(lines[0]) != 260 {
+		t.Fatalf("the frame does not take the whole terminal:\n%s", h.view())
+	}
+	for i, l := range lines {
+		if strings.Contains(l, "WHAT IT SETS") {
+			// the content is laid out 180 wide in the middle of the 258 inside the frame, and below the top
+			if col := ansi.StringWidth(l[:strings.Index(l, "WHAT IT SETS")]); col < 40 || i < 10 {
+				t.Errorf("WHAT IT SETS is at row %d, column %d, want the content in the middle:\n%s", i, col, h.view())
+			}
+		}
+	}
+
+	h.press("esc", "esc", "n")
+	for _, l := range strings.Split(h.view(), "\n") {
+		if t0 := strings.TrimSpace(l); strings.HasPrefix(t0, "╭─ New preset") && ansi.StringWidth(t0) != 96 {
+			t.Errorf("the dialog is %d wide, want 96:\n%s", ansi.StringWidth(t0), h.view())
+		}
+	}
+}
+
 func TestTooSmallTerminalSaysSo(t *testing.T) {
 	h := newHarness(t)
 
@@ -300,11 +390,11 @@ func TestTooSmallTerminalSaysSo(t *testing.T) {
 
 func TestHomeOnABigTerminalUsesTheSpace(t *testing.T) {
 	h := newHarness(t)
-	h.resize(200, 52)
+	h.resize(220, 52)
 
 	h.lacks("PROMPT")
 	h.contains("PRESETS", "██", "IF YOU EQUIP IT", "SETTINGS", "TOKENS · LIVE", "HEALTH", "claude 2.1.309", "3 presets · 6 agents")
-	h.goldenAt("home-wide", 200, 52)
+	h.goldenAt("home-wide", 220, 52)
 }
 
 func TestHomeOnAMediumTerminal(t *testing.T) {
@@ -359,4 +449,25 @@ func TestClickingATileSelectsItAndASecondClickEditsIt(t *testing.T) {
 	h.contains("╔═ ▶ 2 ")
 	h.send(tea.MouseClickMsg{X: x, Y: y, Button: tea.MouseLeft})
 	h.contains("Agent reviewer")
+}
+
+func TestANewerReleaseIsAnnouncedInTheFrame(t *testing.T) {
+	ws, _ := newWorkspace(t)
+	h := harnessFor(t, ws, tui.Env{Paths: ws.Paths, Now: ws.Now, ClaudeVersion: "2.1.309",
+		CheckUpdate: func() *tui.Update { return &tui.Update{Latest: "0.3.0", Current: "0.2.0"} },
+		Note:        "squad checks for updates daily · turn off: squad update --auto-check off"})
+
+	h.contains("⬆ squad 0.3.0 is out · run squad update", "turn off: squad update --auto-check off")
+	h.press("down")
+	h.lacks("turn off") // the note goes with the first key; the notice stays
+	h.contains("⬆ squad 0.3.0 is out")
+}
+
+func TestNoNewerReleaseNoNotice(t *testing.T) {
+	ws, _ := newWorkspace(t)
+	h := harnessFor(t, ws, tui.Env{Paths: ws.Paths, Now: ws.Now, ClaudeVersion: "2.1.309",
+		CheckUpdate: func() *tui.Update { return nil }})
+
+	h.lacks("is out")
+	h.contains("claude 2.1.309")
 }

@@ -114,15 +114,19 @@ func (h *home) viewSpacious(c viewCtx, rows int) string {
 		header = append([]string{pad("", inner)}, header...) // space between the frame's title and the logo
 	}
 	header = append(header, fg(cDim).Render(strings.Repeat("─", inner)))
+	label := ""
+	if h.update != nil {
+		label = h.update.label(c)
+	}
 	bodyH := rows - 2 - len(header)
 
-	listW := min(max(inner/4, 30), 46)
-	h.listW, h.ox, h.oy = listW, c.ox, c.oy
+	listW := min(max(inner*13/40, 39), 60)
+	h.listW = listW
 	left := h.cardList(listW, bodyH, len(header), c)
 	right := h.detail(inner-listW-1, bodyH, len(header), listW, c)
 
 	lines := append(header, panes(left, right, listW, inner)...)
-	return frame("◆ squad-up", c.shift(), "", lines, c.w, rows, listW)
+	return frame("◆ squad-up", c.shift(), label, lines, c.w, rows, listW)
 }
 
 // cardList is the presets as cards of three lines each, Initial pinned at the
@@ -307,7 +311,7 @@ func (h *home) detail(w, rows, headerRows, listW int, c viewCtx) []string {
 	roster, rects, _ := rosterLines(card.Agents, w-2, region, opts)
 	for _, r := range rects {
 		h.tiles = append(h.tiles, tileHit{
-			x: c.ox + 1 + listW + 1 + 1 + r.x, y: c.oy + 1 + h.topRows + headerRows + len(head) + r.y, w: r.w, h: r.h, index: r.index,
+			x: 1 + listW + 1 + 1 + r.x, y: 1 + h.topRows + headerRows + len(head) + r.y, w: r.w, h: r.h, index: r.index,
 		})
 	}
 	for len(roster) < region {

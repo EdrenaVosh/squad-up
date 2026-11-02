@@ -4,6 +4,7 @@ import (
 	"flag"
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"strings"
 	"testing"
@@ -37,6 +38,9 @@ type harness struct {
 	ws    workspace.Workspace
 	paths paths.Paths
 	quit  bool
+	// frames, while not nil, gets the screen after every update, as the
+	// terminal would show it
+	frames *[]string
 }
 
 // newWorkspace builds a foreign Claude Code setup with Initial captured and
@@ -126,6 +130,9 @@ func (h *harness) send(msg tea.Msg) {
 	}
 	m, cmd := h.m.Update(msg)
 	h.m = m
+	if h.frames != nil {
+		*h.frames = append(*h.frames, h.view())
+	}
 	h.run(cmd)
 }
 
@@ -147,6 +154,13 @@ func (h *harness) run(cmd tea.Cmd) {
 				h.run(c)
 			}
 		default:
+			// tea.Sequence: the commands one after another
+			if v := reflect.ValueOf(msg); v.Kind() == reflect.Slice && v.Type().Elem() == reflect.TypeFor[tea.Cmd]() {
+				for i := range v.Len() {
+					h.run(v.Index(i).Interface().(tea.Cmd))
+				}
+				return
+			}
 			h.send(msg)
 		}
 	case <-time.After(2 * time.Second):

@@ -2,6 +2,8 @@ package cli_test
 
 import (
 	"bytes"
+	"fmt"
+	"net/http"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -40,6 +42,24 @@ type env struct {
 	t         *testing.T
 	claudeDir string
 	home      string
+	http      *http.Client // the network squad sees; offline when nil
+}
+
+// offline is the network of the tests: every request fails, so that nothing
+// leaves the machine by accident. A test that needs an answer sets its own.
+var offline = &http.Client{Transport: roundTrip(func(r *http.Request) (*http.Response, error) {
+	return nil, fmt.Errorf("tests do not use the network (%s)", r.URL)
+})}
+
+type roundTrip func(*http.Request) (*http.Response, error)
+
+func (f roundTrip) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }
+
+func (e *env) client() *http.Client {
+	if e.http != nil {
+		return e.http
+	}
+	return offline
 }
 
 type result struct {
@@ -85,6 +105,7 @@ func (e *env) runWith(stdin string, interactive bool, args ...string) result {
 		Err:         &errOut,
 		Interactive: interactive,
 		Now:         func() time.Time { return fixedNow },
+		HTTP:        e.client(),
 	})
 	return result{stdout: out.String(), stderr: errOut.String(), code: code}
 }

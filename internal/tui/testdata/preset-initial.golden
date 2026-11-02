@@ -3,10 +3,10 @@
 │ your original setup, kept in ~/squad-up/presets/initial and never changed    │
 │                                                                              │
 │ AGENTS                                                                       │
-│   SLOT    AGENT         MODEL        EFFORT       ACCESS                     │
-│   SLOT 1  ■ docs-writer [inherit]    ····· —      ■■□□□ default              │
-│   SLOT 2  ■ reviewer    [inherit]    ····· —      ■■□□□ default              │
-│   SLOT 3  ■ tester      [inherit]    ····· —      ■■□□□ default              │
+│   SLOT     AGENT           MODEL          EFFORT         ACCESS              │
+│   SLOT 1   ■ docs-writer   [inherit]      ····· —        ■■□□□ default       │
+│   SLOT 2   ■ reviewer      [inherit]      ····· —        ■■□□□ default       │
+│   SLOT 3   ■ tester        [inherit]      ····· —        ■■□□□ default       │
 │                                                                              │
 │ SETTINGS                                                                     │
 │   Default model    opus                                                      │

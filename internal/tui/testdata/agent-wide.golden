@@ -1,36 +1,36 @@
 ╭─ Agent planner ──────────────────────────────────────────────────────────────────────────────────────────────────── solo-indie · slot 1 ─╮
-│ FIELDS                                          │ Name                                                                    enter · rename │
-│                                                 │ ────────────────────────────────────────────────────────────────────────────────────── │
-│ ▌ Name              planner                     │                                                                                        │
-│   Description       Breaks a task into steps. U…│ planner                                                                                │
-│   Independent       ◇ normal                    │                                                                                        │
-│   Model              opus                       │ The name Claude sees, and the name of the file. Lowercase letters, digits and dashes,  │
-│   Effort            ▂▃▅·· high                  │ up to 64 characters; it must be unique in the preset.                                  │
-│   Permission mode   ■□□□□ plan                  │                                                                                        │
-│   Tools             ‹Read› ‹Grep› ‹Glob›        │                                                                                        │
-│   Disallowed tools  —                           │                                                                                        │
-│   Max turns         —                           │                                                                                        │
-│   Color             ■ cyan                      │                                                                                        │
-│   Prompt            1 line · enter              │                                                                                        │
-│                                                 │                                                                                        │
-│  ╭─ 1 ────────────────────────────╮             │                                                                                        │
-│  │ ■ planner                      │             │                                                                                        │
-│  │                                │             │                                                                                        │
-│  │ ────────────────────────────── │             │                                                                                        │
-│  │ Breaks a task into steps.      │             │                                                                                        │
-│  │                                │             │                                                                                        │
-│  │                                │             │                                                                                        │
-│  │ model    opus                  │             │                                                                                        │
-│  │ effort  ▂▃▅·· high             │             │                                                                                        │
-│  │ access  ■□□□□ plan             │             │                                                                                        │
-│  │ tools   ‹Read› ‹Grep› ‹Glob›   │             │                                                                                        │
-│  │ stance  normal                 │             │                                                                                        │
-│  ╰────────────────────────────────╯             │                                                                                        │
-│                                                 │                                                                                        │
-│ CHECKS                                          │                                                                                        │
-│   ✓ nothing to fix                              │                                                                                        │
-│                                                 │                                                                                        │
-│                                                 │                                                                                        │
-│                                                 │                                                                                        │
-╰─────────────────────────────────────────────────┴────────────────────────────────────────────────────────────────────────────────────────╯
+│ FIELDS                                                                │ Name                                              enter · rename │
+│                                                                       │ ──────────────────────────────────────────────────────────────── │
+│ ▌ Name              planner                                           │                                                                  │
+│   Description       Breaks a task into steps. Use before starting any…│ planner                                                          │
+│   Independent       ◇ normal                                          │                                                                  │
+│   Model              opus                                             │ The name Claude sees, and the name of the file. Lowercase        │
+│   Effort            ▂▃▅·· high                                        │ letters, digits and dashes, up to 64 characters; it must be      │
+│   Permission mode   ■□□□□ plan                                        │ unique in the preset.                                            │
+│   Tools             ‹Read› ‹Grep› ‹Glob›                              │                                                                  │
+│   Disallowed tools  —                                                 │                                                                  │
+│   Max turns         —                                                 │                                                                  │
+│   Color             ■ cyan                                            │                                                                  │
+│   Prompt            1 line · enter                                    │                                                                  │
+│                                                                       │                                                                  │
+│  ╭─ 1 ────────────────────────────╮                                   │                                                                  │
+│  │ ■ planner                      │                                   │                                                                  │
+│  │                                │                                   │                                                                  │
+│  │ ────────────────────────────── │                                   │                                                                  │
+│  │ Breaks a task into steps.      │                                   │                                                                  │
+│  │                                │                                   │                                                                  │
+│  │                                │                                   │                                                                  │
+│  │ model    opus                  │                                   │                                                                  │
+│  │ effort  ▂▃▅·· high             │                                   │                                                                  │
+│  │ access  ■□□□□ plan             │                                   │                                                                  │
+│  │ tools   ‹Read› ‹Grep› ‹Glob›   │                                   │                                                                  │
+│  │ stance  normal                 │                                   │                                                                  │
+│  ╰────────────────────────────────╯                                   │                                                                  │
+│                                                                       │                                                                  │
+│ CHECKS                                                                │                                                                  │
+│   ✓ nothing to fix                                                    │                                                                  │
+│                                                                       │                                                                  │
+│                                                                       │                                                                  │
+│                                                                       │                                                                  │
+╰───────────────────────────────────────────────────────────────────────┴──────────────────────────────────────────────────────────────────╯
   ↑↓  move   enter  edit   p  file preview   esc  back   ?  help

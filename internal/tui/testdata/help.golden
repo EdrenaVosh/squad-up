@@ -1,24 +1,24 @@
-                                                                                
-                                                                                
-        ╭─ Help ───────────────────────────────────────────────────────╮        
-        │                                                              │        
-        │ Main screen                                                  │        
-        │  ↑↓ j k   select a preset                                    │        
-        │  enter    open it: agents, model, permissions                │        
-        │  e        equip it (write it into ~/.claude, after a previe… │        
-        │  t        try it: start claude with it, writing nothing      │        
-        │  n c r d  new, clone, rename, delete                         │        
-        │  i x      import a shared preset, export the selected one    │        
-        │  /        filter the list                                    │        
-        │                                                              │        
-        │ Editing                                                      │        
-        │  esc      go back; changes are saved as you make them        │        
-        │  ctrl+c   quit from anywhere                                 │        
-        │                                                              │        
-        │ Your original setup (◇ initial) is never changed.            │        
-        │ `squad restore` brings it back at any time.                  │        
-        │                                                              │        
-        ╰──────────────────────────────────────────────────────────────╯        
-                                                                                
-                                                                                
-  any key  close
+   ╭─ Help ─────────────────────────────────────────────────────────────────╮   
+   │                                                                        │   
+   │     Main screen                                                        │   
+   │      ↑↓ j k   select a preset                                          │   
+   │      ←→ h l   select an agent of the preset                            │   
+   │      enter    open it: agents, model, permissions                      │   
+   │      a        edit the selected agent                                  │   
+   │      e        equip it (write it into ~/.claude, after a preview)      │   
+   │      t        try it: start claude with it, writing nothing            │   
+   │      u        live tokens of this folder's Claude Code sessions        │   
+   │      m        check which models you can use                           │   
+   │      n c r d  new, clone, rename, delete                               │   
+   │      i x      import a shared preset, export the selected one          │   
+   │      /        filter the list                                          │   
+   │                                                                        │   
+   │     Editing                                                            │   
+   │      esc      go back; changes are saved as you make them              │   
+   │      ctrl+c   quit from anywhere                                       │   
+   │                                                                        │   
+   │     Commands  in your shell                                            │   
+   │     ↓ more · ↑↓ scroll                                                 │   
+   │                                                                        │   
+   ╰────────────────────────────────────────────────────────────────────────╯   
+  ↑↓  scroll   any key  close

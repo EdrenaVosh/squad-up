@@ -57,6 +57,11 @@ type Env struct {
 	// Live reads the transcripts of the session again every second. Tests
 	// leave it off and send the clock by hand.
 	Live bool
+	// CheckUpdate learns whether a newer release is out; it may ask the
+	// network, so it runs in the background. nil checks nothing.
+	CheckUpdate func() *Update
+	// Note is shown in the footer when the interface opens, once.
+	Note string
 }
 
 // minimum size the interface is laid out for.
@@ -67,12 +72,22 @@ const (
 
 // viewCtx is what a screen needs to draw itself.
 type viewCtx struct {
-	w, h   int
+	w, h   int  // the area the content is laid out in
+	fw, fh int  // the whole screen, which the frame takes; 0 when it is w×h
+	fill   bool // the content is laid out over the whole screen, from the top left
 	claude string
 	frame  int  // the animation frame, advancing while Animate is on
 	anim   bool // whether anything should animate
-	ox, oy int  // where the top left of the screen sits in the terminal
 	usage  *usageFeed
+}
+
+// full is the size of the whole screen. The content area w×h sits in its
+// middle.
+func (c viewCtx) full() (int, int) {
+	if c.fw == 0 || c.fh == 0 {
+		return c.w, c.h
+	}
+	return c.fw, c.fh
 }
 
 type hint struct{ key, label string }
@@ -81,18 +96,16 @@ type hint struct{ key, label string }
 // something else has done its job: the welcome screen, after a first preset.
 type finisher interface{ finished() bool }
 
-// fullscreen is implemented by a screen that uses the whole terminal. Every
-// other screen opens in a window in the middle, so that a big terminal is not
-// filled with empty space.
+// fullscreen is implemented by a screen that lays its content out over the
+// whole terminal. Every screen's frame takes the whole terminal; the others
+// lay their content out in a window in the middle of it, so that a big
+// terminal does not stretch their lines.
 type fullscreen interface{ fullscreen() bool }
 
-// The window the other screens open in, at most.
+// The window the content of the other screens is laid out in, at most.
 const (
-	windowW = 120
-	windowH = 36
-	// The main screen stops growing here; more space is margin.
-	homeMaxW = 200
-	homeMaxH = 44
+	windowW = 180
+	windowH = 54
 )
 
 // screen is one page of the interface; the app keeps a stack of them.
@@ -115,12 +128,16 @@ type (
 		n    int
 		then tea.Cmd
 	}
-	flashMsg struct {
+	// releaseMsg follows the messages of a popThen's command.
+	releaseMsg struct{}
+	flashMsg   struct {
 		text string
 		err  bool
 	}
 	reloadMsg struct{}
 	claudeMsg struct{ version string }
+	// updateMsg is a newer release, learned in the background.
+	updateMsg struct{ u Update }
 	// usageTickMsg is the clock that reads the session's transcripts again.
 	usageTickMsg struct{}
 	// openUsageMsg opens the usage report.
@@ -161,6 +178,11 @@ type App struct {
 	claude string
 	frame  int
 	usage  *usageFeed
+	// held counts the closed screens whose follow-up has not arrived yet;
+	// meanwhile the last frame stays, so that the screen underneath does not
+	// flash before the next one opens
+	held  int
+	shown string // the last frame drawn
 }
 
 // New builds the interface. It starts at 80×24 until the terminal reports its
@@ -216,6 +238,17 @@ func (a *App) Init() tea.Cmd {
 	if a.env.Live {
 		cmds = append(cmds, usageTick())
 	}
+	if check := a.env.CheckUpdate; check != nil {
+		cmds = append(cmds, func() tea.Msg {
+			if u := check(); u != nil {
+				return updateMsg{*u}
+			}
+			return nil
+		})
+	}
+	if a.env.Note != "" {
+		cmds = append(cmds, flash(a.env.Note))
+	}
 	return tea.Batch(cmds...)
 }
 
@@ -262,6 +295,11 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case claudeMsg:
 		a.claude = m.version
 		return a, nil
+	case updateMsg:
+		if main, ok := a.stack[0].(*home); ok {
+			main.update = &m.u
+		}
+		return a, nil
 	case usageTickMsg:
 		a.usage.refresh()
 		if a.env.Live {
@@ -292,6 +330,9 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return a, tea.Batch(cmds...)
 	case popMsg:
 		return a.pop(m)
+	case releaseMsg:
+		a.held = max(a.held-1, 0)
+		return a, nil
 	case reloadMsg:
 		a.reloadColors()
 		var cmds []tea.Cmd
@@ -330,28 +371,35 @@ func (a *App) pop(m popMsg) (tea.Model, tea.Cmd) {
 	// The screen underneath may show stale data after what the closed one did.
 	next, cmd := a.top().Update(reloadMsg{})
 	a.stack[len(a.stack)-1] = next
-	return a, tea.Batch(cmd, m.then)
+	if m.then == nil {
+		return a, cmd
+	}
+	// The command may open the next screen: until its messages are in, the
+	// closed one stays on the terminal.
+	a.held++
+	return a, tea.Batch(cmd, tea.Sequence(m.then, func() tea.Msg { return releaseMsg{} }))
 }
 
 // View draws the top screen above the footer.
 func (a *App) View() tea.View {
 	var content string
 	switch {
+	case a.held > 0 && a.shown != "":
+		content = a.shown
 	case a.w < 40 || a.h < 10:
 		note := sWarn.Render("Terminal too small") + "\n" + sMuted.Render("squad-up needs 80×24")
 		content = lipgloss.Place(a.w, a.h, lipgloss.Center, lipgloss.Center, note)
 	default:
-		ctx := viewCtx{w: a.w, h: a.h - 1, claude: a.claude, frame: a.frame, anim: a.env.Animate, usage: a.usage}
-		var body string
-		maxW, maxH := windowW, windowH
+		ctx := viewCtx{w: a.w, h: a.h - 1, fw: a.w, fh: a.h - 1, claude: a.claude, frame: a.frame, anim: a.env.Animate, usage: a.usage}
 		if _, ok := a.top().(fullscreen); ok {
-			maxW, maxH = homeMaxW, homeMaxH
+			ctx.fill = true
+		} else {
+			ctx.w, ctx.h = min(a.w, windowW), min(a.h-1, windowH)
 		}
-		ctx.w, ctx.h = min(a.w, maxW), min(a.h-1, maxH)
-		ctx.ox, ctx.oy = (a.w-ctx.w)/2, (a.h-1-ctx.h)/2
-		body = lipgloss.Place(a.w, a.h-1, lipgloss.Center, lipgloss.Center, a.top().View(ctx))
+		body := lipgloss.Place(a.w, a.h-1, lipgloss.Center, lipgloss.Center, a.top().View(ctx))
 		content = body + "\n" + a.footer()
 	}
+	a.shown = content
 	v := tea.NewView(content)
 	v.AltScreen = true
 	v.MouseMode = tea.MouseModeCellMotion

@@ -123,13 +123,6 @@ func (w *welcomeScreen) View(c viewCtx) string {
 	var lines []string
 	add := func(l ...string) { lines = append(lines, l...) }
 
-	if c.h >= 30 {
-		tall := c.h >= 34 && c.w >= 100
-		add(bigLogoBlock(inner, w.appear.frames(c), c.shift(), 0, tall, c.anim)...)
-	} else {
-		add(logoLines(inner, w.appear.frames(c))...)
-	}
-	add("")
 	if s.Clean {
 		add(" "+sBold.Render(CleanSetup), "")
 	} else {
@@ -158,7 +151,17 @@ func (w *welcomeScreen) View(c viewCtx) string {
 		}
 		add(truncate(" "+mark+pad(label, 32)+sMuted.Render(ch.note), inner))
 	}
-	return c.box("Welcome to squad-up", "", lines, 0)
+
+	// The big logo when it fits above the text, the small one otherwise; the
+	// text sits under it as a block in the middle.
+	var logo []string
+	if big := 7; len(lines)+1+big <= c.h-2 && c.w >= bigLogoWidth(false)+2 {
+		tall := c.w >= bigLogoWidth(true)+2
+		logo = bigLogoBlock(inner, w.appear.frames(c), c.shift(), 0, tall, c.anim)
+	} else {
+		logo = logoLines(inner, w.appear.frames(c))
+	}
+	return c.box("Welcome to squad-up", "", append(append(logo, ""), centerBlock(lines, inner)...), 0)
 }
 
 func issuesText(s initial.Summary) string {

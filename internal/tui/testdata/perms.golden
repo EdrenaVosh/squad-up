@@ -1,5 +1,9 @@
 ╭─ Permissions ─────────────────────────────────────────────────── solo-indie ─╮
 │                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
 │ PERMISSION PROFILE                                                           │
 │                                                                              │
 │    Not set    use the permissions of my original setup                       │
@@ -11,10 +15,6 @@
 │ WHAT IT SETS                                                                 │
 │   defaultMode  acceptEdits                                                   │
 │   ask          Bash(git push *)                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
 │                                                                              │
 │                                                                              │
 │                                                                              │

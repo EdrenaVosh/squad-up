@@ -31,6 +31,7 @@ func (e *env) runOnTerminal(tuiErr error, args ...string) tuiRun {
 		Interactive: true,
 		Terminal:    true,
 		Now:         func() time.Time { return fixedNow },
+		HTTP:        e.client(),
 		TUI: func(env tui.Env, _ io.Reader, _ io.Writer) error {
 			got.opened++
 			got.env = env

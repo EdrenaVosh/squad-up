@@ -1,4 +1,9 @@
 ╭─ Custom permissions ────────────────────────────────────────────── bug-hunt ─╮
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
 │ ▌ Default mode  default                                                      │
 │                                                                              │
 │ ALLOW — runs without asking                                                  │
@@ -9,11 +14,6 @@
 │                                                                              │
 │ DENY — never allowed                                                         │
 │   + add rule                                                                 │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
 │                                                                              │
 │                                                                              │
 │                                                                              │

@@ -1,4 +1,10 @@
 ╭─ Import preview ──────────────────────────────────── shared-team.squad.json ─╮
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
 │ shared-team — Shared Team                                                    │
 │ replace mode · 2 agents · main agent —                                       │
 │ settings: model sonnet · effort high · acceptEdits · 0 allow · 0 ask · 0 de… │
@@ -7,12 +13,6 @@
 │   writer          sonnet   Read, Edit          Writes the change once the pl…│
 │                                                                              │
 │ It is only stored; nothing is equipped.                                      │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
 │                                                                              │
 │                                                                              │
 │                                                                              │

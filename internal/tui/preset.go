@@ -281,6 +281,9 @@ func (p *presetScreen) Hints() []hint {
 	}
 }
 
+// fullscreen lays the preset out over the whole terminal, from the top left.
+func (p *presetScreen) fullscreen() bool { return true }
+
 func (p *presetScreen) View(c viewCtx) string {
 	inner := c.w - 2
 	title := p.card.Title
@@ -307,13 +310,14 @@ func (p *presetScreen) View(c viewCtx) string {
 	add("")
 	add(" " + sMuted.Render("AGENTS"))
 	if len(p.card.Agents) > 0 {
-		add(p.agentHeader(inner))
+		cols := p.agentCols(inner)
+		add(p.agentHeader(cols, inner))
 		if c.h >= 30 {
-			add("   " + fg(cDim).Render(strings.Repeat("─", max(inner-6, 0))))
+			add("   " + fg(cDim).Render(strings.Repeat("─", min(p.agentTableWidth(cols), max(inner-6, 0)))))
 		}
-	}
-	for i, a := range p.card.Agents {
-		add(p.slotLine(i, a, inner))
+		for i, a := range p.card.Agents {
+			add(p.slotLine(i, a, cols, inner))
+		}
 	}
 	if len(p.card.Agents) == 0 && p.readOnly {
 		add("   " + sMuted.Render("no agents"))
@@ -366,29 +370,77 @@ func (p *presetScreen) View(c viewCtx) string {
 	return c.box(title, right, lines, 0)
 }
 
-// The columns of the agents table.
+// The columns of the agents table, at their narrowest.
 const (
 	colSlot, colAgent, colModel, colEffort, colAccess, colStance = 8, 14, 13, 13, 14, 13
 )
 
-// agentHeader names the columns of the agents table.
-func (p *presetScreen) agentHeader(inner int) string {
-	head := pad("SLOT", colSlot) + pad("AGENT", colAgent) + pad("MODEL", colModel) + pad("EFFORT", colEffort) + pad("ACCESS", colAccess)
+// agentCols are the widths of the columns of the agents table. On a wide
+// screen all but the last grow to fill the room.
+func (p *presetScreen) agentCols(inner int) []int {
+	cols := []int{colSlot, colAgent, colModel, colEffort, colAccess}
 	if p.card.Team {
-		head += pad("STANCE", colStance)
+		cols = append(cols, colStance)
 	}
-	return truncate("   "+sMuted.Render(head), inner)
+	total := 0
+	for _, w := range cols {
+		total += w
+	}
+	if room := inner - 6; room > total {
+		grow := room * 100 / total // percent
+		for i := range cols[:len(cols)-1] {
+			cols[i] = cols[i] * grow / 100
+		}
+	}
+	return cols
+}
+
+// agentCells are the cells of one agent's row.
+func (p *presetScreen) agentCells(i int, a workspace.AgentInfo, cols []int) []string {
+	cells := []string{
+		sMuted.Render(fmt.Sprintf("SLOT %d", i+1)),
+		swatch(a.Color) + " " + sBold.Render(truncate(a.Name, cols[1]-2)),
+		modelPill(a.Model), effortBars(a.Effort), permissionStrength(a.PermissionMode),
+	}
+	if p.card.Team {
+		cells = append(cells, independentChip(a.Independent))
+	}
+	return cells
+}
+
+// agentTableWidth is how wide the table's content runs: the columns up to the
+// last one, and the widest cell of the last.
+func (p *presetScreen) agentTableWidth(cols []int) int {
+	last := len(cols) - 1
+	w := lipglossWidth(agentHeads[last])
+	for i, a := range p.card.Agents {
+		w = max(w, lipglossWidth(p.agentCells(i, a, cols)[last]))
+	}
+	for _, c := range cols[:last] {
+		w += c
+	}
+	return w
+}
+
+var agentHeads = []string{"SLOT", "AGENT", "MODEL", "EFFORT", "ACCESS", "STANCE"}
+
+// tableRow lays the cells out in the columns.
+func tableRow(cells []string, cols []int) string {
+	var b strings.Builder
+	for i, cell := range cells {
+		b.WriteString(pad(cell, cols[i]))
+	}
+	return b.String()
+}
+
+// agentHeader names the columns of the agents table.
+func (p *presetScreen) agentHeader(cols []int, inner int) string {
+	return truncate("   "+sMuted.Render(tableRow(agentHeads[:len(cols)], cols)), inner)
 }
 
 // slotLine draws one agent row, with the cursor if it is the current one.
-func (p *presetScreen) slotLine(i int, a workspace.AgentInfo, inner int) string {
-	text := pad(sMuted.Render(fmt.Sprintf("SLOT %d", i+1)), colSlot) +
-		pad(swatch(a.Color)+" "+sBold.Render(truncate(a.Name, colAgent-2)), colAgent) +
-		pad(modelPill(a.Model), colModel) + pad(effortBars(a.Effort), colEffort) + pad(permissionStrength(a.PermissionMode), colAccess)
-	if p.card.Team {
-		text += pad(independentChip(a.Independent), colStance)
-	}
-	return p.line(row{kind: rowAgent, agent: i}, text, inner)
+func (p *presetScreen) slotLine(i int, a workspace.AgentInfo, cols []int, inner int) string {
+	return p.line(row{kind: rowAgent, agent: i}, tableRow(p.agentCells(i, a, cols), cols), inner)
 }
 
 // aboutTitle and about explain the row under the cursor.

@@ -104,17 +104,39 @@ func box(title, right string, lines []string, w, h, dividerAt int) string {
 	return frame(title, 0, right, lines, w, h, dividerAt)
 }
 
-// box draws a frame the size of the view, its edges flowing with the frame
-// clock.
-//
-// On a tall terminal the window is only as high as its content (with a floor),
-// and the app centers it; on a small one it takes all the height.
+// box draws a frame the size of the whole screen, its edges flowing with the
+// frame clock. The lines are fitted to the content area and put in the middle
+// of the frame, or at its top left on a screen that fills it.
 func (c viewCtx) box(title, right string, lines []string, dividerAt int) string {
-	h := c.h
-	if c.h >= 30 {
-		h = min(c.h, max(len(lines)+3, 22))
+	fw, fh := c.full()
+	n := min(len(lines), c.h-2)
+	left, top := (fw-c.w)/2, (fh-2-n)/2
+	if c.fill {
+		top = 0
 	}
-	return frame(title, c.shift(), right, lines, c.w, h, dividerAt)
+	placed := make([]string, top, top+n)
+	for _, l := range fit(lines, c.w-2, n) {
+		placed = append(placed, strings.Repeat(" ", left)+l)
+	}
+	if dividerAt > 0 {
+		dividerAt += left
+	}
+	return frame(title, c.shift(), right, placed, fw, fh, dividerAt)
+}
+
+// centerBlock indents the lines together so that the widest one sits in the
+// middle of w cells; the lines keep their alignment to one another.
+func centerBlock(lines []string, w int) []string {
+	widest := 0
+	for _, l := range lines {
+		widest = max(widest, ansi.StringWidth(l))
+	}
+	indent := strings.Repeat(" ", max((w-widest)/2, 0))
+	out := make([]string, len(lines))
+	for i, l := range lines {
+		out[i] = indent + l
+	}
+	return out
 }
 
 // shift is how far the flowing gradient has moved: one step per frame while

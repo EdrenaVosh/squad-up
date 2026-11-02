@@ -23,6 +23,7 @@ make sandbox-reset && make sandbox-presets   # a fake Claude config and demo pre
 make try                                     # the interface, on the sandbox
 make try ARGS="use solo-indie"               # any command, on the sandbox
 make try-claude                              # the real claude on the sandbox config
+SQUAD_UP_FAKE_UPDATE=0.3.0 make try VERSION=0.2.0   # see the notice of a new release
 ```
 
 The tests do the same: they run against temporary directories and a fake

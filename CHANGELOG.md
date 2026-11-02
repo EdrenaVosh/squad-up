@@ -6,6 +6,44 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-02
+
+### Added
+
+- **New releases are announced.** Once a day squad asks GitHub for the newest
+  release; when there is one, a blinking orange notice in the top edge of the
+  main screen and a line after commands say so. It sends nothing but the
+  request, runs only at a terminal (never in scripts, CI or the status line),
+  and turns off with `squad update --auto-check off` or
+  `SQUAD_UP_NO_UPDATE_CHECK=1`; squad says so the first time.
+- **`squad update` updates.** It runs `brew upgrade`, `go install` or the
+  install script, the way squad was installed, and says when you already have
+  the newest release. `--print` only shows the command.
+- **Commands in the help.** `?` on the main screen now also lists the main
+  shell commands (`squad run`, `use`, `restore`, `update`…) and every key of
+  the main screen; on a small terminal it scrolls.
+
+### Changed
+
+- **Every screen fills the terminal.** The colored frame of every screen takes
+  the whole terminal, and the content sits in its middle; the main screen, the
+  agent editor and the usage report no longer stop growing at 200×44.
+- **Bigger windows and dialogs.** Screens lay their content out in up to
+  180×54 (was 120×36), and the dialogs (names, questions, choices, help) are
+  half as wide and half as tall again, with their content in the middle.
+- **The preset screen fills the terminal.** It starts at the top left like the
+  main screen; the columns of its agents table widen with the screen, and the
+  line under the table's header ends where the table does.
+- **A wider agent editor.** The fields on the left are half as wide again.
+- **A wider preset list.** On a big terminal the list on the left of the main
+  screen is 30% wider.
+
+### Fixed
+
+- **No flash of the main screen between steps.** Closing a dialog that opens
+  the next screen (a new preset's name, "Blank preset") no longer shows the
+  main screen for a moment in between.
+
 ## [0.1.0] - 2026-10-25
 
 The first release.
@@ -44,5 +82,6 @@ The first release.
 - **Installation:** Homebrew, `install.sh`, `go install`, and release archives
   for macOS, Linux and Windows.
 
-[Unreleased]: https://github.com/EdrenaVosh/squad-up/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/EdrenaVosh/squad-up/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/EdrenaVosh/squad-up/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/EdrenaVosh/squad-up/releases/tag/v0.1.0

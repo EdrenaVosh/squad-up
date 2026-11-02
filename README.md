@@ -82,7 +82,9 @@ squad --version
 squad doctor            # finds claude, its version and whether you are logged in
 ```
 
-Update later with `squad update`, which tells you the right command for the way you installed it. It downloads nothing itself.
+Update later with `squad update`: it updates squad the way you installed it (`brew upgrade`, `go install` or the install script). For a build from source it tells you the command instead; `squad update --print` only shows it.
+
+squad looks for a new release once a day and, when there is one, says so in the top edge of the main screen and after commands. Turn that off with `squad update --auto-check off` (or `SQUAD_UP_NO_UPDATE_CHECK=1`); see [Safety and privacy](#safety-and-privacy).
 
 <details>
 <summary><b>Optional: the Claude Code plugin</b></summary>
@@ -121,7 +123,7 @@ On the first run squad-up **saves your current setup** (the agents and a few set
 
 - Press `n` to create a preset. The first option is **a starter template** ([Bug Hunter or Feature Creator](#starter-templates)); the others are a blank preset or a copy of a preset (or of your original setup). The name is free text.
 - Press `enter` to open a preset and `a` to edit the selected agent: model, effort, tools, permissions, the description that tells Claude when to call it, and its prompt.
-- Press `?` anywhere for the keys. The mouse works too.
+- Press `?` anywhere for the keys and the main commands. The mouse works too.
 
 ### 2. Make the team yours
 
@@ -239,9 +241,9 @@ squad edit bugs reviewer --prompt-file review.md      # replace its prompt from 
 
 ### The interface
 
-Run `squad` in a terminal. Presets on the left, the selected preset's agents as equally sized, readable tiles on the right (the selected one is outlined in a bright double border), panels for settings, live tokens, what equipping would change, and health. It animates (a flowing gradient, and a small orange Claude-style mascot hard at work in the tiles of an equipped preset); `SQUAD_UP_NO_ANIM=1` keeps it still, and `NO_COLOR`, `CI`, a dumb terminal or a pipe get plain text. It works from 80×24 up and grows with the terminal.
+Run `squad` in a terminal. Presets on the left, the selected preset's agents as equally sized, readable tiles on the right (the selected one is outlined in a bright double border), panels for settings, live tokens, what equipping would change, and health. It animates (a flowing gradient, and a small orange Claude-style mascot hard at work in the tiles of an equipped preset); `SQUAD_UP_NO_ANIM=1` keeps it still, and `NO_COLOR`, `CI`, a dumb terminal or a pipe get plain text. It works from 80×24 up and fills the whole terminal, however big; smaller screens and dialogs sit in its middle. When a new release is out, a blinking orange notice in the top edge says so.
 
-Keys: arrows or the mouse select, `enter` opens, `e` equips (with a preview), `t` tries a preset for one session, `a` edits the selected agent, `u` opens live tokens, `m` checks your models, `n` creates, `i` imports, `x` exports, `?` helps.
+Keys: arrows or the mouse select, `enter` opens, `e` equips (with a preview), `t` tries a preset for one session, `a` edits the selected agent, `u` opens live tokens, `m` checks your models, `n` creates, `i` imports, `x` exports, `?` lists the keys and the main commands.
 
 ### Team flow and the review loop
 
@@ -370,19 +372,19 @@ Neither template has a main agent, so the flow reaches Claude Code through `squa
 | `squad log` | Operations that changed your config, newest first (`--json`) |
 | `squad doctor` | Check that Claude Code is installed and logged in |
 | `squad statusline enable\|disable\|status` | Show `◆ <preset>` in Claude Code's status line; your own line keeps running first |
-| `squad update` | Show the command that updates this copy of squad; it downloads nothing |
+| `squad update` | Update this copy of squad the way it was installed; `--print` only shows the command, `--auto-check on\|off` turns the daily check for a new release on or off |
 | `squad completion bash\|zsh\|fish\|powershell` | Shell completion script |
 
 **Global flags:** `--claude-dir` (Claude Code's config folder), `--home` (squad-up's data folder), `--no-color`, `-y/--yes` (skip confirmations; never counts as consent to risky imports), `-v/--version`, `-h/--help`.
 
-**Environment:** `CLAUDE_CONFIG_DIR` (default `~/.claude`), `SQUAD_UP_HOME` (default `~/.squad-up`), `SQUAD_UP_NO_ANIM=1` (a still interface), `NO_COLOR`.
+**Environment:** `CLAUDE_CONFIG_DIR` (default `~/.claude`), `SQUAD_UP_HOME` (default `~/.squad-up`), `SQUAD_UP_NO_ANIM=1` (a still interface), `SQUAD_UP_NO_UPDATE_CHECK=1` (no daily check for a new release), `NO_COLOR`.
 
 ## Safety and privacy
 
 - **Every write to `~/.claude` is guarded:** lock, backup, atomic write, manifest. A failure in the middle rolls back from the backup, and Ctrl-C waits until the files are written, so an interrupt does not leave an operation half done (a killed process or a power cut still can: delete `~/.squad-up/.lock` and run `squad restore`). Only files squad wrote, or files byte-identical to your Initial snapshot, are ever removed.
 - **What it never touches:** `env`, `hooks`, `enabledPlugins` and `~/.claude.json` are neither read into logs nor written. The status line is changed only when you run `squad statusline enable`.
 - **Imported presets never run code.** Hooks and MCP servers are stripped unless you allow them, dangerous permission modes need your consent, and `--yes` alone never counts as consent.
-- **No telemetry.** The network is used only for what you ask: an `https` or gist import, a gist export through `gh`, and the model check (which talks to Claude through your own `claude`).
+- **No telemetry.** Nothing about you or your presets is sent anywhere. The network is used for what you ask (an `https` or gist import, a gist export through `gh`, the model check through your own `claude`) and for one thing on its own: **a check for a new release, at most once a day.** It is a plain request to GitHub's public API for the latest release of squad-up, with nothing in it but squad's version; the answer is kept in `~/.squad-up/update-check.json`. It runs only when you use squad at a terminal, never in scripts, pipes, CI or the status line, and never in a development build. The first time, squad tells you about it. Turn it off with `squad update --auto-check off`, or `SQUAD_UP_NO_UPDATE_CHECK=1` in your shell.
 
 ## FAQ
 

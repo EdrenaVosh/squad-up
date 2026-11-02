@@ -279,7 +279,7 @@ func TestTheTemplateIsTheFirstOptionOfTheCreateFlow(t *testing.T) {
 	h.press("enter")
 	h.contains("Use a template", "Bug Hunter or Feature Creator", "Blank preset")
 	h.press("enter") // the first option, already selected
-	h.contains("Bug Hunter", "Feature Creator", "debugger →", "→ tester", "planner →", "→ reviewer")
+	h.contains("Bug Hunter", "Feature Creator", "→ fixer →", "→ tester", "planner →", "→ reviewer")
 	h.lacks("Solo Indie", "Ship It")
 	h.choose("Bug Hunter")
 

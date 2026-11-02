@@ -79,6 +79,10 @@ func (p Paths) StatuslineBackupFile() string {
 	return filepath.Join(p.Home, "statusline-settings.backup.json")
 }
 
+// UpdateCheckFile remembers the last check for a newer release, and whether
+// the check is turned off.
+func (p Paths) UpdateCheckFile() string { return filepath.Join(p.Home, "update-check.json") }
+
 // LockFile guards against two concurrent writers.
 func (p Paths) LockFile() string { return filepath.Join(p.Home, ".lock") }
 

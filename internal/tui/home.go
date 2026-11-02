@@ -36,8 +36,8 @@ type home struct {
 	agent     int // the selected agent of the card
 	cardName  string
 	activity  []apply.JournalEntry
-	listW     int // width of the list column, as last drawn
-	ox, oy    int // where the screen sits in the terminal, for the mouse
+	listW     int     // width of the list column, as last drawn
+	update    *Update // a newer release, announced in the frame; nil for none
 	plan      *apply.Plan
 	planErr   string
 }
@@ -205,11 +205,11 @@ func (h *home) click(m tea.Mouse) (screen, tea.Cmd) {
 			return h, nil
 		}
 	}
-	if m.X-h.ox > h.listW {
+	if m.X > h.listW {
 		return h, nil
 	}
 	for _, hit := range h.hits {
-		if m.Y != hit.line+1+h.topRows+h.oy {
+		if m.Y != hit.line+1+h.topRows {
 			continue
 		}
 		if hit.index == h.cursor {
@@ -350,10 +350,10 @@ func (h *home) Hints() []hint {
 	if h.filtering {
 		return []hint{{"enter", "keep filter"}, {"esc", "clear"}}
 	}
-	return []hint{
-		{"↑↓", "preset"}, {"←→", "agent"}, {"enter", "open"}, {"a", "edit agent"}, {"e", "equip"}, {"t", "try"}, {"u", "tokens"}, {"m", "models"}, {"n", "new"},
-		{"c", "clone"}, {"r", "rename"}, {"d", "delete"}, {"i", "import"}, {"x", "export"}, {"/", "filter"}, {"?", "help"}, {"q", "quit"},
-	}
+	return append([]hint(nil),
+		hint{"↑↓", "preset"}, hint{"←→", "agent"}, hint{"enter", "open"}, hint{"a", "edit agent"}, hint{"e", "equip"}, hint{"t", "try"}, hint{"u", "tokens"}, hint{"m", "models"}, hint{"n", "new"},
+		hint{"c", "clone"}, hint{"r", "rename"}, hint{"d", "delete"}, hint{"i", "import"}, hint{"x", "export"}, hint{"/", "filter"}, hint{"?", "help"}, hint{"q", "quit"},
+	)
 }
 
 func (h *home) View(c viewCtx) string {
@@ -380,7 +380,10 @@ func (h *home) View(c viewCtx) string {
 	if c.w >= spaciousW && c.h >= spaciousH {
 		return banner + h.viewSpacious(c, rows)
 	}
-	h.listW, h.ox, h.oy = listWidth, c.ox, c.oy
+	if h.update != nil {
+		label = h.update.label(c)
+	}
+	h.listW = listWidth
 	if c.w < 2*listWidth+10 {
 		left := h.listLines(inner, rows-2, c)
 		return banner + frame("◆ squad-up", shine, label, left, c.w, rows, 0)
@@ -499,27 +502,47 @@ func entryLine(e workspace.Entry, selected bool, w int, c viewCtx) string {
 
 // ---- help ----
 
-type help struct{}
+type help struct {
+	top      int  // the first line shown, when the help does not fit
+	scrolled bool // it did not fit, as last drawn
+}
 
 func newHelp() *help { return &help{} }
 
 func (h *help) Init() tea.Cmd { return nil }
 
+// Update scrolls a help that does not fit; any other key closes it.
 func (h *help) Update(msg tea.Msg) (screen, tea.Cmd) {
-	if _, ok := msg.(tea.KeyPressMsg); ok {
-		return h, pop()
+	key, ok := msg.(tea.KeyPressMsg)
+	if !ok {
+		return h, nil
 	}
-	return h, nil
+	if h.scrolled {
+		switch key.String() {
+		case "up", "k":
+			h.top = max(h.top-1, 0)
+			return h, nil
+		case "down", "j":
+			h.top++
+			return h, nil
+		}
+	}
+	return h, pop()
 }
 
 func (h *help) View(c viewCtx) string {
 	row := func(k, d string) string { return " " + sAccent.Render(pad(k, 9)) + d }
+	cmd := func(k, d string) string { return " " + sAccent.Render(pad(k, 22)) + d }
 	lines := []string{
 		sBold.Render("Main screen"),
 		row("↑↓ j k", "select a preset"),
+		row("←→ h l", "select an agent of the preset"),
 		row("enter", "open it: agents, model, permissions"),
+		row("a", "edit the selected agent"),
 		row("e", "equip it (write it into ~/.claude, after a preview)"),
 		row("t", "try it: start claude with it, writing nothing"),
+		row("u", "live tokens of this folder's Claude Code sessions"),
+		row("m", "check which models you can use"),
 		row("n c r d", "new, clone, rename, delete"),
 		row("i x", "import a shared preset, export the selected one"),
 		row("/", "filter the list"),
@@ -528,13 +551,42 @@ func (h *help) View(c viewCtx) string {
 		row("esc", "go back; changes are saved as you make them"),
 		row("ctrl+c", "quit from anywhere"),
 		"",
+		sBold.Render("Commands") + sMuted.Render("  in your shell"),
+		cmd("squad run <preset>", "start claude with a preset, for one session"),
+		cmd("squad use <preset>", "equip a preset into ~/.claude"),
+		cmd("squad restore", "go back to your original setup"),
+		cmd("squad undo", "go back one step"),
+		cmd("squad list", "the presets; the equipped one is marked"),
+		cmd("squad status", "what is equipped, and manual edits"),
+		cmd("squad usage --watch", "live tokens per agent"),
+		cmd("squad models --probe", "ask which models you can use"),
+		cmd("squad update", "update squad to the newest release"),
+		cmd("squad --help", "every command and flag"),
+		"",
 		sMuted.Render("Your original setup (◇ initial) is never changed."),
 		sMuted.Render("`squad restore` brings it back at any time."),
+	}
+	_, fh := c.full()
+	room := fh - 4
+	h.scrolled = len(lines) > room
+	if h.scrolled {
+		shown := room - 1 // the last line says there is more
+		h.top = min(h.top, len(lines)-shown)
+		more := "↑↓ scroll"
+		if h.top+shown < len(lines) {
+			more = "↓ more · " + more
+		}
+		lines = append(lines[h.top:h.top+shown:h.top+shown], sMuted.Render(more))
 	}
 	return modal(c, "Help", lines)
 }
 
-func (h *help) Hints() []hint { return []hint{{"any key", "close"}} }
+func (h *help) Hints() []hint {
+	if h.scrolled {
+		return []hint{{"↑↓", "scroll"}, {"any key", "close"}}
+	}
+	return []hint{{"any key", "close"}}
+}
 
 // ---- flows shared by the screens ----
 

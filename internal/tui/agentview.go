@@ -28,7 +28,9 @@ func (e *agentEditor) View(c viewCtx) string {
 
 func (e *agentEditor) viewWide(c viewCtx) string {
 	inner := c.w - 2
-	leftW := min(max(inner*36/100, 44), 58)
+	// the fields get half as much again as the inspector would leave them,
+	// and the inspector keeps room for its line of actions
+	leftW := min(max(inner*54/100, 66), 87, inner-1-66)
 	rightW := inner - leftW - 1
 
 	left := []string{" " + sMuted.Render("FIELDS"), ""}

@@ -3,30 +3,30 @@
 │    ▀▀▀▄ █ ▀▄▀ █   █ █▀▀▀█ █   █ ▀▀▀ █   █ █▀▀▀      ✦                                 ◇ initial is active  │
 │   ▀▀▀▀   ▀▀ ▀  ▀▀▀  ▀   ▀ ▀▀▀▀       ▀▀▀  ▀        ✦                    ✦✦     ✓ in sync with your config  │
 │────────────────────────────────────────────────────────────────────────────────────────────────────────────│
-│ PRESETS 3                    │ ● Bug Hunt  A debugger and a tester for tracking down a failure             │
-│                              │  ◆ AGENTS  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2 slots · in order   │
-│ ▌ ○ Bug Hunt                 │ separate helpers · set a Team flow to link them                             │
-│ ▌   ■ ■ 2 agents             │ ╔═ ▶ 1 ══════════════════╗ ╭─ 2 ────────────────────╮                       │
-│ ▌   A debugger and a tester… │ ║  debugger              ║ │ ■ tester               │                       │
-│                              │ ║                        ║ │                        │                       │
-│   ○ Refactor Day             │ ║ ────────────────────── ║ │ ────────────────────── │                       │
-│     ■ 1 agent                │ ║ Finds the root cause   ║ │ Writes a failing test  │                       │
-│     Keeps your agents and a… │ ║ of a failure.          ║ │ for a bug.             │                       │
-│                              │ ║                        ║ │                        │                       │
-│   ● Solo Indie               │ ║ model   [inherit]      ║ │ model   [inherit]      │                       │
-│     ■ ■ ■ 3 agents           │ ║ effort  ····· —        ║ │ effort  ····· —        │                       │
-│     Planner, reviewer and t… │ ║ access  ■■□□□ default  ║ │ access  ■■□□□ default  │                       │
-│                              │ ║ tools   ‹Read› ‹Bash›  ║ │ tools   ‹Read› ‹Bash›  │                       │
-│                              │ ║ stance  normal         ║ │ stance  normal         │                       │
-│                              │ ╚════════════════════════╝ ╰────────────────────────╯                       │
-│                              │  ▪ SQUAD  ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄ settings, cost and health of the whole preset   │
-│                              │ ┌─ SETTINGS ────────────────────────┐ ┌─ TOKENS · LIVE ───────────────────┐ │
-│                              │ │ Model        haiku                │ │ no session in this folder yet     │ │
-│                              │ │ Effort      ····· —               │ │                                   │ │
-│                              │ │ Permissions —                     │ │ start `squad run` here and every  │ │
-│ ──────────────────────────── │ │ Main agent  debugger              │ │ agent's tokens show up as it      │ │
-│   ● initial         ● ACTIVE │ │ Mode        replace               │ │ works                             │ │
-│     ■ ■ ■ 3 agents           │ │ Rules       —                     │ │                                   │ │
-│     your original setup      │ └───────────────────────────────────┘ └───────────────────────────────────┘ │
-╰──────────────────────────────┴─────────────────────────────────────────────────────────────────────────────╯
+│ PRESETS 3                             │ ● Bug Hunt  A debugger and a tester for tracking down a failure    │
+│                                       │  ◆ AGENTS  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2 slots · in order   │
+│ ▌ ○ Bug Hunt                          │ separate helpers · set a Team flow to link them                    │
+│ ▌   ■ ■ 2 agents                      │ ╔═ ▶ 1 ══════════════════╗ ╭─ 2 ────────────────────╮              │
+│ ▌   A debugger and a tester for trac… │ ║  debugger              ║ │ ■ tester               │              │
+│                                       │ ║                        ║ │                        │              │
+│   ○ Refactor Day                      │ ║ ────────────────────── ║ │ ────────────────────── │              │
+│     ■ 1 agent                         │ ║ Finds the root cause   ║ │ Writes a failing test  │              │
+│     Keeps your agents and adds an ar… │ ║ of a failure.          ║ │ for a bug.             │              │
+│                                       │ ║                        ║ │                        │              │
+│   ● Solo Indie                        │ ║ model   [inherit]      ║ │ model   [inherit]      │              │
+│     ■ ■ ■ 3 agents                    │ ║ effort  ····· —        ║ │ effort  ····· —        │              │
+│     Planner, reviewer and tester for… │ ║ access  ■■□□□ default  ║ │ access  ■■□□□ default  │              │
+│                                       │ ║ tools   ‹Read› ‹Bash›  ║ │ tools   ‹Read› ‹Bash›  │              │
+│                                       │ ║ stance  normal         ║ │ stance  normal         │              │
+│                                       │ ╚════════════════════════╝ ╰────────────────────────╯              │
+│                                       │  ▪ SQUAD  ┄┄┄┄┄┄┄┄ settings, cost and health of the whole preset   │
+│                                       │ ┌─ SETTINGS ─────────────────────────────────────────────────────┐ │
+│                                       │ │ Model        haiku                                             │ │
+│                                       │ │ Effort      ····· —                                            │ │
+│                                       │ │ Permissions —                                                  │ │
+│ ───────────────────────────────────── │ │ Main agent  debugger                                           │ │
+│   ● initial                  ● ACTIVE │ │ Mode        replace                                            │ │
+│     ■ ■ ■ 3 agents                    │ │ Rules       —                                                  │ │
+│     your original setup               │ └────────────────────────────────────────────────────────────────┘ │
+╰───────────────────────────────────────┴────────────────────────────────────────────────────────────────────╯
   ↑↓  preset   ←→  agent   enter  open   a  edit agent   e  equip   t  try   u  tokens   ?  help   q  quit

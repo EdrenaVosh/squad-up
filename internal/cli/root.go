@@ -68,6 +68,7 @@ func Run(args []string, streams IO) int {
 
 	err := root.Execute()
 	if err == nil {
+		a.announceUpdate()
 		return 0
 	}
 
@@ -101,6 +102,9 @@ type app struct {
 	paths     paths.Paths
 	welcome   *initial.Meta // set on the very first run
 	input     *bufio.Reader // shared by every prompt so that buffered answers are not lost
+	// updateDone closes when the background check for a newer release ends;
+	// nil when none was started
+	updateDone chan struct{}
 }
 
 func (a *app) now() time.Time {
@@ -152,6 +156,7 @@ func (a *app) prepare(cmd *cobra.Command, args []string) error {
 		return &ExitError{Code: 1, Err: err, Fix: "pass --claude-dir and --home explicitly"}
 	}
 	a.paths = p
+	a.startUpdateCheck(cmd)
 	if isStatuslineLine(cmd) {
 		return nil // run by Claude Code on every redraw: no first-run capture, no welcome
 	}
@@ -192,6 +197,7 @@ func (a *app) useColor() bool {
 // openInterface runs the terminal interface, starting on the given screen.
 func (a *app) openInterface(start tui.Start) error {
 	env := tui.Env{Paths: a.paths, Now: a.now, Start: start, Animate: os.Getenv("SQUAD_UP_NO_ANIM") == "", Live: true, Cwd: start.Cwd}
+	a.interfaceUpdates(&env)
 	if start.Kind == tui.StartHome {
 		env.Welcome = a.welcome
 	}

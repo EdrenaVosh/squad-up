@@ -2,9 +2,9 @@
                                                                                 
                                                                                 
                                                                                 
-                                                                                
-                                                                                
    ╭─ Starter templates ────────────────────────────────────────────────────╮   
+   │                                                                        │   
+   │                                                                        │   
    │                                                                        │   
    │ ▌ Bug Hunter       Four agents that find a bug's root cause, fix it,   │   
    │                    review the fix independently and test it (debugger  │   
@@ -13,10 +13,10 @@
    │                    tests, and have it reviewed independently (planner  │   
    │                    → executor → reviewer)                              │   
    │                                                                        │   
+   │                                                                        │   
+   │                                                                        │   
+   │                                                                        │   
    ╰────────────────────────────────────────────────────────────────────────╯   
-                                                                                
-                                                                                
-                                                                                
                                                                                 
                                                                                 
                                                                                 

@@ -11,7 +11,7 @@ import (
 )
 
 // modalWidth is the width of the dialogs, narrower on small terminals.
-func modalWidth(c viewCtx) int { return max(min(64, c.w-6), 30) }
+func modalWidth(c viewCtx) int { return max(min(96, c.w-6), 30) }
 
 // modal draws a dialog box with the title and lines in the middle of the area.
 // A dialog that is taller than the area loses its last lines.
@@ -20,21 +20,22 @@ func modal(c viewCtx, title string, lines []string) string {
 }
 
 // choiceWidth is the width of a list of choices, which has room for notes.
-func choiceWidth(c viewCtx) int { return max(min(100, c.w-6), 30) }
+func choiceWidth(c viewCtx) int { return max(min(150, c.w-6), 30) }
 
-// modalSized is modal with a width of its own.
+// modalSized is modal with a width of its own. The dialog is half as tall
+// again as its lines need, and they sit in its middle.
 func modalSized(c viewCtx, title string, lines []string, w int) string {
-	if room := c.h - 4; len(lines) > room {
+	fw, fh := c.full()
+	if room := fh - 4; len(lines) > room {
 		lines = append(lines[:max(room-1, 0)], sMuted.Render("…"))
 	}
-	rows := make([]string, 0, len(lines)+2)
-	rows = append(rows, "")
-	for _, l := range lines {
+	h := min((len(lines)+4)*3/2, fh)
+	rows := make([]string, (h-2-len(lines))/2, h-2)
+	for _, l := range centerBlock(lines, w-4) {
 		rows = append(rows, " "+pad(l, w-4)+" ")
 	}
-	rows = append(rows, "")
-	frame := box(title, "", rows, w, len(rows)+2, 0)
-	return lipgloss.Place(c.w, c.h, lipgloss.Center, lipgloss.Center, frame)
+	frame := box(title, "", rows, w, h, 0)
+	return lipgloss.Place(fw, fh, lipgloss.Center, lipgloss.Center, frame)
 }
 
 // ---- prompt ----
@@ -98,7 +99,7 @@ func (p *promptScreen) View(c viewCtx) string {
 		}
 		lines = append(lines, "")
 	}
-	lines = append(lines, "› "+p.input.View())
+	lines = append(lines, pad("› "+p.input.View(), modalWidth(c)-4)) // full width, so nothing moves while typing
 	if p.preview != nil && p.err == "" {
 		if text := p.preview(strings.TrimSpace(p.input.Value())); text != "" {
 			lines = append(lines, sMuted.Render("  "+text))
@@ -153,7 +154,7 @@ func (a *areaScreen) Update(msg tea.Msg) (screen, tea.Cmd) {
 
 func (a *areaScreen) View(c viewCtx) string {
 	a.area.SetWidth(modalWidth(c) - 6)
-	a.area.SetHeight(max(min(8, c.h-8), 3))
+	a.area.SetHeight(max(min(12, c.h-8), 3))
 	return modal(c, a.title, strings.Split(a.area.View(), "\n"))
 }
 
