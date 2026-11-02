@@ -7,6 +7,7 @@
 Build teams of agents, give each its model, tools and rules, let a main agent lead them through a review loop,<br>
 watch every agent's tokens live, and share the whole team as one file.
 
+[![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-D97757?logo=claude&logoColor=white)](#install)
 [![CI](https://github.com/EdrenaVosh/squad-up/actions/workflows/ci.yml/badge.svg)](https://github.com/EdrenaVosh/squad-up/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/EdrenaVosh/squad-up?display_name=tag&sort=semver)](https://github.com/EdrenaVosh/squad-up/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
