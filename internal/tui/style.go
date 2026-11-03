@@ -14,14 +14,15 @@ import (
 
 // ---- palette ----
 
-// The brand gradient runs amber → pink → violet → blue. It colors the
-// wordmark, the frame edges and progress; everything else stays quiet.
+// The brand gradient runs through Claude's oranges: peach → Claude's own
+// orange → terracotta → rust. It colors the wordmark, the frame edges and
+// progress; everything else stays quiet.
 var (
 	brandStops = []color.Color{
-		lipgloss.Color("#FFB000"),
-		lipgloss.Color("#FF4D8D"),
-		lipgloss.Color("#8E4EC6"),
-		lipgloss.Color("#3E9BFF"),
+		lipgloss.Color("#F4A672"),
+		lipgloss.Color("#D97757"),
+		lipgloss.Color("#C15F3C"),
+		lipgloss.Color("#8F3F22"),
 	}
 	cDim = lipgloss.Color("#5B6068")
 )
@@ -50,7 +51,7 @@ func gradient(n int) []color.Color {
 const flowPeriod = 72
 
 // flowCycle is the brand gradient there and back, so that it loops without a
-// seam: amber → pink → violet → blue → violet → pink → amber.
+// seam: peach → orange → terracotta → rust → terracotta → orange → peach.
 var flowCycle = lipgloss.Blend1D(flowPeriod,
 	brandStops[0], brandStops[1], brandStops[2], brandStops[3], brandStops[2], brandStops[1], brandStops[0])
 

@@ -1,6 +1,6 @@
 {
   "name": "squad-up",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Show and switch your squad-up agent presets without leaving Claude Code",
   "author": {
     "name": "EdrenaVosh"

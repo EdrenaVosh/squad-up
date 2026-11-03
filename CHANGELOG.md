@@ -6,6 +6,15 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-03
+
+### Changed
+
+- **Claude's colors.** The frames, titles and logo flow through Claude's
+  oranges (peach → Claude's own orange → terracotta → rust) instead of a
+  rainbow, and so do the selection bar and the section chips.
+- **A new demo GIF** in the new colors.
+
 ## [0.2.0] - 2026-11-02
 
 ### Added
@@ -82,6 +91,7 @@ The first release.
 - **Installation:** Homebrew, `install.sh`, `go install`, and release archives
   for macOS, Linux and Windows.
 
-[Unreleased]: https://github.com/EdrenaVosh/squad-up/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/EdrenaVosh/squad-up/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/EdrenaVosh/squad-up/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/EdrenaVosh/squad-up/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/EdrenaVosh/squad-up/releases/tag/v0.1.0
