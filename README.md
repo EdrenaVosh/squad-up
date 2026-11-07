@@ -397,6 +397,13 @@ No. It writes the same agent files and settings you would write by hand, or pass
 </details>
 
 <details>
+<summary><b>Can I use it with a Claude subscription (Pro, Max)?</b></summary>
+
+Squad uses Claude Code the same way you do: it arranges agent files and starts the official `claude` command with its documented flags (`--agents`, `--settings`), so every request is made by Claude Code itself, under your usual login, like any other session. It is not a harness that talks to the models itself: it never touches your credentials or tokens and never calls Anthropic's API. The only time squad sends a model a request on its own is `squad models --probe`, which asks first and then runs `claude -p` once per model; `squad doctor` runs `claude -v` and `claude auth status`, which ask no model. On its own, squad connects only to GitHub, to look for a new release, and to the link you give `squad import`.
+
+</details>
+
+<details>
 <summary><b>What is the difference between <code>use</code> and <code>run</code>?</b></summary>
 
 `squad use` equips a preset into `~/.claude`: it applies to every session until you switch or restore. `squad run` starts one session with the preset and leaves your config alone. Start with `run` if you want to try a team safely. With `use`, the agent files are picked up by a running session within seconds, but the model and permission settings are only certain to apply in a new session.
