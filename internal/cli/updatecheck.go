@@ -43,11 +43,14 @@ func (a *app) startUpdateCheck(cmd *cobra.Command) {
 	if !a.checksUpdates(cmd) || !cmd.HasParent() || cmd.Name() == "update" {
 		return
 	}
+	// the checker is made here, not in the goroutine, which can outlive the
+	// command: all it reads afterwards is its own copy
+	c := a.checker()
 	done := make(chan struct{})
 	a.updateDone = done
 	go func() {
 		defer close(done)
-		a.checker().Refresh(context.Background())
+		c.Refresh(context.Background())
 	}()
 }
 
@@ -80,7 +83,7 @@ func (a *app) interfaceUpdates(env *tui.Env) {
 	env.CheckUpdate = func() *tui.Update {
 		c.Refresh(context.Background())
 		if latest := c.Known(); latest != "" {
-			return &tui.Update{Latest: latest, Current: version.Version}
+			return &tui.Update{Latest: latest, Current: c.Current}
 		}
 		return nil
 	}
